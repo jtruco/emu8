@@ -8,9 +8,10 @@ import "github.com/jtruco/emu8/device"
 
 // Bank is a memory bank of bytes
 type Bank struct {
-	size     int
-	readonly bool
-	data     []byte
+	size      int
+	readonly  bool
+	data      []byte
+	listeners []device.BusListener
 }
 
 // NewBank creates a new memory bank
@@ -19,6 +20,7 @@ func NewBank(size int, readonly bool) *Bank {
 	bank.size = size
 	bank.readonly = readonly
 	bank.data = make([]byte, size)
+	bank.listeners = make([]device.BusListener, 0)
 	return bank
 }
 
@@ -54,83 +56,51 @@ func (bank *Bank) Reset() {
 // Bus interface
 
 // Access access to data address
-func (bank *Bank) Access(address uint16) {}
+func (bank *Bank) Access(address uint16) {
+	if len(bank.listeners) > 0 {
+		bank.notifyListeners(address, device.BusAccess, device.Before)
+		bank.notifyListeners(address, device.BusAccess, device.After)
+	}
+}
 
 // Read reads a byte from the bank address
 func (bank *Bank) Read(address uint16) byte {
-	return bank.data[address]
+	if len(bank.listeners) > 0 {
+		bank.notifyListeners(address, device.BusRead, device.Before)
+	}
+	data := bank.data[address]
+	if len(bank.listeners) > 0 {
+		bank.notifyListeners(address, device.BusRead, device.After)
+	}
+	return data
 }
 
 // Write writes a byte to the bank address
 func (bank *Bank) Write(address uint16, data byte) {
+	if len(bank.listeners) > 0 {
+		bank.notifyListeners(address, device.BusWrite, device.Before)
+	}
 	if !bank.readonly {
 		bank.data[address] = data
 	}
+	if len(bank.listeners) > 0 {
+		bank.notifyListeners(address, device.BusWrite, device.After)
+	}
 }
 
-// -----------------------------------------------------------------------------
-// BankMap mapping information
-// -----------------------------------------------------------------------------
+// Events
 
-// BankMap contains a bank bus and mapping information
-type BankMap struct {
-	bus        device.Bus
-	bank       *Bank
-	address    uint16
-	endaddress uint16
-	active     bool
-	init       bool
+// AddBusListener adds a listener tu memory bank events
+func (bank *Bank) AddBusListener(listener device.BusListener) {
+	bank.listeners = append(bank.listeners, listener)
 }
 
-// NewBankMap creates a memory bank map
-func NewBankMap(address uint16, size int, readonly bool, active bool) *BankMap {
-	bmap := BankMap{}
-	bmap.bank = NewBank(size, readonly)
-	bmap.bus = bmap.bank
-	bmap.address = address
-	bmap.endaddress = address + uint16(size) - 1
-	bmap.active = active
-	bmap.init = active
-	return &bmap
-}
-
-// NewROM creates a ROM bank map
-func NewROM(address uint16, size int) *BankMap {
-	return NewBankMap(address, size, true, true)
-}
-
-// NewRAM creates a RAM bank map
-func NewRAM(address uint16, size int) *BankMap {
-	return NewBankMap(address, size, false, true)
-}
-
-// NewBusMap creates a bank map from a device bus
-func NewBusMap(bus device.Bus, address uint16, size int, readonly bool, active bool) *BankMap {
-	bmap := BankMap{}
-	bmap.bus = bus
-	bmap.address = address
-	bmap.endaddress = address + uint16(size) - 1
-	bmap.active = active
-	bmap.init = active
-	return &bmap
-}
-
-// Active is bank active
-func (bmap *BankMap) Active() bool {
-	return bmap.active
-}
-
-// Bank gets the bank
-func (bmap *BankMap) Bank() *Bank {
-	return bmap.bank
-}
-
-// Bus gets the device bus of the bank
-func (bmap *BankMap) Bus() device.Bus {
-	return bmap.bus
-}
-
-// SetActive is bank active
-func (bmap *BankMap) SetActive(active bool) {
-	bmap.active = active
+// notifyListeners emits event and notify listeners
+func (bank *Bank) notifyListeners(address uint16, event, order int) {
+	busevent := device.BusEvent{
+		Event:   device.Event{Type: event, Order: order},
+		Address: address}
+	for _, l := range bank.listeners {
+		l.ListenBusEvent(&busevent)
+	}
 }
