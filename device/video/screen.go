@@ -53,8 +53,8 @@ func (screen *Screen) SetPixel(x, y int, colour int32) {
 	screen.data[pos] = colour
 }
 
-// SetPixelPalette sets colour index at pixel coordinates
-func (screen *Screen) SetPixelPalette(x, y int, index int) {
+// SetPixelIndex sets colour index at pixel coordinates
+func (screen *Screen) SetPixelIndex(x, y int, index int) {
 	pos := x + y*screen.width
 	colour := screen.palette[index]
 	screen.data[pos] = colour
