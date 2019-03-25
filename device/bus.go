@@ -18,18 +18,14 @@ const (
 
 // Bus is the device databus interface
 type Bus interface {
-	// Device interface
-	Device
-	// DataBus interface
-	cpu.DataBus
+	Device      // Is a Device
+	cpu.DataBus // Is a DataBus
 }
 
 // BusEvent is a bus event
 type BusEvent struct {
-	// Is a device event
-	Event
-	// Address on bus
-	Address uint16
+	Event          // Is a Device Event
+	Address uint16 // Address on bus
 }
 
 // BusListener is a bus event listener

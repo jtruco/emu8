@@ -33,10 +33,8 @@ type Device interface {
 
 // Event is a device event
 type Event struct {
-	// Operation type
-	Type int
-	// Operation order
-	Order int
+	Type  int // Operation type
+	Order int // Operation order
 }
 
 // Listener is a device event listener
