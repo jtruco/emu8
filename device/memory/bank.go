@@ -101,6 +101,6 @@ func (bank *Bank) notifyListeners(address uint16, event, order int) {
 		Event:   device.Event{Type: event, Order: order},
 		Address: address}
 	for _, l := range bank.listeners {
-		l.ListenBusEvent(&busevent)
+		l.ProcessBusEvent(&busevent)
 	}
 }

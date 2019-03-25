@@ -34,5 +34,5 @@ type BusEvent struct {
 
 // BusListener is a bus event listener
 type BusListener interface {
-	ListenBusEvent(event *BusEvent)
+	ProcessBusEvent(event *BusEvent)
 }
