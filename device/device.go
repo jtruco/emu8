@@ -41,5 +41,5 @@ type Event struct {
 
 // Listener is a device event listener
 type Listener interface {
-	ListenDeviceEvent(event *Event)
+	ProcessDeviceEvent(event *Event)
 }
