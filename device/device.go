@@ -7,20 +7,15 @@ package device
 
 // Device event order
 const (
-	// Before occurs before event is executed
-	Before = iota
-	// After occurs after event is executed
-	After
+	OrderBefore = iota // Before occurs before event is executed
+	OrderAfter         // After occurs after event is executed
 )
 
 // Device event types
 const (
-	// Undefined event
-	Undefined = 0
-	// Init is a device init event
-	Init = 1
-	// Reset is a device reset event
-	Reset = 2
+	EventUndefined = 0 // Undefined event
+	EventInit      = 1 // Init is a device init event
+	EventReset     = 2 // Reset is a device reset event
 )
 
 // Device is the base device component

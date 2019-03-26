@@ -58,19 +58,19 @@ func (bank *Bank) Reset() {
 // Access access to data address
 func (bank *Bank) Access(address uint16) {
 	if len(bank.listeners) > 0 {
-		bank.notifyListeners(address, device.BusAccess, device.Before)
-		bank.notifyListeners(address, device.BusAccess, device.After)
+		bank.notifyListeners(address, device.EventBusAccess, device.OrderBefore)
+		bank.notifyListeners(address, device.EventBusAccess, device.OrderAfter)
 	}
 }
 
 // Read reads a byte from the bank address
 func (bank *Bank) Read(address uint16) byte {
 	if len(bank.listeners) > 0 {
-		bank.notifyListeners(address, device.BusRead, device.Before)
+		bank.notifyListeners(address, device.EventBusRead, device.OrderBefore)
 	}
 	data := bank.data[address]
 	if len(bank.listeners) > 0 {
-		bank.notifyListeners(address, device.BusRead, device.After)
+		bank.notifyListeners(address, device.EventBusRead, device.OrderAfter)
 	}
 	return data
 }
@@ -78,13 +78,13 @@ func (bank *Bank) Read(address uint16) byte {
 // Write writes a byte to the bank address
 func (bank *Bank) Write(address uint16, data byte) {
 	if len(bank.listeners) > 0 {
-		bank.notifyListeners(address, device.BusWrite, device.Before)
+		bank.notifyListeners(address, device.EventBusWrite, device.OrderBefore)
 	}
 	if !bank.readonly {
 		bank.data[address] = data
 	}
 	if len(bank.listeners) > 0 {
-		bank.notifyListeners(address, device.BusWrite, device.After)
+		bank.notifyListeners(address, device.EventBusWrite, device.OrderAfter)
 	}
 }
 

@@ -8,12 +8,9 @@ import "github.com/jtruco/emu8/cpu"
 
 // Bus event types
 const (
-	// Access is a bus access event
-	BusAccess = 10
-	// Read is a bus read event
-	BusRead = 11
-	// Write is a bus write event
-	BusWrite = 12
+	EventBusAccess = 10 // Access is a bus access event
+	EventBusRead   = 11 // Read is a bus read event
+	EventBusWrite  = 12 // Write is a bus write event
 )
 
 // Bus is the device databus interface
