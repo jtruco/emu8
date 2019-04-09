@@ -4,13 +4,13 @@ package audio
 // Buffer & Player
 // -----------------------------------------------------------------------------
 
-// Buffer is a 16bit audio buffer (SDL AUDIO_U16LSB)
+// Buffer is a 16bit audio doble buffer : samples and audio data
 type Buffer struct {
 	frequency int      // Frequency of audio
-	fps       int      // FPS of
+	fps       int      // Frames per second
 	size      int      // buffer size in samples
 	samples   []uint16 // sample data u16 format
-	data      []byte   // data byte buffer
+	data      []byte   // data buffer. Format : SDL AUDIO_U16LSB
 }
 
 // NewBuffer creates a new buffer of Freq and FPS
@@ -24,8 +24,13 @@ func NewBuffer(frequency, fps int) *Buffer {
 	return buffer
 }
 
-// Data gets the audio buffer data
-func (buffer *Buffer) Data() []byte {
+// AddSample adds a sample at index
+func (buffer *Buffer) AddSample(index int, sample uint16) {
+	buffer.samples[index] += sample
+}
+
+// BuildData builds audio buffer data
+func (buffer *Buffer) BuildData() {
 	for i, j := 0, 0; i < buffer.size; i++ {
 		sample := buffer.samples[i]
 		high, low := uint8(sample>>8), uint8(sample&0xff)
@@ -34,7 +39,16 @@ func (buffer *Buffer) Data() []byte {
 		buffer.data[j] = high
 		j++
 	}
+}
+
+// Data gets the audio data buffer. SDL AUDIO_U16LSB format.
+func (buffer *Buffer) Data() []byte {
 	return buffer.data
+}
+
+// FPS of the audio buffer
+func (buffer *Buffer) FPS() int {
+	return buffer.fps
 }
 
 // Frequency of the audio buffer
@@ -42,7 +56,12 @@ func (buffer *Buffer) Frequency() int {
 	return buffer.frequency
 }
 
-// Reset the audio data
+// GetSample gets sample at index
+func (buffer *Buffer) GetSample(index int) uint16 {
+	return buffer.samples[index]
+}
+
+// Reset the samples buffer
 func (buffer *Buffer) Reset() {
 	for i := range buffer.samples {
 		buffer.samples[i] = 0
@@ -54,17 +73,12 @@ func (buffer *Buffer) Samples() []uint16 {
 	return buffer.samples
 }
 
-// Size number of samples of the buffer
-func (buffer *Buffer) Size() int {
-	return buffer.size
-}
-
-// AddSample adds a sample at index
-func (buffer *Buffer) AddSample(index int, sample uint16) {
-	buffer.samples[index] += sample
-}
-
 // SetSample sets sample at index
 func (buffer *Buffer) SetSample(index int, sample uint16) {
 	buffer.samples[index] = sample
+}
+
+// Size number of samples of the buffer
+func (buffer *Buffer) Size() int {
+	return buffer.size
 }
