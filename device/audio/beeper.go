@@ -68,7 +68,7 @@ func (beeper *Beeper) EndFrame() {
 
 // Device interface
 
-// Init initialices beeper device
+// Init initializes beeper device
 func (beeper *Beeper) Init() {
 	beeper.Reset()
 }

@@ -20,7 +20,7 @@ const (
 
 // Device is the base device component
 type Device interface {
-	// Init initialices the device
+	// Init initializes the device
 	Init()
 	// Reset resets the device
 	Reset()

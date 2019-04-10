@@ -24,7 +24,7 @@ func NewBank(size int, readonly bool) *Bank {
 	return bank
 }
 
-// Data initialices bank data
+// Data gets bank data
 func (bank *Bank) Data() []byte {
 	return bank.data
 }
@@ -41,7 +41,7 @@ func (bank *Bank) ReadOnly() bool {
 
 // Device interface
 
-// Init initialices bank data
+// Init initializes bank data
 func (bank *Bank) Init() {
 	bank.Reset()
 }
