@@ -1,5 +1,9 @@
 package cpu
 
+// -----------------------------------------------------------------------------
+// Clock
+// -----------------------------------------------------------------------------
+
 // Clock is the CPU clock
 type Clock interface {
 	// Add increases clock tstates by value
@@ -16,6 +20,10 @@ type Clock interface {
 func NewClock() Clock {
 	return &ClockDevice{}
 }
+
+// -----------------------------------------------------------------------------
+// ClockDevice
+// -----------------------------------------------------------------------------
 
 // ClockDevice is the default clock implementation
 type ClockDevice struct {

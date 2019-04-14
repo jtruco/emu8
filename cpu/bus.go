@@ -1,5 +1,9 @@
 package cpu
 
+// -----------------------------------------------------------------------------
+// DataBus
+// -----------------------------------------------------------------------------
+
 // DataBus is a 8 bit data bus of 16 bit address
 type DataBus interface {
 	// Access bus access without RW/RD request
