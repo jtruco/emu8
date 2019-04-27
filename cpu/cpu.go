@@ -8,7 +8,7 @@ package cpu
 // CPU is the central processor unit
 type CPU interface {
 	// Clock gets the CPU Clock
-	Clock() *Clock
+	Clock() Clock
 	// Init initializes the CPU
 	Init()
 	// Reset resets the CPU

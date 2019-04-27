@@ -10,6 +10,8 @@ type Clock interface {
 	Add(value int)
 	// Inc increases clock tstates by one
 	Inc()
+	// Restart restarts clock to tstates
+	Restart(tstates int)
 	// SetTstates sets the clock tstate
 	SetTstates(tstate int)
 	// Tstates obtains the clock tstate
@@ -17,7 +19,7 @@ type Clock interface {
 }
 
 // NewClock returns a Clock device
-func NewClock() Clock {
+func NewClock() *ClockDevice {
 	return &ClockDevice{}
 }
 
@@ -30,25 +32,7 @@ type ClockDevice struct {
 	tstates int
 }
 
-// Tstates obtains the clock tstates
-func (c *ClockDevice) Tstates() int {
-	return c.tstates
-}
-
-// SetTstates sets the clock tstates
-func (c *ClockDevice) SetTstates(tstates int) {
-	c.tstates = tstates
-}
-
-// Inc increases clock tstates by one
-func (c *ClockDevice) Inc() {
-	c.tstates++
-}
-
-// Add increases clock tstates by value
-func (c *ClockDevice) Add(value int) {
-	c.tstates += value
-}
+// Device interface
 
 // Init initializces the clock
 func (c *ClockDevice) Init() {
@@ -58,4 +42,31 @@ func (c *ClockDevice) Init() {
 // Reset the clock
 func (c *ClockDevice) Reset() {
 	c.tstates = 0
+}
+
+// Clock interface
+
+// Add increases clock tstates by value
+func (c *ClockDevice) Add(value int) {
+	c.tstates += value
+}
+
+// Inc increases clock tstates by one
+func (c *ClockDevice) Inc() {
+	c.tstates++
+}
+
+// Restart restarts clock to tstates
+func (c *ClockDevice) Restart(tstates int) {
+	c.tstates = c.tstates % tstates
+}
+
+// SetTstates sets the clock tstates
+func (c *ClockDevice) SetTstates(tstates int) {
+	c.tstates = tstates
+}
+
+// Tstates obtains the clock tstates
+func (c *ClockDevice) Tstates() int {
+	return c.tstates
 }
