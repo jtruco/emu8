@@ -51,6 +51,20 @@ func (beeper *Beeper) SetMap(levelMap []uint16) {
 	beeper.levelMap = levelMap
 }
 
+// Device interface
+
+// Init initializes beeper device
+func (beeper *Beeper) Init() {
+	beeper.Reset()
+}
+
+// Reset resets beeper device
+func (beeper *Beeper) Reset() {
+	beeper.buffer.Reset()
+	beeper.tstate = 0
+	beeper.level = 0
+}
+
 // Audio interface
 
 // Buffer gets audio buffer
@@ -66,16 +80,7 @@ func (beeper *Beeper) EndFrame() {
 	beeper.tstate = 0
 }
 
-// Device interface
-
-// Init initializes beeper device
-func (beeper *Beeper) Init() {
-	beeper.Reset()
-}
-
-// Reset resets beeper device
-func (beeper *Beeper) Reset() {
-	beeper.buffer.Reset()
-	beeper.tstate = 0
-	beeper.level = 0
+// IsDirty gets audio buffer
+func (beeper *Beeper) IsDirty() bool {
+	return true // FIXE optimize
 }
