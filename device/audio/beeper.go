@@ -80,7 +80,5 @@ func (beeper *Beeper) EndFrame() {
 	beeper.tstate = 0
 }
 
-// IsDirty gets audio buffer
-func (beeper *Beeper) IsDirty() bool {
-	return true // FIXE optimize
-}
+// IsDirty audio buffer is dirty
+func (beeper *Beeper) IsDirty() bool { return true }
