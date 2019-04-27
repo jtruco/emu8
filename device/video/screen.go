@@ -26,6 +26,14 @@ func NewScreen(width, height int, palette []int32) *Screen {
 	return screen
 }
 
+// Clear clears the screen
+func (screen *Screen) Clear(index int) {
+	colour := screen.palette[index]
+	for i := 0; i < screen.size; i++ {
+		screen.data[i] = colour
+	}
+}
+
 // Data is the pixel data buffer
 func (screen *Screen) Data() []int32 {
 	return screen.data
