@@ -1,11 +1,24 @@
 // Package video contains video components and devices
 package video
 
+import "github.com/jtruco/emu8/device"
+
 // -----------------------------------------------------------------------------
-// Renderer
+// Video & Events
 // -----------------------------------------------------------------------------
 
-// Renderer is a video screen renderer object
+// Video is a video device
+type Video interface {
+	device.Device // Is a device
+	// EndFrame updates screen video frame
+	EndFrame()
+	// IsDirty returns true if video needs refresh
+	IsDirty() bool
+	// The video screen
+	Screen() *Screen
+}
+
+// Renderer is the video screen renderer
 type Renderer interface {
 	// Render renders screen
 	Render(screen *Screen)
