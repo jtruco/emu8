@@ -40,7 +40,6 @@ func (controller *Controller) SetVideo(video Video) {
 func (controller *Controller) Refresh() {
 	controller.video.EndFrame()
 	if controller.video.IsDirty() {
-		// concurrent UI refresh
-		go controller.renderer.Render(controller.video.Screen())
+		controller.renderer.Render(controller.video.Screen())
 	}
 }

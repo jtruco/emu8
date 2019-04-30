@@ -41,7 +41,6 @@ func (controller *Controller) Flush() {
 	dirty := controller.audio.IsDirty()
 	controller.audio.EndFrame()
 	if dirty {
-		// concurrent update UI
-		go controller.player.Play(controller.audio.Buffer())
+		controller.player.Play(controller.audio.Buffer())
 	}
 }
