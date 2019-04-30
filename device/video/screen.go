@@ -13,6 +13,7 @@ type Screen struct {
 	size    int
 	palette []int32
 	data    []int32
+	dirty   bool
 }
 
 // NewScreen creates a screen of size width x height and palette
@@ -23,6 +24,7 @@ func NewScreen(width, height int, palette []int32) *Screen {
 	screen.size = width * height
 	screen.palette = palette
 	screen.data = make([]int32, screen.size)
+	screen.dirty = false
 	return screen
 }
 
@@ -32,6 +34,7 @@ func (screen *Screen) Clear(index int) {
 	for i := 0; i < screen.size; i++ {
 		screen.data[i] = colour
 	}
+	screen.dirty = false
 }
 
 // Data is the pixel data buffer
@@ -49,6 +52,16 @@ func (screen *Screen) Width() int {
 	return screen.width
 }
 
+// Dirty if screen is dirty
+func (screen *Screen) IsDirty() bool {
+	return screen.dirty
+}
+
+// SetDirty sets if screen is dirty
+func (screen *Screen) SetDirty(dirty bool) {
+	screen.dirty = dirty
+}
+
 // GetPixel gets colour from pixel coordinates
 func (screen *Screen) GetPixel(x, y int) int32 {
 	pos := x + y*screen.width
@@ -58,12 +71,14 @@ func (screen *Screen) GetPixel(x, y int) int32 {
 // SetPixel sets colour at pixel coordinates
 func (screen *Screen) SetPixel(x, y int, colour int32) {
 	pos := x + y*screen.width
-	screen.data[pos] = colour
+	if screen.data[pos] != colour {
+		screen.data[pos] = colour
+		screen.dirty = true
+	}
 }
 
 // SetPixelIndex sets colour index at pixel coordinates
 func (screen *Screen) SetPixelIndex(x, y int, index int) {
-	pos := x + y*screen.width
 	colour := screen.palette[index]
-	screen.data[pos] = colour
+	screen.SetPixel(x, y, colour)
 }

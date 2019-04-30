@@ -12,8 +12,6 @@ type Video interface {
 	device.Device // Is a device
 	// EndFrame updates screen video frame
 	EndFrame()
-	// IsDirty returns true if video needs refresh
-	IsDirty() bool
 	// The video screen
 	Screen() *Screen
 }

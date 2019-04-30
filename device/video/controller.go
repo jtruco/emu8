@@ -39,7 +39,9 @@ func (controller *Controller) SetVideo(video Video) {
 // Refresh video screen to output renderer
 func (controller *Controller) Refresh() {
 	controller.video.EndFrame()
-	if controller.video.IsDirty() {
-		controller.renderer.Render(controller.video.Screen())
+	screen := controller.video.Screen()
+	if screen.IsDirty() {
+		controller.renderer.Render(screen)
+		screen.SetDirty(false)
 	}
 }
