@@ -38,9 +38,6 @@ func (controller *Controller) SetPlayer(player Player) {
 
 // Flush ends the audio frame and flush out the buffer to player
 func (controller *Controller) Flush() {
-	dirty := controller.audio.IsDirty()
 	controller.audio.EndFrame()
-	if dirty {
-		controller.player.Play(controller.audio.Buffer())
-	}
+	controller.player.Play(controller.audio.Buffer())
 }

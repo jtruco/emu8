@@ -13,8 +13,6 @@ type Audio interface {
 	Buffer() *Buffer
 	// EndFrame audio frame is finished and buffer is ready
 	EndFrame()
-	// IsDirty audio buffer is dirty
-	IsDirty() bool
 }
 
 // Player is the audio buffer player
