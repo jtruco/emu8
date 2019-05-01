@@ -9,6 +9,7 @@ import (
 	"github.com/jtruco/emu8/device/audio"
 	"github.com/jtruco/emu8/device/memory"
 	"github.com/jtruco/emu8/machine"
+	"github.com/jtruco/emu8/machine/spectrum/snapshot"
 )
 
 // -----------------------------------------------------------------------------
@@ -155,7 +156,7 @@ func (spectrum *Spectrum) EndFrame() {}
 // Snapshots : load & save state
 
 // LoadState loads a ZX Spectrum snapshot
-func (spectrum *Spectrum) LoadState(snap *Snapshot) {
+func (spectrum *Spectrum) LoadState(snap *snapshot.Snapshot) {
 	// CPU
 	// FIXME implement Z80 State copy
 	spectrum.cpu.A = snap.A
@@ -204,9 +205,9 @@ func (spectrum *Spectrum) LoadFile(filename string) {
 		return
 	}
 	// currently only SNA format
-	state := LoadSNA(data)
-	if state != nil {
-		spectrum.LoadState(state)
+	snap := snapshot.LoadSNA(data)
+	if snap != nil {
+		spectrum.LoadState(snap)
 	}
 }
 
