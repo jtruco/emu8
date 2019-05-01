@@ -2,7 +2,6 @@ package spectrum
 
 import (
 	"io/ioutil"
-	"log"
 
 	"github.com/jtruco/emu8/cpu"
 	"github.com/jtruco/emu8/cpu/z80"
@@ -214,7 +213,6 @@ func (spectrum *Spectrum) LoadFile(filename string) {
 func (spectrum *Spectrum) loadROM() {
 	data, err := ioutil.ReadFile("48.rom")
 	if err != nil {
-		log.Println(err.Error())
 		return
 	}
 	// spectrum.memory.Load(0, data[0:0x4000])
