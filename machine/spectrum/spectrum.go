@@ -1,8 +1,6 @@
 package spectrum
 
 import (
-	"io/ioutil"
-
 	"github.com/jtruco/emu8/cpu"
 	"github.com/jtruco/emu8/cpu/z80"
 	"github.com/jtruco/emu8/device"
@@ -18,10 +16,10 @@ import (
 
 // Default ZX Spectrum constants
 const (
-	// fps          = 50.08 // 50.08 Hz
-	fps            = 50    // 50 Hz
+	fps            = 50    // 50 Hz (50.08 Hz)
 	frameTStates   = 69888 // TStates per frame
 	audioFrecuency = 48000 // 48 KHz
+	romName        = "zxspectrum.rom"
 )
 
 // Spectrum the ZX Spectrum
@@ -100,7 +98,7 @@ func (spectrum *Spectrum) Init() {
 	// initialize components
 	spectrum.components.Init()
 	// initialize spectrum
-	spectrum.loadROM()
+	spectrum.initSpectrum()
 }
 
 // Reset resets the machine
@@ -108,7 +106,17 @@ func (spectrum *Spectrum) Reset() {
 	// reset components
 	spectrum.components.Reset()
 	// resets spectrum
-	spectrum.loadROM()
+	spectrum.initSpectrum()
+}
+
+func (spectrum *Spectrum) initSpectrum() {
+	// load ROM at bank 0
+	data, err := spectrum.controller.Files().LoadROM(romName)
+	if err != nil {
+		return
+	}
+	rom := spectrum.memory.GetBankMap(0).Bank()
+	rom.Load(0, data[0:0x4000])
 }
 
 // Machine properties
@@ -155,6 +163,20 @@ func (spectrum *Spectrum) EndFrame() {}
 
 // Snapshots : load & save state
 
+// LoadFile loads a file into machine
+func (spectrum *Spectrum) LoadFile(name string) {
+	// currently only snapshots files
+	data, err := spectrum.controller.Files().LoadSnapshot(name)
+	if err != nil {
+		return
+	}
+	// only SNA format supported
+	snap := snapshot.LoadSNA(data)
+	if snap != nil {
+		spectrum.LoadState(snap)
+	}
+}
+
 // LoadState loads a ZX Spectrum snapshot
 func (spectrum *Spectrum) LoadState(snap *snapshot.Snapshot) {
 	// CPU
@@ -193,32 +215,3 @@ func (spectrum *Spectrum) LoadState(snap *snapshot.Snapshot) {
 	// Memory
 	spectrum.memory.Load(0x4000, snap.Memory[0:0xc000])
 }
-
-// -----------------------------------------------------------------------------
-// TODO : ROM & FILES
-// -----------------------------------------------------------------------------
-
-// LoadFile loads a snapshot file
-func (spectrum *Spectrum) LoadFile(filename string) {
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return
-	}
-	// currently only SNA format
-	snap := snapshot.LoadSNA(data)
-	if snap != nil {
-		spectrum.LoadState(snap)
-	}
-}
-
-func (spectrum *Spectrum) loadROM() {
-	data, err := ioutil.ReadFile("48.rom")
-	if err != nil {
-		return
-	}
-	// spectrum.memory.Load(0, data[0:0x4000])
-	rom := spectrum.memory.GetBankMap(0).Bank()
-	rom.Load(0, data[0:0x4000])
-}
-
-// -----------------------------------------------------------------------------

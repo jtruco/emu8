@@ -5,6 +5,7 @@ import (
 	"github.com/jtruco/emu8/cpu"
 	"github.com/jtruco/emu8/device"
 	"github.com/jtruco/emu8/device/audio"
+	"github.com/jtruco/emu8/device/io/file"
 	"github.com/jtruco/emu8/device/io/keyboard"
 	"github.com/jtruco/emu8/device/video"
 )
@@ -24,18 +25,19 @@ type Machine interface {
 	Components() *device.Components
 	// SetController connects the machine to the controller
 	SetController(Controller)
-	// LoadFile
-	LoadFile(filename string)
 	// BeginFrame begin emulation frame tasks
 	BeginFrame()
 	// Emulate one machine step
 	Emulate()
 	// EndFrame end emulation frame tasks
 	EndFrame()
+	// LoadFile loads a file into machine
+	LoadFile(name string)
 }
 
 // Controller is the machine controller
 type Controller interface {
+	Files() *file.Manager
 	Keyboard() *keyboard.Controller
 	Video() *video.Controller
 	Audio() *audio.Controller

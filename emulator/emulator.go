@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jtruco/emu8/device/audio"
+	"github.com/jtruco/emu8/device/io/file"
 	"github.com/jtruco/emu8/device/io/keyboard"
 	"github.com/jtruco/emu8/device/video"
 	"github.com/jtruco/emu8/machine"
@@ -18,6 +19,7 @@ import (
 // Emulator is the emulator main controller
 type Emulator struct {
 	machine  machine.Machine      // The emulated machine
+	files    *file.Manager        // The filesystem manager
 	video    *video.Controller    // The video controller
 	audio    *audio.Controller    // The audio controller
 	keyboard *keyboard.Controller // The keyboard controlller
@@ -29,6 +31,7 @@ type Emulator struct {
 func New(machine machine.Machine) *Emulator {
 	emulator := &Emulator{}
 	emulator.machine = machine
+	emulator.files = file.DefaultManager()
 	emulator.video = video.NewController()
 	emulator.audio = audio.NewController()
 	emulator.keyboard = keyboard.NewController()
@@ -41,6 +44,11 @@ func New(machine machine.Machine) *Emulator {
 // Machine gets the emulated machine
 func (emulator *Emulator) Machine() machine.Machine {
 	return emulator.machine
+}
+
+// Files the filesystem manager
+func (emulator *Emulator) Files() *file.Manager {
+	return emulator.files
 }
 
 // Video the video controller
@@ -82,7 +90,6 @@ func (emulator *Emulator) Stop() {
 	if emulator.running {
 		emulator.running = false
 		emulator.wg.Wait()
-		// time.Sleep(100 * time.Millisecond) // FIXME improve wait group within conrollers
 	}
 }
 
