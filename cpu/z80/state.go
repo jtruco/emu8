@@ -94,3 +94,39 @@ func (state *State) initControl() {
 	state.ActiveEI = false
 	state.ReadIFF2 = false
 }
+
+// Copy copies state values
+func (state *State) Copy(value *State) {
+	state.A = value.A
+	state.F = value.F
+	state.B = value.B
+	state.C = value.C
+	state.D = value.D
+	state.E = value.E
+	state.H = value.H
+	state.L = value.L
+	state.Ax = value.Ax
+	state.Fx = value.Fx
+	state.Bx = value.Bx
+	state.Cx = value.Cx
+	state.Dx = value.Dx
+	state.Ex = value.Ex
+	state.Hx = value.Hx
+	state.Lx = value.Lx
+	state.IXl = value.IXl
+	state.IXh = value.IXh
+	state.IYl = value.IYl
+	state.IYh = value.IYh
+	state.I = value.I
+	state.R = value.R
+	state.W = value.W
+	state.Z = value.Z
+	state.SP = value.SP
+	state.PC = value.PC
+	state.Halted = value.Halted
+	state.IM = value.IM
+	state.IFF1 = value.IFF1
+	state.IFF2 = value.IFF2
+	state.ActiveEI = value.ActiveEI
+	state.ReadIFF2 = value.ActiveEI
+}

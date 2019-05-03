@@ -180,34 +180,7 @@ func (spectrum *Spectrum) LoadFile(name string) {
 // LoadState loads a ZX Spectrum snapshot
 func (spectrum *Spectrum) LoadState(snap *snapshot.Snapshot) {
 	// CPU
-	// FIXME implement Z80 State copy
-	spectrum.cpu.A = snap.A
-	spectrum.cpu.F = snap.F
-	spectrum.cpu.B = snap.B
-	spectrum.cpu.C = snap.C
-	spectrum.cpu.D = snap.D
-	spectrum.cpu.E = snap.E
-	spectrum.cpu.H = snap.H
-	spectrum.cpu.L = snap.L
-	spectrum.cpu.Ax = snap.Ax
-	spectrum.cpu.Fx = snap.Fx
-	spectrum.cpu.Bx = snap.Bx
-	spectrum.cpu.Cx = snap.Cx
-	spectrum.cpu.Dx = snap.Dx
-	spectrum.cpu.Ex = snap.Ex
-	spectrum.cpu.Hx = snap.Hx
-	spectrum.cpu.Lx = snap.Lx
-	spectrum.cpu.IXl = snap.IXl
-	spectrum.cpu.IXh = snap.IXh
-	spectrum.cpu.IYl = snap.IYl
-	spectrum.cpu.IYh = snap.IYh
-	spectrum.cpu.I = snap.I
-	spectrum.cpu.IFF1 = snap.IFF1
-	spectrum.cpu.IFF2 = snap.IFF2
-	spectrum.cpu.IM = snap.IM
-	spectrum.cpu.R = snap.R
-	spectrum.cpu.PC = snap.PC
-	spectrum.cpu.SP = snap.SP
+	spectrum.cpu.State.Copy(&snap.State)
 	// TStates
 	spectrum.clock.SetTstates(int(snap.Tstates))
 	// Border
