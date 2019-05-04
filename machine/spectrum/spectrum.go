@@ -6,6 +6,7 @@ import (
 	"github.com/jtruco/emu8/device"
 	"github.com/jtruco/emu8/device/audio"
 	"github.com/jtruco/emu8/device/memory"
+	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/machine"
 	"github.com/jtruco/emu8/machine/spectrum/snapshot"
 )
@@ -24,16 +25,16 @@ const (
 
 // Spectrum the ZX Spectrum
 type Spectrum struct {
-	config     machine.Config     // Machine information
-	controller machine.Controller // The machine controller
-	components *device.Components // Machine device components
-	clock      *cpu.ClockDevice   // The system clock
-	cpu        *z80.Z80           // The Zilog Z80A CPU
-	memory     *memory.Memory     // The machine memory
-	ula        *ULA               // The spectrum ULA
-	tv         *TVVideo           // The spectrum TV video output
-	beeper     *audio.Beeper      // The spectrum Beeper
-	keyboard   *Keyboard          // The spectrum Keyboard
+	config     machine.Config        // Machine information
+	controller controller.Controller // The emulator controller
+	components *device.Components    // Machine device components
+	clock      *cpu.ClockDevice      // The system clock
+	cpu        *z80.Z80              // The Zilog Z80A CPU
+	memory     *memory.Memory        // The machine memory
+	ula        *ULA                  // The spectrum ULA
+	tv         *TVVideo              // The spectrum TV video output
+	beeper     *audio.Beeper         // The spectrum Beeper
+	keyboard   *Keyboard             // The spectrum Keyboard
 }
 
 // NewSpectrum returns a new ZX Spectrum
@@ -111,7 +112,7 @@ func (spectrum *Spectrum) Reset() {
 
 func (spectrum *Spectrum) initSpectrum() {
 	// load ROM at bank 0
-	data, err := spectrum.controller.Files().LoadROM(romName)
+	data, err := spectrum.controller.FileManager().LoadROM(romName)
 	if err != nil {
 		return
 	}
@@ -137,7 +138,7 @@ func (spectrum *Spectrum) Components() *device.Components {
 }
 
 // SetController connect controllers & components
-func (spectrum *Spectrum) SetController(controller machine.Controller) {
+func (spectrum *Spectrum) SetController(controller controller.Controller) {
 	spectrum.controller = controller
 	controller.Video().SetVideo(spectrum.tv)
 	controller.Audio().SetAudio(spectrum.beeper)
@@ -166,7 +167,7 @@ func (spectrum *Spectrum) EndFrame() {}
 // LoadFile loads a file into machine
 func (spectrum *Spectrum) LoadFile(name string) {
 	// currently only snapshots files
-	data, err := spectrum.controller.Files().LoadSnapshot(name)
+	data, err := spectrum.controller.FileManager().LoadSnapshot(name)
 	if err != nil {
 		return
 	}

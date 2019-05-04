@@ -4,10 +4,7 @@ package machine
 import (
 	"github.com/jtruco/emu8/cpu"
 	"github.com/jtruco/emu8/device"
-	"github.com/jtruco/emu8/device/audio"
-	"github.com/jtruco/emu8/device/io/file"
-	"github.com/jtruco/emu8/device/io/keyboard"
-	"github.com/jtruco/emu8/device/video"
+	"github.com/jtruco/emu8/emulator/controller"
 )
 
 // -----------------------------------------------------------------------------
@@ -24,7 +21,7 @@ type Machine interface {
 	// Components the machine components
 	Components() *device.Components
 	// SetController connects the machine to the controller
-	SetController(Controller)
+	SetController(controller.Controller)
 	// BeginFrame begin emulation frame tasks
 	BeginFrame()
 	// Emulate one machine step
@@ -33,14 +30,6 @@ type Machine interface {
 	EndFrame()
 	// LoadFile loads a file into machine
 	LoadFile(name string)
-}
-
-// Controller is the machine controller
-type Controller interface {
-	Files() *file.Manager
-	Keyboard() *keyboard.Controller
-	Video() *video.Controller
-	Audio() *audio.Controller
 }
 
 // -----------------------------------------------------------------------------
