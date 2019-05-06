@@ -1,3 +1,4 @@
+// Package spectrum implements de ZX Spectrum machine
 package spectrum
 
 import (
@@ -112,7 +113,7 @@ func (spectrum *Spectrum) Reset() {
 
 func (spectrum *Spectrum) initSpectrum() {
 	// load ROM at bank 0
-	data, err := spectrum.controller.FileManager().LoadROM(romName)
+	data, err := spectrum.controller.File().LoadROM(romName)
 	if err != nil {
 		return
 	}
@@ -167,7 +168,7 @@ func (spectrum *Spectrum) EndFrame() {}
 // LoadFile loads a file into machine
 func (spectrum *Spectrum) LoadFile(name string) {
 	// currently only snapshots files
-	data, err := spectrum.controller.FileManager().LoadSnapshot(name)
+	data, err := spectrum.controller.File().LoadSnapshot(name)
 	if err != nil {
 		return
 	}

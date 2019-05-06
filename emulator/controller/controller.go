@@ -1,15 +1,17 @@
 package controller
 
-import (
-	"github.com/jtruco/emu8/device/audio"
-	"github.com/jtruco/emu8/device/io/keyboard"
-	"github.com/jtruco/emu8/device/video"
-)
+// -----------------------------------------------------------------------------
+// Emulator Controller
+// -----------------------------------------------------------------------------
 
-// Controller is the emulator controller
+// Controller the controller interface
 type Controller interface {
-	FileManager() *FileManager
-	Keyboard() *keyboard.Controller
-	Video() *video.Controller
-	Audio() *audio.Controller
+	// File returns the file manager
+	File() *FileManager
+	// Video returns the video controller
+	Video() *VideoController
+	// Audio returns the audio controller
+	Audio() *AudioController
+	// Keyboard returns the keyboard controller
+	Keyboard() *KeyboardController
 }

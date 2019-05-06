@@ -5,9 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jtruco/emu8/device/audio"
-	"github.com/jtruco/emu8/device/io/keyboard"
-	"github.com/jtruco/emu8/device/video"
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/machine"
 )
@@ -18,23 +15,23 @@ import (
 
 // Emulator is the emulator main controller
 type Emulator struct {
-	machine     machine.Machine         // The emulated machine
-	filemanager *controller.FileManager // The filesystem manager
-	video       *video.Controller       // The video controller
-	audio       *audio.Controller       // The audio controller
-	keyboard    *keyboard.Controller    // The keyboard controlller
-	running     bool
-	wg          sync.WaitGroup
+	machine  machine.Machine                // The emulated machine
+	file     *controller.FileManager        // The files manager
+	video    *controller.VideoController    // The video controller
+	audio    *controller.AudioController    // The audio controller
+	keyboard *controller.KeyboardController // The keyboard controlller
+	running  bool
+	wg       sync.WaitGroup
 }
 
 // New creates a machine emulator
 func New(machine machine.Machine) *Emulator {
 	emulator := &Emulator{}
 	emulator.machine = machine
-	emulator.filemanager = controller.DefaultFileManager()
-	emulator.video = video.NewController()
-	emulator.audio = audio.NewController()
-	emulator.keyboard = keyboard.NewController()
+	emulator.file = controller.DefaultFileManager()
+	emulator.video = controller.NewVideoController()
+	emulator.audio = controller.NewAudioController()
+	emulator.keyboard = controller.NewKeyboardController()
 	emulator.machine.SetController(emulator)
 	return emulator
 }
@@ -47,22 +44,22 @@ func (emulator *Emulator) Machine() machine.Machine {
 }
 
 // FileManager the filesystem manager
-func (emulator *Emulator) FileManager() *controller.FileManager {
-	return emulator.filemanager
+func (emulator *Emulator) File() *controller.FileManager {
+	return emulator.file
 }
 
 // Video the video controller
-func (emulator *Emulator) Video() *video.Controller {
+func (emulator *Emulator) Video() *controller.VideoController {
 	return emulator.video
 }
 
 // Audio the audio controller
-func (emulator *Emulator) Audio() *audio.Controller {
+func (emulator *Emulator) Audio() *controller.AudioController {
 	return emulator.audio
 }
 
 // Keyboard the keyboard controller
-func (emulator *Emulator) Keyboard() *keyboard.Controller {
+func (emulator *Emulator) Keyboard() *controller.KeyboardController {
 	return emulator.keyboard
 }
 
