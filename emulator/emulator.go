@@ -15,52 +15,31 @@ import (
 
 // Emulator is the emulator main controller
 type Emulator struct {
-	machine  machine.Machine                // The emulated machine
-	file     *controller.FileManager        // The files manager
-	video    *controller.VideoController    // The video controller
-	audio    *controller.AudioController    // The audio controller
-	keyboard *controller.KeyboardController // The keyboard controlller
-	running  bool
-	wg       sync.WaitGroup
+	machine    machine.Machine       // The hosted machine
+	controller controller.Controller // The emulator controller
+	running    bool                  // Indicates emulation is running
+	wg         sync.WaitGroup        // Sync control
 }
 
 // New creates a machine emulator
 func New(machine machine.Machine) *Emulator {
 	emulator := &Emulator{}
 	emulator.machine = machine
-	emulator.file = controller.DefaultFileManager()
-	emulator.video = controller.NewVideoController()
-	emulator.audio = controller.NewAudioController()
-	emulator.keyboard = controller.NewKeyboardController()
-	emulator.machine.SetController(emulator)
+	emulator.controller = controller.New()
+	emulator.machine.SetController(emulator.controller)
 	return emulator
 }
 
 // Machine controller
 
-// Machine gets the emulated machine
+// Controller gets the emulator controller
+func (emulator *Emulator) Controller() controller.Controller {
+	return emulator.controller
+}
+
+// Machine gets the hosted machine
 func (emulator *Emulator) Machine() machine.Machine {
 	return emulator.machine
-}
-
-// FileManager the filesystem manager
-func (emulator *Emulator) File() *controller.FileManager {
-	return emulator.file
-}
-
-// Video the video controller
-func (emulator *Emulator) Video() *controller.VideoController {
-	return emulator.video
-}
-
-// Audio the audio controller
-func (emulator *Emulator) Audio() *controller.AudioController {
-	return emulator.audio
-}
-
-// Keyboard the keyboard controller
-func (emulator *Emulator) Keyboard() *controller.KeyboardController {
-	return emulator.keyboard
 }
 
 // Machine emulation control
@@ -140,6 +119,6 @@ func (emulator *Emulator) flushInput() {
 // refreshUI refresh UI asynchronusly
 func (emulator *Emulator) refreshUI() {
 	// Video & Audio refresh
-	emulator.video.Refresh()
-	emulator.audio.Flush()
+	emulator.controller.Video().Refresh()
+	emulator.controller.Audio().Flush()
 }
