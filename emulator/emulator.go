@@ -119,6 +119,6 @@ func (emulator *Emulator) flushInput() {
 // refreshUI refresh UI asynchronusly
 func (emulator *Emulator) refreshUI() {
 	// Video & Audio refresh
-	emulator.controller.Video().Refresh()
 	emulator.controller.Audio().Flush()
+	emulator.controller.Video().Refresh()
 }
