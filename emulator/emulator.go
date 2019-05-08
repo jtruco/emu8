@@ -113,7 +113,8 @@ func (emulator *Emulator) emulateFrame() {
 
 // flushInput flushes input events
 func (emulator *Emulator) flushInput() {
-	// FIXME : emulator.keyboard.Flush()
+	// Keyboard events
+	emulator.controller.Keyboard().Flush()
 }
 
 // refreshUI refresh UI asynchronusly

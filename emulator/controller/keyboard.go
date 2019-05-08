@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"sync"
+
 	"github.com/jtruco/emu8/device"
 	"github.com/jtruco/emu8/device/io/keyboard"
 )
@@ -11,13 +13,22 @@ import (
 
 // KeyboardController is the emulator keyboard controller
 type KeyboardController struct {
-	receivers map[keyboard.Receiver]keyboard.KeyMap
+	receivers  map[keyboard.Receiver]keyboard.KeyMap // Keyboard receiver devices
+	eventQueue []keyEvent                            // Keyboard event queue
+	mtx        sync.Mutex                            // Sync
+}
+
+// Keyboard key event
+type keyEvent struct {
+	Keycode   keyboard.KeyCode
+	EventType int
 }
 
 // NewKeyboardController creates a new controller with an empty keymap
 func NewKeyboardController() *KeyboardController {
 	controller := KeyboardController{}
 	controller.receivers = make(map[keyboard.Receiver]keyboard.KeyMap)
+	controller.eventQueue = make([]keyEvent, 10)
 	return &controller
 }
 
@@ -47,16 +58,36 @@ func (controller *KeyboardController) KeyUp(keycode keyboard.KeyCode) {
 
 // KeyEvent emits a keyboard event
 func (controller *KeyboardController) KeyEvent(keycode keyboard.KeyCode, eventType int) {
+	controller.mtx.Lock()
+	defer controller.mtx.Unlock()
+
+	event := keyEvent{keycode, eventType}
+	controller.eventQueue = append(controller.eventQueue, event)
+}
+
+// Flush flushes keyboard event queue
+func (controller *KeyboardController) Flush() {
+	controller.mtx.Lock()
+	defer controller.mtx.Unlock()
+
+	for _, e := range controller.eventQueue {
+		controller.emitEvent(e)
+	}
+	controller.eventQueue = controller.eventQueue[:0]
+}
+
+// emitEvent emits a keyboard event
+func (controller *KeyboardController) emitEvent(keyEvent keyEvent) {
 	// For every receiver checks if keycode is mapped
 	for receiver, keymap := range controller.receivers {
-		keys, ok := keymap[keycode]
+		keys, ok := keymap[keyEvent.Keycode]
 		if ok {
 			// For each key emit event to receiver
 			for _, key := range keys {
 				keyevent := keyboard.KeyEvent{
-					Event:   device.Event{Type: eventType, Order: device.OrderAfter},
+					Event:   device.Event{Type: keyEvent.EventType, Order: device.OrderAfter},
 					Key:     key,
-					Pressed: eventType == keyboard.KeyDown}
+					Pressed: keyEvent.EventType == keyboard.KeyDown}
 				receiver.ProcessKeyEvent(&keyevent)
 			}
 		}
