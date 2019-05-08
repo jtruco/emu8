@@ -28,7 +28,7 @@ type keyEvent struct {
 func NewKeyboardController() *KeyboardController {
 	controller := KeyboardController{}
 	controller.receivers = make(map[keyboard.Receiver]keyboard.KeyMap)
-	controller.eventQueue = make([]keyEvent, 10)
+	controller.eventQueue = make([]keyEvent, 0, 5)
 	return &controller
 }
 
