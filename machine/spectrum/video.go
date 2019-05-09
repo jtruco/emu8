@@ -11,21 +11,23 @@ import (
 
 // ZX Spectrum video constans
 const (
-	paperWidth   = 256
-	paperHeight  = 192
-	borderLeft   = 48
-	borderRight  = 48
-	borderTop    = 64
-	borderBottom = 56
-	borderWidth  = 32
-	borderHeight = 24
-	screenWidth  = paperWidth + 2*borderWidth
-	screenHeight = paperHeight + 2*borderHeight
-	dataSize     = 0x1800              // 6 Kbytes
-	attrSize     = 0x0300              // 768 bytes
-	videoSize    = dataSize + attrSize // 6912 bytes
-	videoAddr    = 0x0                 // bank at 0x4000
-	attrAddr     = videoAddr + dataSize
+	paperWidth    = 256
+	paperHeight   = 192
+	borderLeft    = 48
+	borderRight   = 48
+	borderTop     = 64
+	borderBottom  = 56
+	screenWidth   = paperWidth + borderLeft + borderRight
+	screenHeight  = paperHeight + borderTop + borderBottom
+	displayLeft   = 16
+	displayTop    = 40
+	displayWidth  = paperWidth + 2*(borderLeft-displayLeft)
+	displayHeight = paperHeight + 2*(borderTop-displayTop)
+	dataSize      = 0x1800              // 6 Kbytes
+	attrSize      = 0x0300              // 768 bytes
+	videoSize     = dataSize + attrSize // 6912 bytes
+	videoAddr     = 0x0                 // bank at 0x4000
+	attrAddr      = videoAddr + dataSize
 )
 
 // ZX Spetrum 16/48k RGB colour palette
@@ -40,11 +42,18 @@ var zxPalette = []int32{
 // ZX Spectrum TVVideo
 // -----------------------------------------------------------------------------
 
+// tvEvent
+type tvEvent struct {
+	TState int  // TState
+	Border byte // Border colour index
+}
+
 // TVVideo is the spectrum RF video device
 type TVVideo struct {
 	screen  *video.Screen // The video screen
 	bank    *memory.Bank  // The spectrum video memory bank
 	palette []int32       // The video palette
+	events  []tvEvent     // The video event queue
 	border  byte          // The border current colour index
 	flash   bool          // Flash state
 	frames  int           // Frame count
@@ -55,12 +64,17 @@ func NewTVVideo(bank *memory.Bank) *TVVideo {
 	tv := &TVVideo{}
 	tv.palette = zxPalette
 	tv.screen = video.NewScreen(screenWidth, screenHeight, tv.palette)
+	tv.screen.SetDisplay(video.Rect{X: displayLeft, Y: displayTop, W: displayWidth, H: displayHeight})
 	tv.bank = bank
+	tv.events = make([]tvEvent, 0, 10)
 	return tv
 }
 
 // SetBorder sets de current border color
-func (tv *TVVideo) SetBorder(colour byte) { tv.border = colour }
+func (tv *TVVideo) SetBorder(tstate int, colour byte) {
+	tv.border = colour
+	tv.events = append(tv.events, tvEvent{tstate, colour})
+}
 
 // Device
 
@@ -81,10 +95,19 @@ func (tv *TVVideo) EndFrame() {
 	tv.frames++
 	tv.flash = (tv.frames & 0x10) == 0
 	tv.paintScreen()
+	tv.paintBorder()
+	// tv.emulateBorder()
+	tv.events = tv.events[:0]
 }
 
 // Screen the video screen
 func (tv *TVVideo) Screen() *video.Screen { return tv.screen }
+
+// Screen: accurate emulation
+
+func (tv *TVVideo) emulateBorder() {
+	// TODO
+}
 
 // Screen: simple and fast emulation
 
@@ -92,8 +115,6 @@ func (tv *TVVideo) Screen() *video.Screen { return tv.screen }
 func (tv *TVVideo) paintScreen() {
 	videodata := tv.bank.Data()
 	flash := tv.flash
-
-	// Paint paper
 
 	// 3 banks, of 8 rows, of 8 lines, of 32 cols
 	baddr := 0
@@ -118,25 +139,27 @@ func (tv *TVVideo) paintScreen() {
 		baddr += 0x800 // 2Kbytes
 	}
 
-	// paint border
+}
 
+// paintBorder is a simple border emulation
+func (tv *TVVideo) paintBorder() {
 	// Border Top and Bottom and Paper
 	border := tv.palette[tv.border]
-	for y := 0; y < borderHeight; y++ {
+	for y := 0; y < borderTop; y++ {
 		for x := 0; x < screenWidth; x++ {
 			tv.screen.SetPixel(x, y, border)
 		}
 	}
-	for y := borderHeight + paperHeight; y < screenHeight; y++ {
+	for y := borderTop + paperHeight; y < screenHeight; y++ {
 		for x := 0; x < screenWidth; x++ {
 			tv.screen.SetPixel(x, y, border)
 		}
 	}
-	for y := borderHeight; y < borderHeight+paperHeight; y++ {
-		for x := 0; x < borderWidth; x++ {
+	for y := borderTop; y < borderTop+paperHeight; y++ {
+		for x := 0; x < borderLeft; x++ {
 			tv.screen.SetPixel(x, y, border)
 		}
-		for x := borderWidth + paperWidth; x < screenWidth; x++ {
+		for x := borderLeft + paperWidth; x < screenWidth; x++ {
 			tv.screen.SetPixel(x, y, border)
 		}
 	}
@@ -157,8 +180,8 @@ func (tv *TVVideo) paintByte(y, c int, data, attr byte, flash bool) {
 	if attr&0x80 != 0 && flash {
 		ink, paper = paper, ink
 	}
-	sx := borderWidth + (c << 3)
-	y += borderHeight
+	sx := borderLeft + (c << 3)
+	y += borderTop
 	for x := sx; x < sx+8; x++ {
 		set := (data & mask) != 0
 		if set {
