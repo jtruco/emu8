@@ -186,7 +186,7 @@ func (spectrum *Spectrum) LoadState(snap *snapshot.Snapshot) {
 	// TStates
 	spectrum.clock.SetTstates(snap.Tstates)
 	// Border
-	spectrum.tv.SetBorder(snap.Tstates, snap.Border)
+	spectrum.tv.SetBorder(snap.Border)
 	// Memory
 	spectrum.memory.Load(0x4000, snap.Memory[0:0xc000])
 }

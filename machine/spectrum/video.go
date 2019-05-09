@@ -15,12 +15,12 @@ const (
 	paperHeight   = 192
 	borderLeft    = 48
 	borderRight   = 48
-	borderTop     = 64
+	borderTop     = 48
 	borderBottom  = 56
 	screenWidth   = paperWidth + borderLeft + borderRight
 	screenHeight  = paperHeight + borderTop + borderBottom
 	displayLeft   = 16
-	displayTop    = 40
+	displayTop    = 24
 	displayWidth  = paperWidth + 2*(borderLeft-displayLeft)
 	displayHeight = paperHeight + 2*(borderTop-displayTop)
 	dataSize      = 0x1800              // 6 Kbytes
@@ -42,18 +42,11 @@ var zxPalette = []int32{
 // ZX Spectrum TVVideo
 // -----------------------------------------------------------------------------
 
-// tvEvent
-type tvEvent struct {
-	TState int  // TState
-	Border byte // Border colour index
-}
-
 // TVVideo is the spectrum RF video device
 type TVVideo struct {
 	screen  *video.Screen // The video screen
 	bank    *memory.Bank  // The spectrum video memory bank
 	palette []int32       // The video palette
-	events  []tvEvent     // The video event queue
 	border  byte          // The border current colour index
 	flash   bool          // Flash state
 	frames  int           // Frame count
@@ -66,14 +59,12 @@ func NewTVVideo(bank *memory.Bank) *TVVideo {
 	tv.screen = video.NewScreen(screenWidth, screenHeight, tv.palette)
 	tv.screen.SetDisplay(video.Rect{X: displayLeft, Y: displayTop, W: displayWidth, H: displayHeight})
 	tv.bank = bank
-	tv.events = make([]tvEvent, 0, 10)
 	return tv
 }
 
 // SetBorder sets de current border color
-func (tv *TVVideo) SetBorder(tstate int, colour byte) {
+func (tv *TVVideo) SetBorder(colour byte) {
 	tv.border = colour
-	tv.events = append(tv.events, tvEvent{tstate, colour})
 }
 
 // Device
@@ -96,18 +87,12 @@ func (tv *TVVideo) EndFrame() {
 	tv.flash = (tv.frames & 0x10) == 0
 	tv.paintScreen()
 	tv.paintBorder()
-	// tv.emulateBorder()
-	tv.events = tv.events[:0]
 }
 
 // Screen the video screen
 func (tv *TVVideo) Screen() *video.Screen { return tv.screen }
 
 // Screen: accurate emulation
-
-func (tv *TVVideo) emulateBorder() {
-	// TODO
-}
 
 // Screen: simple and fast emulation
 
