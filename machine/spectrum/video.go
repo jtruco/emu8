@@ -1,6 +1,8 @@
 package spectrum
 
 import (
+	"github.com/jtruco/emu8/cpu"
+	"github.com/jtruco/emu8/device"
 	"github.com/jtruco/emu8/device/memory"
 	"github.com/jtruco/emu8/device/video"
 )
@@ -9,25 +11,29 @@ import (
 // Video constants & vars
 // -----------------------------------------------------------------------------
 
-// ZX Spectrum video constans
+// Video screen constants
 const (
-	paperWidth    = 256
-	paperHeight   = 192
-	borderLeft    = 48
-	borderRight   = 48
-	borderTop     = 48
-	borderBottom  = 56
-	screenWidth   = paperWidth + borderLeft + borderRight
-	screenHeight  = paperHeight + borderTop + borderBottom
-	displayLeft   = 16
-	displayTop    = 24
-	displayWidth  = paperWidth + 2*(borderLeft-displayLeft)
-	displayHeight = paperHeight + 2*(borderTop-displayTop)
-	dataSize      = 0x1800              // 6 Kbytes
-	attrSize      = 0x0300              // 768 bytes
-	videoSize     = dataSize + attrSize // 6912 bytes
-	videoAddr     = 0x0                 // bank at 0x4000
-	attrAddr      = videoAddr + dataSize
+	tvScreenWidth   = 256
+	tvScreenHeight  = 192
+	tvBorderLeft    = 48
+	tvBorderRight   = 48
+	tvBorderTop     = 64
+	tvBorderBottom  = 56
+	tvTotalWidth    = tvScreenWidth + tvBorderLeft + tvBorderRight
+	tvTotalHeight   = tvScreenHeight + tvBorderTop + tvBorderBottom
+	tvDisplayLeft   = 16 // Border : 32
+	tvDisplayTop    = 40 // Border : 24
+	tvDisplayWidth  = tvScreenWidth + 2*(tvBorderLeft-tvDisplayLeft)
+	tvDisplayHeight = tvScreenHeight + 2*(tvBorderTop-tvDisplayTop)
+)
+
+// Video memory constants
+const (
+	tvDataSize  = 0x1800                   // 6 Kbytes (6144)
+	tvAttrSize  = 0x0300                   // 768 bytes
+	tvVideoSize = tvDataSize + tvAttrSize  // 6912 bytes
+	tvVideoAddr = 0x0                      // bank at 0x4000
+	tvAttrAddr  = tvVideoAddr + tvDataSize // 0x1800
 )
 
 // ZX Spetrum 16/48k RGB colour palette
@@ -44,26 +50,43 @@ var zxPalette = []int32{
 
 // TVVideo is the spectrum RF video device
 type TVVideo struct {
-	screen  *video.Screen // The video screen
-	bank    *memory.Bank  // The spectrum video memory bank
-	palette []int32       // The video palette
-	border  byte          // The border current colour index
-	flash   bool          // Flash state
-	frames  int           // Frame count
+	screen   *video.Screen // The video screen
+	bank     *memory.Bank  // The spectrum video memory bank
+	clock    cpu.Clock     // The CPU clock
+	tstate   int           // Current videoframe tstate
+	palette  []int32       // The video palette
+	border   byte          // The border current colour index
+	flash    bool          // Flash state
+	frames   int           // Frame count
+	accurate bool          // Accurate scanlines simulation
 }
 
 // NewTVVideo creates the video device
-func NewTVVideo(bank *memory.Bank) *TVVideo {
+func NewTVVideo(spectrum *Spectrum) *TVVideo {
 	tv := &TVVideo{}
 	tv.palette = zxPalette
-	tv.screen = video.NewScreen(screenWidth, screenHeight, tv.palette)
-	tv.screen.SetDisplay(video.Rect{X: displayLeft, Y: displayTop, W: displayWidth, H: displayHeight})
-	tv.bank = bank
+	tv.screen = video.NewScreen(tvTotalWidth, tvTotalHeight, tv.palette)
+	tv.screen.SetDisplay(video.Rect{X: tvDisplayLeft, Y: tvDisplayTop, W: tvDisplayWidth, H: tvDisplayHeight})
+	tv.bank = spectrum.memory.GetBankMap(1).Bank()
+	tv.bank.AddBusListener(tv)
+	tv.clock = spectrum.clock
 	return tv
+}
+
+// ProcessBusEvent processes the bus event
+func (tv *TVVideo) ProcessBusEvent(event *device.BusEvent) {
+	if tv.accurate && event.Address < tvVideoSize {
+		if event.Type == device.EventBusWrite && event.Order == device.OrderBefore {
+			tv.DoScanlines()
+		}
+	}
 }
 
 // SetBorder sets de current border color
 func (tv *TVVideo) SetBorder(colour byte) {
+	if tv.accurate {
+		tv.DoScanlines()
+	}
 	tv.border = colour
 }
 
@@ -83,22 +106,25 @@ func (tv *TVVideo) Reset() {
 
 // EndFrame updates screen video frame
 func (tv *TVVideo) EndFrame() {
+	if tv.accurate {
+		tv.DoScanlines()
+		tv.tstate = 0
+	} else {
+		tv.paintScreen()
+		tv.paintBorder()
+	}
 	tv.frames++
 	tv.flash = (tv.frames & 0x10) == 0
-	tv.paintScreen()
-	tv.paintBorder()
 }
 
 // Screen the video screen
 func (tv *TVVideo) Screen() *video.Screen { return tv.screen }
 
-// Screen: accurate emulation
-
 // Screen: simple and fast emulation
 
 // paintScreen is a simple screen emulation
 func (tv *TVVideo) paintScreen() {
-	videodata := tv.bank.Data()
+	screendata := tv.bank.Data()
 	flash := tv.flash
 
 	// 3 banks, of 8 rows, of 8 lines, of 32 cols
@@ -108,11 +134,11 @@ func (tv *TVVideo) paintScreen() {
 		for r := 0; r < 8; r++ {
 			laddr := baddr + r*32
 			for l := 0; l < 8; l++ {
-				caddr := uint16(videoAddr + laddr)
-				aaddr := uint16(attrAddr + (y/8)*32)
+				caddr := tvVideoAddr + laddr
+				aaddr := tvAttrAddr + (y/8)*32
 				for c := 0; c < 32; c++ {
-					data := videodata[caddr]
-					attr := videodata[aaddr]
+					data := screendata[caddr]
+					attr := screendata[aaddr]
 					tv.paintByte(y, c, data, attr, flash)
 					caddr++
 					aaddr++
@@ -130,21 +156,22 @@ func (tv *TVVideo) paintScreen() {
 func (tv *TVVideo) paintBorder() {
 	// Border Top and Bottom and Paper
 	border := tv.palette[tv.border]
-	for y := 0; y < borderTop; y++ {
-		for x := 0; x < screenWidth; x++ {
+	display := tv.screen.Display()
+	for y := display.Y; y < tvBorderTop; y++ {
+		for x := 0; x < tvTotalWidth; x++ {
 			tv.screen.SetPixel(x, y, border)
 		}
 	}
-	for y := borderTop + paperHeight; y < screenHeight; y++ {
-		for x := 0; x < screenWidth; x++ {
+	for y := tvBorderTop + tvScreenHeight; y < tvTotalHeight; y++ {
+		for x := 0; x < tvTotalWidth; x++ {
 			tv.screen.SetPixel(x, y, border)
 		}
 	}
-	for y := borderTop; y < borderTop+paperHeight; y++ {
-		for x := 0; x < borderLeft; x++ {
+	for y := tvBorderTop; y < display.Y+display.H; y++ {
+		for x := 0; x < tvBorderLeft; x++ {
 			tv.screen.SetPixel(x, y, border)
 		}
-		for x := borderLeft + paperWidth; x < screenWidth; x++ {
+		for x := tvBorderLeft + tvScreenWidth; x < tvTotalWidth; x++ {
 			tv.screen.SetPixel(x, y, border)
 		}
 	}
@@ -165,8 +192,8 @@ func (tv *TVVideo) paintByte(y, c int, data, attr byte, flash bool) {
 	if attr&0x80 != 0 && flash {
 		ink, paper = paper, ink
 	}
-	sx := borderLeft + (c << 3)
-	y += borderTop
+	sx := tvBorderLeft + (c << 3)
+	y += tvBorderTop
 	for x := sx; x < sx+8; x++ {
 		set := (data & mask) != 0
 		if set {
@@ -176,4 +203,11 @@ func (tv *TVVideo) paintByte(y, c int, data, attr byte, flash bool) {
 		}
 		mask >>= 1
 	}
+}
+
+// Screen : accurate emulation
+
+// DoScanlines refresh TV scanlines
+func (tv *TVVideo) DoScanlines() {
+	// TODO
 }

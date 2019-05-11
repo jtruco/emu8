@@ -65,6 +65,7 @@ func (ula *ULA) Read(address uint16) byte {
 func (ula *ULA) Write(address uint16, data byte) {
 	if (address & 0x0001) == 0 {
 		// border
+		ula.spectrum.tv.DoScanlines()
 		ula.spectrum.tv.SetBorder(data & 0x07)
 
 		// beeper

@@ -56,7 +56,7 @@ func (spectrum *Spectrum) buildMachine() {
 	spectrum.buildMemory()
 	spectrum.ula = NewULA(spectrum)
 	spectrum.cpu = z80.New(spectrum.clock, spectrum.memory, spectrum.ula)
-	spectrum.tv = NewTVVideo(spectrum.memory.GetBankMap(1).Bank())
+	spectrum.tv = NewTVVideo(spectrum)
 	spectrum.beeper = audio.NewBeeper(audioFrecuency, fps, frameTStates)
 	spectrum.beeper.SetMap(beeperMap)
 	spectrum.keyboard = NewKeyboard()
