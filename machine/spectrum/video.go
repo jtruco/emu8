@@ -250,8 +250,8 @@ func (tv *TVVideo) DoScanlines() {
 				hBorder = true
 				nextX = tvTotalWidth - 1
 			} else {
-				nextX = tvBorderLeft + tvScreenWidth - 1
 				hBorder = vBorder
+				nextX = tvBorderLeft + tvScreenWidth - 1
 			}
 			// paint scanline trace
 			if lastX < nextX {
