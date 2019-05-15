@@ -36,6 +36,18 @@ const (
 	tvAttrAddr  = tvVideoAddr + tvDataSize // 0x1800
 )
 
+// TV video timings constants
+const (
+	tvTstatePixels    = 2
+	tvLineTstates     = 224
+	tvHRetraceTstates = 48
+	tvHBorderTstates  = 24
+	tvFirstScreenLine = tvBorderTop
+	tvLastScreenLine  = tvBorderTop + tvScreenHeight - 1
+	tvBytePixels      = 8
+	tvLineBytes       = tvScreenWidth / tvBytePixels
+)
+
 // ZX Spetrum 16/48k RGB colour palette
 var zxPalette = []int32{
 	/* Bright 0 (black, blue, red, magenta, green, cyan, yellow, white) */
@@ -66,10 +78,11 @@ func NewTVVideo(spectrum *Spectrum) *TVVideo {
 	tv := &TVVideo{}
 	tv.palette = zxPalette
 	tv.screen = video.NewScreen(tvTotalWidth, tvTotalHeight, tv.palette)
-	tv.screen.SetDisplay(video.Rect{X: tvDisplayLeft, Y: tvDisplayTop, W: tvDisplayWidth, H: tvDisplayHeight})
+	tv.screen.SetDisplay(tvDisplayLeft, tvDisplayTop, tvDisplayWidth, tvDisplayHeight)
 	tv.bank = spectrum.memory.GetBankMap(1).Bank()
 	tv.bank.AddBusListener(tv)
 	tv.clock = spectrum.clock
+	tv.accurate = true
 	return tv
 }
 
@@ -124,61 +137,53 @@ func (tv *TVVideo) Screen() *video.Screen { return tv.screen }
 
 // paintScreen is a simple screen emulation
 func (tv *TVVideo) paintScreen() {
-	screendata := tv.bank.Data()
-	flash := tv.flash
-
 	// 3 banks, of 8 rows, of 8 lines, of 32 cols
+	screendata := tv.bank.Data()
 	baddr := 0
-	y := 0
+	y, sy := 0, tvBorderTop
 	for b := 0; b < 3; b++ {
 		for r := 0; r < 8; r++ {
 			laddr := baddr + r*32
 			for l := 0; l < 8; l++ {
 				caddr := tvVideoAddr + laddr
-				aaddr := tvAttrAddr + (y/8)*32
+				aaddr := tvAttrAddr + (y>>3)<<5
+				sx := tvBorderLeft
 				for c := 0; c < 32; c++ {
 					data := screendata[caddr]
 					attr := screendata[aaddr]
-					tv.paintByte(y, c, data, attr, flash)
+					tv.paintByte(sy, sx, data, attr, tv.flash)
 					caddr++
 					aaddr++
+					sx += tvBytePixels
 				}
 				y++
+				sy++
 				laddr += 0x100 // 8 * 32;
 			}
 		}
 		baddr += 0x800 // 2Kbytes
 	}
-
 }
 
 // paintBorder is a simple border emulation
 func (tv *TVVideo) paintBorder() {
-	// Border Top and Bottom and Paper
+	// Border Top, Bottom and Paper
 	border := tv.palette[tv.border]
 	display := tv.screen.Display()
 	for y := display.Y; y < tvBorderTop; y++ {
-		for x := 0; x < tvTotalWidth; x++ {
-			tv.screen.SetPixel(x, y, border)
-		}
+		tv.scanlineBorder(y, 0, tvTotalWidth, border)
 	}
-	for y := tvBorderTop + tvScreenHeight; y < tvTotalHeight; y++ {
-		for x := 0; x < tvTotalWidth; x++ {
-			tv.screen.SetPixel(x, y, border)
-		}
+	for y := tvBorderTop + tvScreenHeight; y < display.Y+display.H; y++ {
+		tv.scanlineBorder(y, 0, tvTotalWidth, border)
 	}
 	for y := tvBorderTop; y < display.Y+display.H; y++ {
-		for x := 0; x < tvBorderLeft; x++ {
-			tv.screen.SetPixel(x, y, border)
-		}
-		for x := tvBorderLeft + tvScreenWidth; x < tvTotalWidth; x++ {
-			tv.screen.SetPixel(x, y, border)
-		}
+		tv.scanlineBorder(y, 0, tvBorderLeft, border)
+		tv.scanlineBorder(y, tvBorderLeft+tvScreenWidth, tvTotalWidth, border)
 	}
 }
 
 // paintByte paints a byte
-func (tv *TVVideo) paintByte(y, c int, data, attr byte, flash bool) {
+func (tv *TVVideo) paintByte(y, sx int, data, attr byte, flash bool) {
 	var ink, paper, mask byte
 	ink = attr & 0x07
 	if (attr & 0x40) != 0 {
@@ -192,8 +197,6 @@ func (tv *TVVideo) paintByte(y, c int, data, attr byte, flash bool) {
 	if attr&0x80 != 0 && flash {
 		ink, paper = paper, ink
 	}
-	sx := tvBorderLeft + (c << 3)
-	y += tvBorderTop
 	for x := sx; x < sx+8; x++ {
 		set := (data & mask) != 0
 		if set {
@@ -209,5 +212,122 @@ func (tv *TVVideo) paintByte(y, c int, data, attr byte, flash bool) {
 
 // DoScanlines refresh TV scanlines
 func (tv *TVVideo) DoScanlines() {
-	// TODO
+	// Spectrum 48k - Tv Scanlines timings
+	// Vertical   : 16 Sl sync, 48 Sl border top, 192 Sl Screen, 56 Sl boder bottom
+	// Horizontal : 128 Ts screen, 24 Ts border right, 48 Ts retrace, 24 TS border left
+	// First screen (0,0) pixel Tstate = 14336 TS = 64 Scanlines * 224 Tstates
+	display := tv.screen.Display()
+	border := tv.palette[tv.border]
+	tstate := tv.tstate
+	endtstate := tv.clock.Tstates()
+	limitBottom := display.Y*tvLineTstates - tvHBorderTstates
+	limitTop := (display.Y+display.H)*tvLineTstates - tvHBorderTstates
+	if endtstate < limitBottom || tstate > limitTop {
+		return
+	}
+	if tstate < limitBottom {
+		tstate = limitBottom
+	}
+	if endtstate > limitTop {
+		endtstate = limitTop
+	}
+	tv.tstate = endtstate
+	x, y := tvTstateToXY(tstate)
+	endX, endY := tvTstateToXY(endtstate)
+	for y <= endY {
+		// horizontal 448 px : 48 border left + 256 screen/border  + 48 border right + 96 sync
+		hBorder, vBorder := false, y < tvFirstScreenLine || y > tvLastScreenLine
+		nextX, lastX := x, (tvTotalWidth - 1)
+		if y == endY && endX < lastX {
+			lastX = endX
+		}
+		for x <= lastX {
+			// detect trace type
+			if x < tvBorderLeft {
+				hBorder = true
+				nextX = tvBorderLeft - 1
+			} else if x >= (tvBorderLeft + tvScreenWidth) {
+				hBorder = true
+				nextX = tvTotalWidth - 1
+			} else {
+				nextX = tvBorderLeft + tvScreenWidth - 1
+				hBorder = vBorder
+			}
+			// paint scanline trace
+			if lastX < nextX {
+				nextX = lastX
+			}
+			if hBorder {
+				tv.scanlineBorder(y, x, nextX, border)
+			} else {
+				tv.scanlineScreen(y, x, nextX)
+			}
+			// next trace
+			x = nextX + 1
+		}
+		// next scanline
+		x, y = 0, y+1
+	}
+}
+
+func (tv *TVVideo) scanlineScreen(y, x1, x2 int) {
+	var attr, data, ink, paper, mask byte
+	screendata := tv.bank.Data()
+	xx := x1 - tvBorderLeft
+	yy := y - tvBorderTop
+	scrAddr := 0x800*(yy>>6) | tvLineBytes*((yy&0x38)>>3) | ((yy & 0x07) << 8) | xx>>3
+	attrAddr := (yy>>3)<<5 + xx>>3 + tvAttrAddr
+	bit := byte(xx % tvBytePixels)
+	mask = 1 << (7 - bit)
+	readmem := true
+	for x := x1; x <= x2; x++ {
+		if readmem {
+			readmem = false
+			// read memory data & attr
+			data = screendata[scrAddr]
+			attr = screendata[attrAddr]
+			scrAddr++
+			attrAddr++
+			// calculate ink + paper
+			ink = attr & 0x07
+			if (attr & 0x40) != 0 {
+				ink |= 0x08
+			}
+			paper = (attr >> 3) & 0x07
+			if (attr & 0x40) != 0 {
+				paper |= 0x08
+			}
+			if attr&0x80 != 0 && tv.flash {
+				ink, paper = paper, ink
+			}
+		}
+		// paint pixel
+		set := (data & mask) != 0
+		if set {
+			tv.screen.SetPixelIndex(x, y, int(ink))
+		} else {
+			tv.screen.SetPixelIndex(x, y, int(paper))
+		}
+		// next pixel
+		bit++
+		mask >>= 1
+		if bit == tvBytePixels {
+			bit = 0
+			mask = 1 << 7 // 0x80
+			readmem = true
+		}
+	}
+}
+
+func (tv *TVVideo) scanlineBorder(y, x1, x2 int, colour int32) {
+	for x := x1; x <= x2; x++ {
+		tv.screen.SetPixel(x, y, colour)
+	}
+}
+
+func tvTstateToXY(tstate int) (int, int) {
+	tstate -= tvHBorderTstates
+	y := tstate / tvLineTstates
+	x := tstate % tvLineTstates * tvTstatePixels
+	return x, y
 }

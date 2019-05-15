@@ -75,8 +75,8 @@ func (screen *Screen) SetDirty(dirty bool) {
 }
 
 // SetDisplay sets if screen is dirty
-func (screen *Screen) SetDisplay(display Rect) {
-	screen.display = display
+func (screen *Screen) SetDisplay(X, Y, W, H int) {
+	screen.display = Rect{X: X, Y: Y, W: W, H: H}
 }
 
 // GetPixel gets colour from pixel coordinates
