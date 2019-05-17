@@ -193,10 +193,10 @@ func (tv *TVVideo) paintByte(y, sx int, data, attr byte, flash bool) {
 	if (attr & 0x40) != 0 {
 		paper |= 0x08
 	}
-	mask = 0x80
-	if attr&0x80 != 0 && flash {
+	if (attr&0x80) != 0 && flash {
 		ink, paper = paper, ink
 	}
+	mask = 0x80
 	for x := sx; x < sx+8; x++ {
 		set := (data & mask) != 0
 		if set {
