@@ -1,9 +1,7 @@
 package spectrum
 
 import (
-	"github.com/jtruco/emu8/cpu"
 	"github.com/jtruco/emu8/device"
-	"github.com/jtruco/emu8/device/memory"
 	"github.com/jtruco/emu8/device/video"
 )
 
@@ -63,8 +61,7 @@ var zxPalette = []int32{
 // TVVideo is the spectrum RF video device
 type TVVideo struct {
 	screen   *video.Screen // The video screen
-	bank     *memory.Bank  // The spectrum video memory bank
-	clock    cpu.Clock     // The CPU clock
+	spectrum *Spectrum     // The Spectrum machine
 	tstate   int           // Current videoframe tstate
 	palette  []int32       // The video palette
 	border   byte          // The border current colour index
@@ -79,10 +76,9 @@ func NewTVVideo(spectrum *Spectrum) *TVVideo {
 	tv.palette = zxPalette
 	tv.screen = video.NewScreen(tvTotalWidth, tvTotalHeight, tv.palette)
 	tv.screen.SetDisplay(tvDisplayLeft, tvDisplayTop, tvDisplayWidth, tvDisplayHeight)
-	tv.bank = spectrum.memory.GetBankMap(1).Bank()
-	tv.bank.AddBusListener(tv)
-	tv.clock = spectrum.clock
-	tv.accurate = true
+	tv.spectrum = spectrum
+	spectrum.VideoMemory().AddBusListener(tv)
+	tv.accurate = false
 	return tv
 }
 
@@ -93,6 +89,11 @@ func (tv *TVVideo) ProcessBusEvent(event *device.BusEvent) {
 			tv.DoScanlines()
 		}
 	}
+}
+
+// SetAccurate sets de video emulation algorithm
+func (tv *TVVideo) SetAccurate(accurate bool) {
+	tv.accurate = accurate
 }
 
 // SetBorder sets de current border color
@@ -138,7 +139,7 @@ func (tv *TVVideo) Screen() *video.Screen { return tv.screen }
 // paintScreen is a simple screen emulation
 func (tv *TVVideo) paintScreen() {
 	// 3 banks, of 8 rows, of 8 lines, of 32 cols
-	screendata := tv.bank.Data()
+	screendata := tv.spectrum.VideoMemory().Data()
 	baddr := 0
 	y, sy := 0, tvBorderTop
 	for b := 0; b < 3; b++ {
@@ -177,7 +178,7 @@ func (tv *TVVideo) paintBorder() {
 		tv.scanlineBorder(y, 0, tvTotalWidth, border)
 	}
 	for y := tvBorderTop; y < display.Y+display.H; y++ {
-		tv.scanlineBorder(y, 0, tvBorderLeft, border)
+		tv.scanlineBorder(y, 0, tvBorderLeft-1, border)
 		tv.scanlineBorder(y, tvBorderLeft+tvScreenWidth, tvTotalWidth, border)
 	}
 }
@@ -219,7 +220,7 @@ func (tv *TVVideo) DoScanlines() {
 	display := tv.screen.Display()
 	border := tv.palette[tv.border]
 	tstate := tv.tstate
-	endtstate := tv.clock.Tstates()
+	endtstate := tv.spectrum.Clock().Tstates()
 	limitBottom := display.Y*tvLineTstates - tvHBorderTstates
 	limitTop := (display.Y+display.H)*tvLineTstates - tvHBorderTstates
 	if endtstate < limitBottom || tstate > limitTop {
@@ -272,7 +273,7 @@ func (tv *TVVideo) DoScanlines() {
 
 func (tv *TVVideo) scanlineScreen(y, x1, x2 int) {
 	var attr, data, ink, paper, mask byte
-	screendata := tv.bank.Data()
+	screendata := tv.spectrum.VideoMemory().Data()
 	xx := x1 - tvBorderLeft
 	yy := y - tvBorderTop
 	scrAddr := 0x800*(yy>>6) | tvLineBytes*((yy&0x38)>>3) | ((yy & 0x07) << 8) | xx>>3

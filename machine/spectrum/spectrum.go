@@ -123,12 +123,17 @@ func (spectrum *Spectrum) initSpectrum() {
 
 // Machine properties
 
+// Clock gets the machine clock
+func (spectrum *Spectrum) Clock() cpu.Clock {
+	return spectrum.clock
+}
+
 // Config gets the machine info
 func (spectrum *Spectrum) Config() *machine.Config {
 	return &spectrum.config
 }
 
-// CPU gets the machine clock
+// CPU gets the machine CPU
 func (spectrum *Spectrum) CPU() cpu.CPU {
 	return spectrum.cpu
 }
@@ -144,6 +149,11 @@ func (spectrum *Spectrum) SetController(controller controller.Controller) {
 	controller.Video().SetVideo(spectrum.tv)
 	controller.Audio().SetAudio(spectrum.beeper)
 	controller.Keyboard().AddReceiver(spectrum.keyboard, zxKeyboardMap)
+}
+
+// VideoMemory gets the video memory bank
+func (spectrum *Spectrum) VideoMemory() *memory.Bank {
+	return spectrum.memory.GetBankMap(1).Bank()
 }
 
 // Emulation control
