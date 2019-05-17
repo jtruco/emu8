@@ -1,5 +1,7 @@
 package spectrum
 
+import "github.com/jtruco/emu8/device"
+
 // -----------------------------------------------------------------------------
 // Audio constants & vars
 // -----------------------------------------------------------------------------
@@ -18,6 +20,30 @@ const (
 var beeperMap = []uint16{0, amplTape >> volumeRate, amplBeeper >> volumeRate, (amplBeeper + amplTape) >> volumeRate}
 
 // -----------------------------------------------------------------------------
+// Contention table
+// -----------------------------------------------------------------------------
+
+// ULA contention delay table
+var ulaDelayTable [frameTStates + tvLineTstates]int
+
+func init() {
+	// contention table
+	tstate := tvFirstScreenTstate - 1
+	for y := 0; y < tvScreenHeight; y++ {
+		for x := 0; x < tvScreenWidth; x += 16 {
+			tstatex := x / tvTstatePixels
+			ulaDelayTable[tstate+tstatex+0] = 6
+			ulaDelayTable[tstate+tstatex+1] = 5
+			ulaDelayTable[tstate+tstatex+2] = 4
+			ulaDelayTable[tstate+tstatex+3] = 3
+			ulaDelayTable[tstate+tstatex+4] = 2
+			ulaDelayTable[tstate+tstatex+5] = 1
+		}
+		tstate += tvLineTstates
+	}
+}
+
+// -----------------------------------------------------------------------------
 // ULA
 // -----------------------------------------------------------------------------
 
@@ -30,7 +56,19 @@ type ULA struct {
 func NewULA(spectrum *Spectrum) *ULA {
 	ula := &ULA{}
 	ula.spectrum = spectrum
+	spectrum.VideoMemory().AddBusListener(ula)
 	return ula
+}
+
+// ProcessBusEvent processes the bus event
+func (ula *ULA) ProcessBusEvent(event *device.BusEvent) {
+	if event.Type == device.EventBusAccess && event.Order == device.OrderBefore {
+		clock := ula.spectrum.Clock()
+		delay := ulaDelayTable[clock.Tstates()]
+		if delay > 0 {
+			clock.Add(delay)
+		}
+	}
 }
 
 // Device

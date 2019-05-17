@@ -36,14 +36,15 @@ const (
 
 // TV video timings constants
 const (
-	tvTstatePixels    = 2
-	tvLineTstates     = 224
-	tvHRetraceTstates = 48
-	tvHBorderTstates  = 24
-	tvFirstScreenLine = tvBorderTop
-	tvLastScreenLine  = tvBorderTop + tvScreenHeight - 1
-	tvBytePixels      = 8
-	tvLineBytes       = tvScreenWidth / tvBytePixels
+	tvTstatePixels      = 2
+	tvLineTstates       = 224
+	tvHRetraceTstates   = 48
+	tvHBorderTstates    = 24
+	tvFirstScreenTstate = 14336
+	tvFirstScreenLine   = tvBorderTop
+	tvLastScreenLine    = tvBorderTop + tvScreenHeight - 1
+	tvBytePixels        = 8
+	tvLineBytes         = tvScreenWidth / tvBytePixels
 )
 
 // ZX Spetrum 16/48k RGB colour palette
