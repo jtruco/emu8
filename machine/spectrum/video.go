@@ -78,7 +78,7 @@ func NewTVVideo(spectrum *Spectrum) *TVVideo {
 	tv.screen.SetDisplay(tvDisplayLeft, tvDisplayTop, tvDisplayWidth, tvDisplayHeight)
 	tv.spectrum = spectrum
 	spectrum.VideoMemory().AddBusListener(tv)
-	tv.accurate = false
+	tv.accurate = true
 	return tv
 }
 
