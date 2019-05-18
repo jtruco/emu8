@@ -23,6 +23,9 @@ var beeperMap = []uint16{0, amplTape >> volumeRate, amplBeeper >> volumeRate, (a
 // Contention table
 // -----------------------------------------------------------------------------
 
+// IO contention pages
+var ulaIoPageContention = [4]bool{false, true, false, false}
+
 // ULA contention delay table
 var ulaDelayTable [frameTStates + tvLineTstates]int
 
@@ -62,12 +65,8 @@ func NewULA(spectrum *Spectrum) *ULA {
 
 // ProcessBusEvent processes the bus event
 func (ula *ULA) ProcessBusEvent(event *device.BusEvent) {
-	if event.Type != device.EventBusAccess && event.Order == device.OrderBefore {
-		clock := ula.spectrum.Clock()
-		delay := ulaDelayTable[clock.Tstates()]
-		if delay > 0 {
-			clock.Add(delay)
-		}
+	if event.Order == device.OrderBefore {
+		ula.doContention()
 	}
 }
 
@@ -87,7 +86,9 @@ func (ula *ULA) Access(address uint16) {}
 // Read bus at address
 func (ula *ULA) Read(address uint16) byte {
 	var result byte = 0xff
-	if (address & 0x0001) == 0x0000 {
+	ula.preIO(address)
+	ula.postIO(address)
+	if (address & 0x0001) == 0x0 {
 		// Read keyboard state
 		var row uint
 		for row = 0; row < 8; row++ {
@@ -101,6 +102,7 @@ func (ula *ULA) Read(address uint16) byte {
 
 // Write bus at address
 func (ula *ULA) Write(address uint16, data byte) {
+	ula.preIO(address)
 	if (address & 0x0001) == 0 {
 		// border
 		ula.spectrum.tv.DoScanlines()
@@ -111,5 +113,41 @@ func (ula *ULA) Write(address uint16, data byte) {
 		tstate := ula.spectrum.clock.Tstates()
 		beeper := int(data&0x18) >> 3
 		ula.spectrum.beeper.SetLevel(tstate, beeper)
+	}
+	ula.postIO(address)
+}
+
+// preIO contention
+func (ula *ULA) preIO(address uint16) {
+	page := address >> 14
+	if ulaIoPageContention[page] {
+		ula.doContention()
+	}
+}
+
+// postIO contention
+func (ula *ULA) postIO(address uint16) {
+	if (address & 0x0001) != 0 {
+		page := address >> 14
+		if ulaIoPageContention[page] {
+			clock := ula.spectrum.Clock()
+			ula.doContention()
+			clock.Add(1)
+			ula.doContention()
+			clock.Add(1)
+			ula.doContention()
+			clock.Add(-2) // +1-3
+		}
+	} else {
+		ula.doContention()
+	}
+}
+
+// doContention aplies clock contention
+func (ula *ULA) doContention() {
+	clock := ula.spectrum.Clock()
+	delay := ulaDelayTable[clock.Tstates()]
+	if delay > 0 {
+		clock.Add(delay)
 	}
 }
