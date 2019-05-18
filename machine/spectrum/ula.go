@@ -62,7 +62,7 @@ func NewULA(spectrum *Spectrum) *ULA {
 
 // ProcessBusEvent processes the bus event
 func (ula *ULA) ProcessBusEvent(event *device.BusEvent) {
-	if event.Type == device.EventBusAccess && event.Order == device.OrderBefore {
+	if event.Type != device.EventBusAccess && event.Order == device.OrderBefore {
 		clock := ula.spectrum.Clock()
 		delay := ulaDelayTable[clock.Tstates()]
 		if delay > 0 {
