@@ -141,7 +141,7 @@ func (z80 *Z80) readPort(port uint16) byte {
 func (z80 *Z80) readPortNoReq(address uint16, n int) {
 	for i := 0; i < n; i++ {
 		z80.io.Access(address)
-		z80.clock.Inc() // +1 tstates in bus access
+		// peripherals control clock : z80.clock.Inc()
 	}
 }
 
