@@ -132,9 +132,8 @@ func (z80 *Z80) readNoReq(address uint16, n int) {
 // readPort writes a byte to a port
 func (z80 *Z80) readPort(port uint16) byte {
 	z80.readPortNoReq(port, 1) // pre
-	z80.readPortNoReq(port, 2) // post
+	z80.readPortNoReq(port, 3) // post
 	value := z80.io.Read(port)
-	z80.clock.Add(1) // +1
 	return value
 }
 
@@ -164,8 +163,7 @@ func (z80 *Z80) writeNoReq(address uint16, n int) {
 func (z80 *Z80) writePort(port uint16, value byte) {
 	z80.readPortNoReq(port, 1) // pre
 	z80.io.Write(port, value)
-	z80.readPortNoReq(port, 2) // post
-	z80.clock.Add(1)           // +1
+	z80.readPortNoReq(port, 3) // post
 }
 
 // -----------------------------------------------------------------------------
