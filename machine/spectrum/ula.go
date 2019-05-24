@@ -66,7 +66,7 @@ func NewULA(spectrum *Spectrum) *ULA {
 // ProcessBusEvent processes the bus event
 func (ula *ULA) ProcessBusEvent(event *device.BusEvent) {
 	if event.Order == device.OrderBefore {
-		ula.doContention()
+		ula.doContention(0)
 	}
 }
 
@@ -119,10 +119,9 @@ func (ula *ULA) Write(address uint16, data byte) {
 
 // preIO contention
 func (ula *ULA) preIO(address uint16) {
-	// FIXME review exact timings
-	ula.spectrum.clock.Add(1)
 	if ula.isContended(address) {
-		ula.doContention()
+		ula.doContention(1)
+	} else {
 		ula.spectrum.clock.Add(1)
 	}
 }
@@ -131,24 +130,20 @@ func (ula *ULA) preIO(address uint16) {
 func (ula *ULA) postIO(address uint16) {
 	if (address & 0x0001) != 0 {
 		if ula.isContended(address) {
-			ula.doContention()
-			ula.spectrum.clock.Add(1)
-			ula.doContention()
-			ula.spectrum.clock.Add(1)
-			ula.doContention()
-			ula.spectrum.clock.Add(1)
+			ula.doContention(1)
+			ula.doContention(1)
+			ula.doContention(1)
 		} else {
 			ula.spectrum.clock.Add(3)
 		}
 	} else {
-		ula.doContention()
-		ula.spectrum.clock.Add(3)
+		ula.doContention(3)
 	}
 }
 
 // doContention aplies clock contention
-func (ula *ULA) doContention() {
-	delay := ulaDelayTable[ula.spectrum.clock.Tstates()]
+func (ula *ULA) doContention(tstates int) {
+	delay := ulaDelayTable[ula.spectrum.clock.Tstates()] + tstates
 	if delay > 0 {
 		ula.spectrum.clock.Add(delay)
 	}
