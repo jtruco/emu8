@@ -88,7 +88,7 @@ func (ula *ULA) Read(address uint16) byte {
 	var result byte = 0xff
 	ula.preIO(address)
 	ula.postIO(address)
-	if (address & 0x0001) == 0x0 {
+	if (address & 0x0001) == 0 {
 		// Read keyboard state
 		var row uint
 		for row = 0; row < 8; row++ {
@@ -119,35 +119,43 @@ func (ula *ULA) Write(address uint16, data byte) {
 
 // preIO contention
 func (ula *ULA) preIO(address uint16) {
-	page := address >> 14
-	if ulaIoPageContention[page] {
+	// FIXME review exact timings
+	ula.spectrum.clock.Add(1)
+	if ula.isContended(address) {
 		ula.doContention()
+		ula.spectrum.clock.Add(1)
 	}
 }
 
 // postIO contention
 func (ula *ULA) postIO(address uint16) {
 	if (address & 0x0001) != 0 {
-		page := address >> 14
-		if ulaIoPageContention[page] {
-			clock := ula.spectrum.Clock()
+		if ula.isContended(address) {
 			ula.doContention()
-			clock.Add(1)
+			ula.spectrum.clock.Add(1)
 			ula.doContention()
-			clock.Add(1)
+			ula.spectrum.clock.Add(1)
 			ula.doContention()
-			clock.Add(-2) // +1-3
+			ula.spectrum.clock.Add(1)
+		} else {
+			ula.spectrum.clock.Add(3)
 		}
 	} else {
 		ula.doContention()
+		ula.spectrum.clock.Add(3)
 	}
 }
 
 // doContention aplies clock contention
 func (ula *ULA) doContention() {
-	clock := ula.spectrum.Clock()
-	delay := ulaDelayTable[clock.Tstates()]
+	delay := ulaDelayTable[ula.spectrum.clock.Tstates()]
 	if delay > 0 {
-		clock.Add(delay)
+		ula.spectrum.clock.Add(delay)
 	}
+}
+
+// isContended true if address access is contended
+func (ula *ULA) isContended(address uint16) bool {
+	page := address >> 14
+	return ulaIoPageContention[page]
 }
