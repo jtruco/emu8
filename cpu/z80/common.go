@@ -131,18 +131,8 @@ func (z80 *Z80) readNoReq(address uint16, n int) {
 
 // readPort writes a byte to a port
 func (z80 *Z80) readPort(port uint16) byte {
-	z80.readPortNoReq(port, 1) // pre
-	z80.readPortNoReq(port, 3) // post
 	value := z80.io.Read(port)
 	return value
-}
-
-// readPortNoReq only puts address on bus (no IOREQ) during n tstates
-func (z80 *Z80) readPortNoReq(address uint16, n int) {
-	for i := 0; i < n; i++ {
-		z80.io.Access(address)
-		// peripherals control clock : z80.clock.Inc()
-	}
 }
 
 // writeByte writes a byte into memory
@@ -161,9 +151,7 @@ func (z80 *Z80) writeNoReq(address uint16, n int) {
 
 // writePort writes a byte to a port
 func (z80 *Z80) writePort(port uint16, value byte) {
-	z80.readPortNoReq(port, 1) // pre
 	z80.io.Write(port, value)
-	z80.readPortNoReq(port, 3) // post
 }
 
 // -----------------------------------------------------------------------------
