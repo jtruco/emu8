@@ -328,7 +328,7 @@ func (tv *TVVideo) scanlineBorder(y, x1, x2 int, colour int32) {
 }
 
 func tvTstateToXY(tstate int) (int, int) {
-	tstate -= tvHBorderTstates
+	tstate = tstate + tvHBorderTstates
 	y := tstate / tvLineTstates
 	x := tstate % tvLineTstates * tvTstatePixels
 	return x, y
