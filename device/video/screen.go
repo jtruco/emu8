@@ -16,7 +16,7 @@ type Screen struct {
 	width   int     // Witdh of screen
 	height  int     // Height of screen
 	data    []int32 // Screen data
-	display Rect    // Visible display of screen palette []int32
+	display Rect    // Visible display of screen
 	palette []int32 // Screen colour palette
 	dirty   bool    // Dirty control
 }
