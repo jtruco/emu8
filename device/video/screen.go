@@ -13,13 +13,12 @@ type Rect struct {
 // Each pixel represents an int32 color, no specific format (RGBA, BGRA,...)
 // Coordinates starts at upper left corner.
 type Screen struct {
-	width   int
-	height  int
-	size    int
-	display Rect
-	palette []int32
-	data    []int32
-	dirty   bool
+	width   int     // Witdh of screen
+	height  int     // Height of screen
+	data    []int32 // Screen data
+	display Rect    // Visible display of screen palette []int32
+	palette []int32 // Screen colour palette
+	dirty   bool    // Dirty control
 }
 
 // NewScreen creates a screen of size width x height and palette
@@ -27,10 +26,9 @@ func NewScreen(width, height int, palette []int32) *Screen {
 	screen := &Screen{}
 	screen.width = width
 	screen.height = height
-	screen.size = width * height
+	screen.data = make([]int32, (width * height))
 	screen.display = Rect{0, 0, width, height}
 	screen.palette = palette
-	screen.data = make([]int32, screen.size)
 	screen.dirty = false
 	return screen
 }
@@ -38,7 +36,8 @@ func NewScreen(width, height int, palette []int32) *Screen {
 // Clear clears the screen
 func (screen *Screen) Clear(index int) {
 	colour := screen.palette[index]
-	for i := 0; i < screen.size; i++ {
+	size := len(screen.data)
+	for i := 0; i < size; i++ {
 		screen.data[i] = colour
 	}
 	screen.dirty = false
