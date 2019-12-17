@@ -7,11 +7,13 @@ import (
 
 // main program start
 func main() {
-	if config.Init() {
-		app := app.GetDefaultApp()
-		if app.Init() {
-			app.Run()
-			app.End()
-		}
+	if !config.Init() {
+		return
 	}
+	app := app.GetDefaultApp()
+	if !app.Init() {
+		return
+	}
+	app.Run()
+	app.End()
 }
