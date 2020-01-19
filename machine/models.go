@@ -4,7 +4,7 @@ package machine
 // Machines & Models
 // -----------------------------------------------------------------------------
 
-// 	TODO: implement Amstrad CPC, MSX-1 & Commodore 64
+// 	TODO: Amstrad CPC, MSX-1 & Commodore 64
 
 // Machines
 const (
@@ -14,6 +14,14 @@ const (
 	Commodore64
 	MSX
 )
+
+// Machines machine name mapping
+var Machines = map[string]int{
+	"ZXSpectrum":  ZXSpectrum,
+	"AmstradCPC":  AmstradCPC,
+	"Commodore64": Commodore64,
+	"MSX":         MSX,
+}
 
 // Machine models
 const (
@@ -29,21 +37,29 @@ const (
 	MSX1
 )
 
-// ModelStrings machine model string name mapping
-var ModelStrings = map[int]string{
-	ZXSpectrum16k: "ZXSpectrum16k",
-	ZXSpectrum48k: "ZXSpectrum48k",
-	AmstradCPC464: "AmstradCPC464",
-	CommodoreC64:  "CommodoreC64",
-	MSX1:          "MSX1",
+// Models machine model name mapping
+var Models = map[string]int{
+	"ZXSpectrum16k": ZXSpectrum16k,
+	"ZXSpectrum48k": ZXSpectrum48k,
+	"AmstradCPC464": AmstradCPC464,
+	"CommodoreC64":  CommodoreC64,
+	"MSX1":          MSX1,
 }
 
-// GetModel gets model from string
-func GetModel(modelStr string, defaultModel int) int {
-	for model, namestr := range ModelStrings {
-		if namestr == modelStr {
-			return model
-		}
+// GetMachine gets model from name
+func GetMachine(name string, defaultMachine int) int {
+	machine, ok := Machines[name]
+	if ok {
+		return machine
+	}
+	return defaultMachine
+}
+
+// GetModel gets model from name
+func GetModel(name string, defaultModel int) int {
+	model, ok := Models[name]
+	if ok {
+		return model
 	}
 	return defaultModel
 }
