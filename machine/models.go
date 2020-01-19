@@ -29,8 +29,27 @@ const (
 	MSX1
 )
 
-// Models machines and models mapping
-var Models = map[int][]int{
+// ModelStrings machine model string name mapping
+var ModelStrings = map[int]string{
+	ZXSpectrum16k: "ZXSpectrum16k",
+	ZXSpectrum48k: "ZXSpectrum48k",
+	AmstradCPC464: "AmstradCPC464",
+	CommodoreC64:  "CommodoreC64",
+	MSX1:          "MSX1",
+}
+
+// GetModel gets model from string
+func GetModel(modelStr string, defaultModel int) int {
+	for model, namestr := range ModelStrings {
+		if namestr == modelStr {
+			return model
+		}
+	}
+	return defaultModel
+}
+
+// MachineModels machines and models mapping
+var MachineModels = map[int][]int{
 	ZXSpectrum:  {ZXSpectrum16k, ZXSpectrum48k},
 	AmstradCPC:  {AmstradCPC464},
 	Commodore64: {CommodoreC64},
@@ -39,7 +58,7 @@ var Models = map[int][]int{
 
 // GetFromModel gets machine from model
 func GetFromModel(model int) int {
-	for machine, models := range Models {
+	for machine, models := range MachineModels {
 		for _, m := range models {
 			if m == model {
 				return machine

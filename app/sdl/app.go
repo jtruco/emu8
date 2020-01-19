@@ -42,8 +42,8 @@ func (app *App) Init() bool {
 	app.emulator.Controller().Video().SetRenderer(app.video)
 	app.emulator.Controller().Audio().SetPlayer(app.audio)
 	app.emulator.Init()
-	if app.config.Snapfile != "" {
-		app.emulator.Machine().LoadFile(app.config.Snapfile)
+	if app.config.FileName != "" {
+		app.emulator.Machine().LoadFile(app.config.FileName)
 	}
 	// init SDL video output
 	if !app.video.Init() {
