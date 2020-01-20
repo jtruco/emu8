@@ -24,6 +24,19 @@ const (
 	romName        = "zxspectrum.rom"
 )
 
+// ZX Spectrum formats
+const (
+	formatSNA = "sna"
+	formatZ80 = "z80"
+	formatTAP = "tap"
+	formatTZX = "tzx"
+)
+
+var (
+	snapFormats = []string{formatSNA, formatZ80}
+	tapeFormats = []string{formatTAP, formatTZX}
+)
+
 // Spectrum the ZX Spectrum
 type Spectrum struct {
 	config     machine.Config        // Machine information
@@ -144,11 +157,13 @@ func (spectrum *Spectrum) Components() *device.Components {
 }
 
 // SetController connect controllers & components
-func (spectrum *Spectrum) SetController(controller controller.Controller) {
-	spectrum.controller = controller
-	controller.Video().SetVideo(spectrum.tv)
-	controller.Audio().SetAudio(spectrum.beeper)
-	controller.Keyboard().AddReceiver(spectrum.keyboard, zxKeyboardMap)
+func (spectrum *Spectrum) SetController(cntrlr controller.Controller) {
+	spectrum.controller = cntrlr
+	spectrum.controller.Video().SetVideo(spectrum.tv)
+	spectrum.controller.Audio().SetAudio(spectrum.beeper)
+	spectrum.controller.Keyboard().AddReceiver(spectrum.keyboard, zxKeyboardMap)
+	spectrum.controller.File().RegisterFormat(controller.FormatSnap, snapFormats)
+	spectrum.controller.File().RegisterFormat(controller.FormatTape, tapeFormats)
 }
 
 // VideoMemory gets the video memory bank
@@ -177,15 +192,28 @@ func (spectrum *Spectrum) EndFrame() {}
 
 // LoadFile loads a file into machine
 func (spectrum *Spectrum) LoadFile(name string) {
-	// currently only snapshots files
-	data, err := spectrum.controller.File().LoadSnapshot(name)
+	format, ext := spectrum.controller.File().FileFormat(name)
+	if format == controller.FormatUnknown {
+		return
+	}
+	data, err := spectrum.controller.File().LoadFileFormat(name, format)
 	if err != nil {
 		return
 	}
-	// only SNA format supported
-	snap := snapshot.LoadSNA(data)
-	if snap != nil {
-		spectrum.LoadState(snap)
+	// load snapshop formats
+	if format == controller.FormatSnap {
+		var snap *snapshot.Snapshot
+		switch ext {
+		case formatSNA:
+			snap = snapshot.LoadSNA(data)
+		default:
+			// not supported format
+		}
+		if snap != nil {
+			spectrum.LoadState(snap)
+		}
+	} else if format == controller.FormatTape {
+		// TODO not implemented
 	}
 }
 

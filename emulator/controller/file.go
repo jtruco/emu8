@@ -4,22 +4,34 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // -----------------------------------------------------------------------------
 // File Manager
 // -----------------------------------------------------------------------------
 
+// Path constants
 const (
-	pathRom      = "roms"  // ROMs default subpath
-	pathSnapshot = "snaps" // Snapshots default subpath
+	defaultRomPath  = "roms"  // ROMs default subpath
+	defaultSnapPath = "snaps" // Snapshots default subpath
+	defaultTapePath = "tapes" // Tapes default subpath
+)
+
+// File formats
+const (
+	FormatUnknown = iota
+	FormatRom
+	FormatSnap
+	FormatTape
+	_formatMax // limit count
 )
 
 // FileManager is the emulator files manager
 type FileManager struct {
-	path         string // The base path
-	romPath      string // ROMs path
-	snapshotPath string // Snapshots path
+	path     string             // The file manager base path
+	subpaths [_formatMax]string // Subpaths by file format
+	formats  map[string]int     // The file type extension mapping
 }
 
 // DefaultFileManager returns the default file manager
@@ -31,42 +43,68 @@ func DefaultFileManager() *FileManager {
 // NewFileManager returns a new file manager
 func NewFileManager(path string) *FileManager {
 	manager := &FileManager{}
+	manager.formats = make(map[string]int)
 	manager.SetPath(path)
 	return manager
 }
 
-// Paths management
-
-// FilenameROM gets ROM filename full path
-func (manager *FileManager) FilenameROM(rom string) string {
-	return filepath.Join(manager.romPath, rom)
-}
-
-// FilenameSnapshot gets Snapshot filename full path
-func (manager *FileManager) FilenameSnapshot(snap string) string {
-	return filepath.Join(manager.snapshotPath, snap)
-}
+// Path management
 
 // SetPath sets the base path of the file manager
 func (manager *FileManager) SetPath(path string) {
 	manager.path = path
-	manager.romPath = filepath.Join(path, pathRom)
-	manager.snapshotPath = filepath.Join(path, pathSnapshot)
+	manager.subpaths[FormatUnknown] = path
+	manager.subpaths[FormatRom] = filepath.Join(path, defaultRomPath)
+	manager.subpaths[FormatSnap] = filepath.Join(path, defaultSnapPath)
+	manager.subpaths[FormatTape] = filepath.Join(path, defaultTapePath)
 }
 
-// Files management
+// File management
 
 // LoadROM loads a file from ROMs path
 func (manager *FileManager) LoadROM(name string) ([]byte, error) {
-	return manager.LoadFile(manager.FilenameROM(name))
+	return manager.LoadFileFormat(name, FormatRom)
 }
 
-// LoadSnapshot loads a file from Snapshots path
-func (manager *FileManager) LoadSnapshot(name string) ([]byte, error) {
-	return manager.LoadFile(manager.FilenameSnapshot(name))
+// LoadFileFormat loads a base filename from its format default location
+func (manager *FileManager) LoadFileFormat(filename string, format int) ([]byte, error) {
+	data, err := manager.LoadFile(filename)
+	if err == nil || format == FormatUnknown {
+		return data, err
+	}
+	// find base file in standar location
+	filename = filepath.Join(manager.subpaths[format], filepath.Base(filename))
+	return manager.LoadFile(filename)
 }
 
 // LoadFile loads a file and return its data bytes
 func (manager *FileManager) LoadFile(filename string) ([]byte, error) {
 	return ioutil.ReadFile(filename)
+}
+
+// File extension type management
+
+// RegisterFormat adds a format and its extensions
+func (manager *FileManager) RegisterFormat(format int, extensions []string) {
+	for _, ext := range extensions {
+		manager.AddFormat(format, ext)
+	}
+}
+
+// AddFormat adds a file extension format
+func (manager *FileManager) AddFormat(format int, extension string) {
+	manager.formats[extension] = format
+}
+
+// FileFormat detects and returns the file machine format and supported extension
+func (manager *FileManager) FileFormat(filename string) (int, string) {
+	extension := filepath.Ext(filename)
+	if len(extension) > 0 {
+		extension = strings.ToLower(extension[1:])
+		format, ok := manager.formats[extension]
+		if ok {
+			return format, extension
+		}
+	}
+	return FormatUnknown, extension
 }
