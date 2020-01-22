@@ -2,6 +2,7 @@ package sdl
 
 import (
 	"log"
+	"sync"
 	"unsafe"
 
 	"github.com/jtruco/emu8/device/video"
@@ -10,13 +11,15 @@ import (
 
 // Video is the SDL video UI
 type Video struct {
+	_sync      sync.Mutex   // Sync object
 	app        *App         // The SDL app
+	device     video.Video  // The machine video device
 	window     *sdl.Window  // The main window
 	winsurface *sdl.Surface // The window surface
 	surface    *sdl.Surface // The emulator surface
 	buffer     []sdl.Rect   // The buffer
-	scale      int32
-	fullscreen bool
+	scale      int32        // Video scale configuration
+	fullscreen bool         // Full Screen window mode
 }
 
 // NewVideo creates a new video UI
@@ -28,54 +31,19 @@ func NewVideo(app *App) *Video {
 
 // Init initialices video
 func (video *Video) Init() bool {
-	// Configuration
+	// configuration
+	video.device = video.app.emulator.Controller().Video().Video()
 	video.scale = int32(video.app.config.VideoScale)
 	video.fullscreen = video.app.config.FullScreen
-	// SDL window & surface
-	device := video.app.emulator.Controller().Video().Video()
-	screen := device.Screen()
-	display := screen.Display()
-	window, err := sdl.CreateWindow(
-		video.app.config.AppTitle,
-		sdl.WINDOWPOS_UNDEFINED,
-		sdl.WINDOWPOS_UNDEFINED,
-		(int32(display.W) * video.scale),
-		(int32(display.H) * video.scale),
-		sdl.WINDOW_SHOWN)
-	if err != nil {
-		log.Println("Error initializing SDL window : " + err.Error())
-		return false
-	}
-	surface, err := window.GetSurface()
-	if err != nil {
-		log.Println("Error creating window surface : " + err.Error())
-		return false
-	}
-	video.window = window
-	video.winsurface = surface
-	// Emulator screen surface
-	pixels := unsafe.Pointer(&screen.Data()[0])
-	surface, err = sdl.CreateRGBSurfaceWithFormatFrom(
-		pixels,
-		int32(screen.Width()),
-		int32(screen.Height()),
-		32,
-		4*int32(screen.Width()),
-		uint32(sdl.PIXELFORMAT_BGRA32))
-	if err != nil {
-		log.Println("Error creating emulator surface : " + err.Error())
-		return false
-	}
-	surface.SetBlendMode(sdl.BLENDMODE_NONE)
-	video.surface = surface
-	// Screen regions buffer
-	video.buffer = make([]sdl.Rect, len(screen.Regions()))
-	return true
+	// initialization
+	return video.initSDLVideo()
 }
 
 // Render renders screen to video UI
 func (video *Video) Render(screen *video.Screen) {
 	var srcRect sdl.Rect
+	video._sync.Lock()
+	defer video._sync.Unlock()
 	display := screen.Display()
 	rects := screen.DirtyRegions()
 	count := len(rects)
@@ -93,4 +61,75 @@ func (video *Video) Render(screen *video.Screen) {
 		video.surface.BlitScaled(&srcRect, video.winsurface, &video.buffer[idx])
 	}
 	video.window.UpdateSurfaceRects(video.buffer[:count])
+}
+
+// ToggleFullscreen enable / disable fullscreen mode
+func (video *Video) ToggleFullscreen() {
+	video.fullscreen = !video.fullscreen
+	video.initSDLVideo()
+}
+
+func (video *Video) initSDLVideo() bool {
+	video._sync.Lock()
+	defer video._sync.Unlock()
+	video.destroySDLWindow()
+	if !video.createSDLWindow() {
+		return false
+	}
+	if !video.createEmulatorSurface() {
+		return false
+	}
+	video.device.Screen().SetDirty(true)
+	return true
+}
+
+func (video *Video) createSDLWindow() bool {
+	display := video.device.Screen().Display()
+	window, err := sdl.CreateWindow(
+		video.app.config.AppTitle,
+		sdl.WINDOWPOS_UNDEFINED,
+		sdl.WINDOWPOS_UNDEFINED,
+		(int32(display.W) * video.scale),
+		(int32(display.H) * video.scale),
+		0)
+	if err != nil {
+		log.Println("Error initializing SDL window : " + err.Error())
+	}
+	if video.fullscreen {
+		window.SetFullscreen(sdl.WINDOW_FULLSCREEN)
+	}
+	window.Show()
+	surface, err := window.GetSurface()
+	if err != nil {
+		log.Println("Error creating window surface : " + err.Error())
+		return false
+	}
+	video.window = window
+	video.winsurface = surface
+	return true
+}
+func (video *Video) destroySDLWindow() {
+	if video.window != nil {
+		video.window.Destroy()
+	}
+}
+
+func (video *Video) createEmulatorSurface() bool {
+	screen := video.device.Screen()
+	pixels := unsafe.Pointer(&screen.Data()[0])
+	surface, err := sdl.CreateRGBSurfaceWithFormatFrom(
+		pixels,
+		int32(screen.Width()),
+		int32(screen.Height()),
+		32,
+		4*int32(screen.Width()),
+		uint32(sdl.PIXELFORMAT_BGRA32))
+	if err != nil {
+		log.Println("Error creating emulator surface : " + err.Error())
+		return false
+	}
+	surface.SetBlendMode(sdl.BLENDMODE_NONE)
+	video.surface = surface
+	video.buffer = make([]sdl.Rect, len(screen.Regions()))
+	return true
 }

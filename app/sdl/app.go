@@ -78,6 +78,8 @@ func (app *App) Run() {
 						running = false
 					case sdl.K_F5:
 						app.emulator.Reset()
+					case sdl.K_F11:
+						app.video.ToggleFullscreen()
 					}
 				}
 				// send 1erst key event to emulator
