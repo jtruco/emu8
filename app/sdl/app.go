@@ -16,6 +16,7 @@ type App struct {
 	video    *Video
 	audio    *Audio
 	emulator *emulator.Emulator
+	running  bool
 }
 
 // NewApp creates a new application
@@ -27,7 +28,7 @@ func NewApp() *App {
 	return app
 }
 
-// Init the SDL app
+// Init the SDL App
 func (app *App) Init() bool {
 	// init sdl
 	if err := sdl.Init(sdl.INIT_VIDEO | sdl.INIT_AUDIO); err != nil {
@@ -56,52 +57,58 @@ func (app *App) Init() bool {
 	return true
 }
 
-// Run the SDL app
+// Run the SDL App
 func (app *App) Run() {
-	const sleep = 20 * time.Millisecond
+	const sleep = 10 * time.Millisecond
 	app.emulator.Start()
-	running := true
-	for running {
+	app.running = true
+	for app.running {
 		count := 0
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			count++
 			switch e := event.(type) {
-
 			case *sdl.QuitEvent:
-				running = false
-
+				app.running = false
 			case *sdl.KeyboardEvent:
-				// check function keys
-				if e.Type == sdl.KEYDOWN {
-					switch e.Keysym.Sym {
-					case sdl.K_ESCAPE:
-						running = false
-					case sdl.K_F5:
-						app.emulator.Reset()
-					case sdl.K_F11:
-						app.video.ToggleFullscreen()
-					}
-				}
-				// send 1erst key event to emulator
-				if e.Repeat == 0 {
-					if e.Type == sdl.KEYDOWN {
-						app.emulator.Controller().Keyboard().KeyDown(int(e.Keysym.Scancode))
-					} else {
-						app.emulator.Controller().Keyboard().KeyUp(int(e.Keysym.Scancode))
-					}
-				}
+				app.processKeyboard(e)
 			}
 		}
-		// sleep
 		if count == 0 {
 			time.Sleep(sleep)
 		}
 	}
-	// stop emulator
 	app.emulator.Stop()
 }
 
-// End the SDL app
+// End the SDL App
 func (app *App) End() {
 	sdl.Quit()
+}
+
+func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
+	if e.Repeat == 0 {
+		captured := false
+		// check function keys
+		if e.Type == sdl.KEYDOWN {
+			captured = true
+			switch e.Keysym.Sym {
+			case sdl.K_ESCAPE:
+				app.running = false
+			case sdl.K_F5:
+				app.emulator.Reset()
+			case sdl.K_F11:
+				app.video.ToggleFullscreen()
+			default:
+				captured = false
+			}
+		}
+		if !captured {
+			// send key event to emulator
+			if e.Type == sdl.KEYDOWN {
+				app.emulator.Controller().Keyboard().KeyDown(int(e.Keysym.Scancode))
+			} else {
+				app.emulator.Controller().Keyboard().KeyUp(int(e.Keysym.Scancode))
+			}
+		}
+	}
 }
