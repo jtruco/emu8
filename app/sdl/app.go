@@ -86,29 +86,30 @@ func (app *App) End() {
 }
 
 func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
-	if e.Repeat == 0 {
-		captured := false
-		// check function keys
-		if e.Type == sdl.KEYDOWN {
-			captured = true
-			switch e.Keysym.Sym {
-			case sdl.K_ESCAPE:
-				app.running = false
-			case sdl.K_F5:
-				app.emulator.Reset()
-			case sdl.K_F11:
-				app.video.ToggleFullscreen()
-			default:
-				captured = false
-			}
+	if e.Repeat > 0 {
+		return
+	}
+	captured := false
+	// check function keys
+	if e.Type == sdl.KEYDOWN {
+		captured = true
+		switch e.Keysym.Sym {
+		case sdl.K_ESCAPE:
+			app.running = false
+		case sdl.K_F5:
+			app.emulator.Reset()
+		case sdl.K_F11:
+			app.video.ToggleFullscreen()
+		default:
+			captured = false
 		}
-		if !captured {
-			// send key event to emulator
-			if e.Type == sdl.KEYDOWN {
-				app.emulator.Controller().Keyboard().KeyDown(int(e.Keysym.Scancode))
-			} else {
-				app.emulator.Controller().Keyboard().KeyUp(int(e.Keysym.Scancode))
-			}
+	}
+	if !captured {
+		// send key event to emulator
+		if e.Type == sdl.KEYDOWN {
+			app.emulator.Controller().Keyboard().KeyDown(int(e.Keysym.Scancode))
+		} else {
+			app.emulator.Controller().Keyboard().KeyUp(int(e.Keysym.Scancode))
 		}
 	}
 }
