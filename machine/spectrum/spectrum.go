@@ -206,6 +206,8 @@ func (spectrum *Spectrum) LoadFile(name string) {
 		switch ext {
 		case formatSNA:
 			snap = snapshot.LoadSNA(data)
+		case formatZ80:
+			snap = snapshot.LoadZ80(data)
 		default:
 			// not supported format
 		}
