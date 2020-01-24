@@ -1,13 +1,20 @@
 package snapshot
 
+import "log"
+
 // -----------------------------------------------------------------------------
 // SNA format
 // -----------------------------------------------------------------------------
 
+const (
+	_SNAFileLength = 49179
+)
+
 // LoadSNA loads snap from SNA data format
 func LoadSNA(data []byte) *Snapshot {
 	// Check format
-	if len(data) != 49179 {
+	if len(data) != _SNAFileLength {
+		log.Println("SNA : Invalid file format")
 		return nil
 	}
 
