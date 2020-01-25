@@ -1,4 +1,4 @@
-package snapshot
+package format
 
 import (
 	"github.com/jtruco/emu8/cpu/z80"

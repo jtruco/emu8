@@ -9,7 +9,7 @@ import (
 	"github.com/jtruco/emu8/device/memory"
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/machine"
-	"github.com/jtruco/emu8/machine/spectrum/snapshot"
+	"github.com/jtruco/emu8/machine/spectrum/format"
 )
 
 // -----------------------------------------------------------------------------
@@ -192,35 +192,35 @@ func (spectrum *Spectrum) EndFrame() {}
 
 // LoadFile loads a file into machine
 func (spectrum *Spectrum) LoadFile(name string) {
-	format, ext := spectrum.controller.File().FileFormat(name)
-	if format == controller.FormatUnknown {
+	filefmt, ext := spectrum.controller.File().FileFormat(name)
+	if filefmt == controller.FormatUnknown {
 		return
 	}
-	data, err := spectrum.controller.File().LoadFileFormat(name, format)
+	data, err := spectrum.controller.File().LoadFileFormat(name, filefmt)
 	if err != nil {
 		return
 	}
 	// load snapshop formats
-	if format == controller.FormatSnap {
-		var snap *snapshot.Snapshot
+	if filefmt == controller.FormatSnap {
+		var snap *format.Snapshot
 		switch ext {
 		case formatSNA:
-			snap = snapshot.LoadSNA(data)
+			snap = format.LoadSNA(data)
 		case formatZ80:
-			snap = snapshot.LoadZ80(data)
+			snap = format.LoadZ80(data)
 		default:
 			// not supported format
 		}
 		if snap != nil {
 			spectrum.LoadState(snap)
 		}
-	} else if format == controller.FormatTape {
+	} else if filefmt == controller.FormatTape {
 		// TODO not implemented
 	}
 }
 
 // LoadState loads a ZX Spectrum snapshot
-func (spectrum *Spectrum) LoadState(snap *snapshot.Snapshot) {
+func (spectrum *Spectrum) LoadState(snap *format.Snapshot) {
 	// CPU
 	spectrum.cpu.State.Copy(&snap.State)
 	// TStates
