@@ -37,6 +37,9 @@ const (
 	MSX1
 )
 
+// DefaultModel default machine model is ZX Spectrum 48k
+const DefaultModel = ZXSpectrum48k
+
 // Models machine model name mapping
 var Models = map[string]int{
 	"ZXSpectrum16k": ZXSpectrum16k,
@@ -47,21 +50,21 @@ var Models = map[string]int{
 }
 
 // GetMachine gets model from name
-func GetMachine(name string, defaultMachine int) int {
+func GetMachine(name string) int {
 	machine, ok := Machines[name]
 	if ok {
 		return machine
 	}
-	return defaultMachine
+	return UnknownMachine
 }
 
 // GetModel gets model from name
-func GetModel(name string, defaultModel int) int {
+func GetModel(name string) int {
 	model, ok := Models[name]
 	if ok {
 		return model
 	}
-	return defaultModel
+	return UnknownModel
 }
 
 // MachineModels machines and models mapping

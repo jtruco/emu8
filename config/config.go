@@ -2,28 +2,28 @@ package config
 
 import (
 	"flag"
-
-	"github.com/jtruco/emu8/machine"
 )
 
 // Default configuration constants
 const (
 	DefaultAppTitle     = "emu8"
 	DefaultAppUI        = "sdl"
-	DefaultMachineModel = machine.ZXSpectrum48k
+	DefaultMachineModel = "ZXSpectrum48k"
 	DefaultVideoScale   = 2
 	DefaultFullScreen   = false
+	DefaultAccelerate   = false
 )
 
 // Config is the main configuration
 type Config struct {
 	AppTitle     string
 	AppUI        string
-	MachineModel int
+	MachineModel string
 	RomFile      string
 	FileName     string
 	VideoScale   int
 	FullScreen   bool
+	Accelerate   bool
 }
 
 // config is the application main configuration
@@ -42,13 +42,13 @@ func Init() bool {
 
 // parse command line arguments
 func parseArgs() {
-	model := flag.String("m", "ZXSpectrum48k", "Machine model")
+	flag.StringVar(&config.MachineModel, "m", "ZXSpectrum48k", "Machine model")
 	flag.StringVar(&config.RomFile, "r", "", "Load rom file")
 	flag.StringVar(&config.FileName, "f", "", "Load file")
 	flag.IntVar(&config.VideoScale, "vs", DefaultVideoScale, "Video scale (1..4)")
 	flag.BoolVar(&config.FullScreen, "vf", DefaultFullScreen, "Video in full screen mode")
+	flag.BoolVar(&config.FullScreen, "a", DefaultAccelerate, "Tape accelerate loading")
 	flag.Parse()
-	config.MachineModel = machine.GetModel(*model, DefaultMachineModel)
 	if len(flag.Args()) > 0 {
 		config.FileName = flag.Args()[0]
 	}
@@ -62,4 +62,5 @@ func init() {
 	config.MachineModel = DefaultMachineModel
 	config.VideoScale = DefaultVideoScale
 	config.FullScreen = DefaultFullScreen
+	config.Accelerate = DefaultAccelerate
 }

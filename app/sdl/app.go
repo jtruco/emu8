@@ -36,16 +36,18 @@ func (app *App) Init() bool {
 		return false
 	}
 	// init emulator
-	if app.emulator = emulator.FromMachine(app.config.MachineModel); app.emulator == nil {
+	emulator := emulator.FromModel(app.config.MachineModel)
+	if emulator == nil {
 		log.Println("Error initializing emulator : machine model is not valid.")
 		return false
 	}
-	app.emulator.Controller().Video().SetRenderer(app.video)
-	app.emulator.Controller().Audio().SetPlayer(app.audio)
-	app.emulator.Init()
+	emulator.Controller().Video().SetRenderer(app.video)
+	emulator.Controller().Audio().SetPlayer(app.audio)
+	emulator.Init()
 	if app.config.FileName != "" {
-		app.emulator.Machine().LoadFile(app.config.FileName)
+		emulator.Machine().LoadFile(app.config.FileName)
 	}
+	app.emulator = emulator
 	// init SDL video output
 	if !app.video.Init() {
 		return false

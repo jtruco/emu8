@@ -1,6 +1,8 @@
 package emulator
 
 import (
+	"log"
+
 	"github.com/jtruco/emu8/machine"
 	"github.com/jtruco/emu8/machine/spectrum"
 )
@@ -9,8 +11,12 @@ import (
 // Machine factory
 // -----------------------------------------------------------------------------
 
-// FromMachine returns an emulator for a machine model
-func FromMachine(model int) *Emulator {
+// FromModel returns an emulator for a machine model
+func FromModel(modelname string) *Emulator {
+	model := machine.GetModel(modelname)
+	if model == machine.UnknownModel {
+		model = machine.DefaultModel
+	}
 	machine := CreateMachine(model)
 	return New(machine)
 }
@@ -25,7 +31,12 @@ func CreateMachine(model int) machine.Machine {
 
 	// TODO : AmstradCPC, Commodore64, MSX
 
+	case machine.UnknownMachine:
+		log.Println("Emulator : Unknown machine model")
+		return nil
+
 	default:
+		log.Println("Emulator : Unsupported machine model")
 		return nil
 	}
 }
