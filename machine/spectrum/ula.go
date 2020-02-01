@@ -2,6 +2,8 @@ package spectrum
 
 import "github.com/jtruco/emu8/device"
 
+import "github.com/jtruco/emu8/machine/spectrum/format"
+
 // -----------------------------------------------------------------------------
 // Audio constants & vars
 // -----------------------------------------------------------------------------
@@ -14,7 +16,7 @@ const (
 	amplBeeper = (50 * 256)
 	amplTape   = (2 * 256)
 	amplAyTone = (24 * 256)
-	volumeRate = 2
+	volumeRate = 1.0
 )
 
 var beeperMap = []uint16{0, amplTape >> volumeRate, amplBeeper >> volumeRate, (amplBeeper + amplTape) >> volumeRate}
@@ -96,6 +98,11 @@ func (ula *ULA) Read(address uint16) byte {
 				result &= ula.spectrum.keyboard.rowstates[row]
 			}
 		}
+
+		// Read tape state
+		if ula.spectrum.tape.IsPlaying() {
+			result &= ula.spectrum.tape.Ear()
+		}
 	}
 	return result
 }
@@ -108,10 +115,17 @@ func (ula *ULA) Write(address uint16, data byte) {
 		ula.spectrum.tv.DoScanlines()
 		ula.spectrum.tv.SetBorder(data & 0x07)
 
-		// beeper
+		// beeper & tape output
 		// EAR(bit 4) and MIC(bit 3) output
 		tstate := ula.spectrum.clock.Tstates()
 		beeper := int(data&0x18) >> 3
+		if ula.spectrum.tape.IsPlaying() {
+			if ula.spectrum.tape.Ear() == format.TapeEarOn {
+				beeper |= 2
+			} else {
+				beeper &^= 2
+			}
+		}
 		ula.spectrum.beeper.SetLevel(tstate, beeper)
 	}
 	ula.postIO(address)

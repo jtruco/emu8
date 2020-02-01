@@ -16,6 +16,8 @@ type Clock interface {
 	SetTstates(tstate int)
 	// Tstates obtains the clock tstate
 	Tstates() int
+	// Total gets total tstates since last reset
+	Total() int64
 }
 
 // NewClock returns a Clock device
@@ -30,6 +32,7 @@ func NewClock() *ClockDevice {
 // ClockDevice is the default clock implementation
 type ClockDevice struct {
 	tstates int
+	total   int64
 }
 
 // Device interface
@@ -42,6 +45,7 @@ func (c *ClockDevice) Init() {
 // Reset the clock
 func (c *ClockDevice) Reset() {
 	c.tstates = 0
+	c.total = 0
 }
 
 // Clock interface
@@ -49,11 +53,13 @@ func (c *ClockDevice) Reset() {
 // Add increases clock tstates by value
 func (c *ClockDevice) Add(value int) {
 	c.tstates += value
+	c.total += int64(value)
 }
 
 // Inc increases clock tstates by one
 func (c *ClockDevice) Inc() {
 	c.tstates++
+	c.total++
 }
 
 // Restart restarts clock to tstates
@@ -64,6 +70,12 @@ func (c *ClockDevice) Restart(tstates int) {
 // SetTstates sets the clock tstates
 func (c *ClockDevice) SetTstates(tstates int) {
 	c.tstates = tstates
+	c.total = int64(tstates)
+}
+
+// Total gets total tstates since last reset
+func (c *ClockDevice) Total() int64 {
+	return c.total
 }
 
 // Tstates obtains the clock tstates

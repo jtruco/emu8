@@ -14,6 +14,8 @@ type Controller interface {
 	Audio() *AudioController
 	// Keyboard returns the keyboard controller
 	Keyboard() *KeyboardController
+	// Tape returns the tape controller
+	Tape() *TapeController
 }
 
 // EmulatorController is the emulator controller implementation.
@@ -22,6 +24,7 @@ type EmulatorController struct {
 	video    *VideoController    // The video controller
 	audio    *AudioController    // The audio controller
 	keyboard *KeyboardController // The keyboard controlller
+	tape     *TapeController     // The tape controlller
 }
 
 // New returns a new emulator controller.
@@ -31,6 +34,7 @@ func New() *EmulatorController {
 	contoller.video = NewVideoController()
 	contoller.audio = NewAudioController()
 	contoller.keyboard = NewKeyboardController()
+	contoller.tape = NewTapeController()
 	return contoller
 }
 
@@ -52,4 +56,9 @@ func (controller *EmulatorController) Audio() *AudioController {
 // Keyboard the keyboard controller
 func (controller *EmulatorController) Keyboard() *KeyboardController {
 	return controller.keyboard
+}
+
+// Tape the tape controller
+func (controller *EmulatorController) Tape() *TapeController {
+	return controller.tape
 }

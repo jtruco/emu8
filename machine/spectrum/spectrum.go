@@ -7,9 +7,11 @@ import (
 	"github.com/jtruco/emu8/device"
 	"github.com/jtruco/emu8/device/audio"
 	"github.com/jtruco/emu8/device/memory"
+	"github.com/jtruco/emu8/device/tape"
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/machine"
 	"github.com/jtruco/emu8/machine/spectrum/format"
+	"log"
 )
 
 // -----------------------------------------------------------------------------
@@ -49,6 +51,7 @@ type Spectrum struct {
 	tv         *TVVideo              // The spectrum TV video output
 	beeper     *audio.Beeper         // The spectrum Beeper
 	keyboard   *Keyboard             // The spectrum Keyboard
+	tape       *tape.Drive           // The spectrum tape drive
 }
 
 // NewSpectrum returns a new ZX Spectrum
@@ -63,7 +66,6 @@ func NewSpectrum(model int) *Spectrum {
 
 // buildMachine create and connect machine components
 func (spectrum *Spectrum) buildMachine() {
-
 	// Build components
 	spectrum.clock = cpu.NewClock()
 	spectrum.buildMemory()
@@ -73,6 +75,7 @@ func (spectrum *Spectrum) buildMachine() {
 	spectrum.beeper = audio.NewBeeper(audioFrecuency, fps, frameTStates)
 	spectrum.beeper.SetMap(beeperMap)
 	spectrum.keyboard = NewKeyboard()
+	spectrum.tape = tape.New(spectrum.clock)
 
 	// register components
 	spectrum.registerComponents()
@@ -96,7 +99,7 @@ func (spectrum *Spectrum) buildMemory() {
 
 // register components
 func (spectrum *Spectrum) registerComponents() {
-	spectrum.components = device.NewComponents(7)
+	spectrum.components = device.NewComponents(8)
 	spectrum.components.Add(spectrum.clock)
 	spectrum.components.Add(spectrum.memory)
 	spectrum.components.Add(spectrum.ula)
@@ -104,6 +107,7 @@ func (spectrum *Spectrum) registerComponents() {
 	spectrum.components.Add(spectrum.keyboard)
 	spectrum.components.Add(spectrum.tv)
 	spectrum.components.Add(spectrum.beeper)
+	spectrum.components.Add(spectrum.tape)
 }
 
 // Device interface
@@ -164,6 +168,7 @@ func (spectrum *Spectrum) SetController(cntrlr controller.Controller) {
 	spectrum.controller.Keyboard().AddReceiver(spectrum.keyboard, zxKeyboardMap)
 	spectrum.controller.File().RegisterFormat(controller.FormatSnap, snapFormats)
 	spectrum.controller.File().RegisterFormat(controller.FormatTape, tapeFormats)
+	spectrum.controller.Tape().SetDrive(spectrum.tape)
 }
 
 // VideoMemory gets the video memory bank
@@ -181,6 +186,10 @@ func (spectrum *Spectrum) BeginFrame() {
 
 // Emulate one machine step
 func (spectrum *Spectrum) Emulate() {
+	// Tape emulation
+	if spectrum.tape.IsPlaying() {
+		spectrum.tape.Playback()
+	}
 	// Exetues a CPU instruction
 	spectrum.cpu.Execute()
 }
@@ -194,10 +203,12 @@ func (spectrum *Spectrum) EndFrame() {}
 func (spectrum *Spectrum) LoadFile(name string) {
 	filefmt, ext := spectrum.controller.File().FileFormat(name)
 	if filefmt == controller.FormatUnknown {
+		log.Println("Spectrum : Not supported format ", ext)
 		return
 	}
 	data, err := spectrum.controller.File().LoadFileFormat(name, filefmt)
 	if err != nil {
+		log.Println("Spectrum : Error loading file ", ext)
 		return
 	}
 	// load snapshop formats
@@ -209,13 +220,23 @@ func (spectrum *Spectrum) LoadFile(name string) {
 		case formatZ80:
 			snap = format.LoadZ80(data)
 		default:
-			// not supported format
+			log.Println("Spectrum : Not implemented format ", ext)
 		}
 		if snap != nil {
 			spectrum.LoadState(snap)
 		}
 	} else if filefmt == controller.FormatTape {
-		// TODO not implemented
+		var tap tape.Tape
+		switch ext {
+		case formatTAP:
+			tap = format.NewTap()
+			tap.Load(data)
+		default:
+			log.Println("Spectrum : Not implemented format ", ext)
+		}
+		if tap != nil {
+			spectrum.tape.Insert(tap)
+		}
 	}
 }
 
