@@ -11,7 +11,6 @@ const (
 	DefaultMachineModel = "ZXSpectrum48k"
 	DefaultVideoScale   = 2
 	DefaultFullScreen   = false
-	DefaultAccelerate   = true
 )
 
 // Config is the main configuration
@@ -60,5 +59,4 @@ func init() {
 	config.MachineModel = DefaultMachineModel
 	config.VideoScale = DefaultVideoScale
 	config.FullScreen = DefaultFullScreen
-	config.Accelerate = DefaultAccelerate
 }
