@@ -61,7 +61,7 @@ func (app *App) Init() bool {
 
 // Run the SDL App
 func (app *App) Run() {
-	const sleep = 10 * time.Millisecond
+	const sleep = 20 * time.Millisecond // 50 Hz
 	app.emulator.Start()
 	app.running = true
 	for app.running {
