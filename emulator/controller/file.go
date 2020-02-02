@@ -82,6 +82,11 @@ func (manager *FileManager) LoadFile(filename string) ([]byte, error) {
 	return ioutil.ReadFile(filename)
 }
 
+// BaseName helper funcion to obtain base filename
+func (manager *FileManager) BaseName(filename string) string {
+	return filepath.Base(filename)
+}
+
 // File extension type management
 
 // RegisterFormat adds a format and its extensions

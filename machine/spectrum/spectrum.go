@@ -2,6 +2,8 @@
 package spectrum
 
 import (
+	"log"
+
 	"github.com/jtruco/emu8/cpu"
 	"github.com/jtruco/emu8/cpu/z80"
 	"github.com/jtruco/emu8/device"
@@ -11,7 +13,6 @@ import (
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/machine"
 	"github.com/jtruco/emu8/machine/spectrum/format"
-	"log"
 )
 
 // -----------------------------------------------------------------------------
@@ -200,17 +201,18 @@ func (spectrum *Spectrum) EndFrame() {}
 // Snapshots : load & save state
 
 // LoadFile loads a file into machine
-func (spectrum *Spectrum) LoadFile(name string) {
-	filefmt, ext := spectrum.controller.File().FileFormat(name)
+func (spectrum *Spectrum) LoadFile(filename string) {
+	filefmt, ext := spectrum.controller.File().FileFormat(filename)
 	if filefmt == controller.FormatUnknown {
 		log.Println("Spectrum : Not supported format ", ext)
 		return
 	}
-	data, err := spectrum.controller.File().LoadFileFormat(name, filefmt)
+	data, err := spectrum.controller.File().LoadFileFormat(filename, filefmt)
 	if err != nil {
 		log.Println("Spectrum : Error loading file ", ext)
 		return
 	}
+	name := spectrum.controller.File().BaseName(filename)
 	// load snapshop formats
 	if filefmt == controller.FormatSnap {
 		var snap *format.Snapshot
@@ -235,6 +237,7 @@ func (spectrum *Spectrum) LoadFile(name string) {
 			log.Println("Spectrum : Not implemented format ", ext)
 		}
 		if tap != nil {
+			tap.Info().Name = name
 			spectrum.tape.Insert(tap)
 		}
 	}
