@@ -2,6 +2,7 @@
 package emulator
 
 import (
+	"log"
 	"sync"
 	"time"
 
@@ -58,6 +59,7 @@ func (emulator *Emulator) Start() {
 	if !emulator.running {
 		emulator.running = true
 		go emulator.runEmulation()
+		log.Println("Emulator : Started")
 	}
 }
 
@@ -66,6 +68,7 @@ func (emulator *Emulator) Stop() {
 	if emulator.running {
 		emulator.running = false
 		emulator.wg.Wait()
+		log.Println("Emulator : Stopped")
 	}
 }
 

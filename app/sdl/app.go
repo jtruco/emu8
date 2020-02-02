@@ -108,6 +108,11 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 			app.emulator.Controller().Tape().Drive().Stop()
 		case sdl.K_F8:
 			app.emulator.Controller().Tape().Drive().Rewind()
+		// Emulator
+		case sdl.K_F9:
+			app.emulator.Start()
+		case sdl.K_F10:
+			app.emulator.Stop()
 		// UI
 		case sdl.K_F11:
 			app.video.ToggleFullscreen()
