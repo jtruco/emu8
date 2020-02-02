@@ -1,8 +1,9 @@
 package spectrum
 
-import "github.com/jtruco/emu8/device"
-
-import "github.com/jtruco/emu8/machine/spectrum/format"
+import (
+	"github.com/jtruco/emu8/device"
+	"github.com/jtruco/emu8/machine/spectrum/format"
+)
 
 // -----------------------------------------------------------------------------
 // Audio constants & vars
@@ -13,13 +14,13 @@ import "github.com/jtruco/emu8/machine/spectrum/format"
  * (Now scaled up for 16-bit.)
  */
 const (
-	amplBeeper = (50 * 256)
-	amplTape   = (2 * 256)
-	amplAyTone = (24 * 256)
-	volumeRate = 1.0
+	amplRate   = 3
+	amplBeeper = (50 * 256) >> amplRate
+	amplTape   = (2 * 256) >> amplRate
+	amplAyTone = (24 * 256) >> amplRate
 )
 
-var beeperMap = []uint16{0, amplTape >> volumeRate, amplBeeper >> volumeRate, (amplBeeper + amplTape) >> volumeRate}
+var beeperMap = []uint16{0, amplTape, amplBeeper, (amplBeeper + amplTape)}
 
 // -----------------------------------------------------------------------------
 // Contention table

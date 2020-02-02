@@ -78,8 +78,8 @@ func (emulator *Emulator) runEmulation() {
 	defer emulator.wg.Done()
 
 	// emulation speed
-	config := emulator.machine.Config()
-	ticker := time.NewTicker(time.Duration(config.FrameDuration))
+	frame := emulator.machine.Config().FrameTime
+	ticker := time.NewTicker(time.Duration(frame))
 	defer ticker.Stop()
 
 	// emulation loop
