@@ -241,17 +241,15 @@ func (tzx *Tzx) Play(control *tape.Control) {
 
 	case tapeStateLastPulse:
 		control.Ear ^= TapeEarMask
-		if tzx.endBlockPause > 0 {
-			control.State = tapeStatePause
-			control.Timeout = 3500 // TZX : 1 ms
-		} else {
-			control.State = tapeStateTzxHeader
-		}
+		control.State = tapeStatePause
+		control.Timeout = 3500 // TZX 1 ms
 
 	case tapeStatePause:
 		control.Ear = TapeEarOff
 		control.State = tapeStateTzxHeader
-		control.Timeout = tzx.endBlockPause * (tapeEndBlockPause / 1000)
+		if !control.EndOfTape() {
+			control.Timeout = tzx.endBlockPause * tapeTstatesMs
+		}
 
 	case tapeStatePureTone:
 		control.Ear ^= TapeEarMask
@@ -292,6 +290,7 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 	id := control.Block.Info().Type
 	data := control.Block.Data()
 	switch id {
+
 	case 0x10:
 		tzx.leaderLenght = tapeLeaderLenght
 		tzx.sync1Lenght = tapeSync1Lenght

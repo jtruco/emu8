@@ -41,7 +41,8 @@ const (
 	tapeOneLenght     = 1710
 	tapeHeaderPulses  = 8063
 	tapeDataPulses    = 3223
-	tapeEndBlockPause = 3500000
+	tapeEndBlockPause = 3494400 // 3494400 Ts/s
+	tapeTstatesMs     = tapeEndBlockPause / 1000
 )
 
 // -----------------------------------------------------------------------------
