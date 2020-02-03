@@ -24,7 +24,7 @@ func (control *Control) DataAtPos() byte {
 
 // EndOfBlock position at end of block data
 func (control *Control) EndOfBlock() bool {
-	return control.BlockPos >= control.Block.Info().Lenght
+	return control.BlockPos >= control.Block.Info().Length
 }
 
 // EndOfTape blockindex at end of tape blocks

@@ -9,7 +9,7 @@ type BlockInfo struct {
 	Type   byte // Block type
 	Index  int  // Block index
 	Offset int  // Block offset
-	Lenght int  // Block lenght
+	Length int  // Block lenght
 }
 
 // Block is a tape block

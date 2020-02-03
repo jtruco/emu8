@@ -45,7 +45,7 @@ func LoadSNA(data []byte) *Snapshot {
 	snap.R = data[20]
 	snap.F = data[21]
 	snap.A = data[22]
-	snap.SP = uint16(data[23]) | (uint16(data[24]) << 8)
+	snap.SP = readWord(data, 23)
 	snap.IM = data[25] & 0x03
 	snap.PC = 0x72 // RETN at address 0x72
 	snap.Border = data[26] & 0x07

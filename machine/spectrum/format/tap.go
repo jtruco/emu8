@@ -1,8 +1,10 @@
 package format
 
-import "github.com/jtruco/emu8/device/tape"
+import (
+	"log"
 
-import "log"
+	"github.com/jtruco/emu8/device/tape"
+)
 
 // -----------------------------------------------------------------------------
 // TAP tape format
@@ -42,10 +44,9 @@ func (block *TapBlock) Data() []byte {
 
 // Tap implements the a tape format .TAP
 type Tap struct {
-	info   tape.Info    // Tape information
-	data   []byte       // Data buffer
-	blocks []tape.Block // block array
-	// TODO : en control ?
+	info         tape.Info    // Tape information
+	data         []byte       // Data buffer
+	blocks       []tape.Block // block array
 	leaderPulses int
 	mask         byte
 	bitTime      int
@@ -83,7 +84,7 @@ func (tap *Tap) Load(data []byte) bool {
 		block.Type = data[offset]
 		block.Index = index
 		block.Offset = offset
-		block.Lenght = length
+		block.Length = length
 		block.data = data[offset : offset+length]
 		if block.Type == tapBlockHeader {
 			block.header.tapType = data[1]
@@ -168,17 +169,15 @@ func (tap *Tap) Play(control *tape.Control) {
 	case tapeStatePauseStop:
 		control.BlockIndex++
 		if control.EndOfTape() {
-			control.Playing = false // Stop
+			control.State = tapeStateStop
 		} else {
 			control.State = tapeStateStart // Next block
 		}
 
 	case tapeStateStop:
-	default:
 		control.Playing = false // Stop
-	}
-}
 
-func readWord(data []byte, pos int) uint16 {
-	return uint16(data[pos]) | (uint16(data[pos+1]) << 8)
+	default:
+		control.State = tapeStateStop
+	}
 }

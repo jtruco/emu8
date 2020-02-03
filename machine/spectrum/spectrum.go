@@ -228,17 +228,19 @@ func (spectrum *Spectrum) LoadFile(filename string) {
 			spectrum.LoadState(snap)
 		}
 	} else if filefmt == controller.FormatTape {
-		var tap tape.Tape
+		var tape tape.Tape
+		loaded := false
 		switch ext {
 		case formatTAP:
-			tap = format.NewTap()
-			tap.Load(data)
+			tape = format.NewTap()
+			loaded = tape.Load(data)
 		default:
-			log.Println("Spectrum : Not implemented format ", ext)
+			tape = format.NewTzx()
+			loaded = tape.Load(data)
 		}
-		if tap != nil {
-			tap.Info().Name = name
-			spectrum.tape.Insert(tap)
+		if loaded {
+			tape.Info().Name = name
+			spectrum.tape.Insert(tape)
 		}
 	}
 }

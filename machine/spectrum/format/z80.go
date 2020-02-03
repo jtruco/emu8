@@ -47,8 +47,8 @@ func z80LoadHeaderV1(data []byte, snap *Snapshot) bool {
 	snap.B = data[3]
 	snap.L = data[4]
 	snap.H = data[5]
-	snap.PC = uint16(data[6]) | (uint16(data[7]) << 8)
-	snap.SP = uint16(data[8]) | (uint16(data[9]) << 8)
+	snap.PC = readWord(data, 6)
+	snap.SP = readWord(data, 8)
 	snap.I = data[10]
 	data12 := data[12]
 	if data12 == 255 {
