@@ -13,6 +13,7 @@ import (
 // TZX constants
 const (
 	tzxHeaderSignature = "ZXTape!"
+	tzxStartEar        = TapeEarOff
 )
 
 // TZX states
@@ -26,10 +27,6 @@ const (
 	tapeStatePureToneNochg
 	tapeStatePulseSequence
 	tapeStatePulseSequenceNochg
-	// NEWDR_BYTE
-	// NEWDR_BIT
-	// CSW_RLE
-	// CSW_ZRLE
 )
 
 // TzxBlock is a tape block
@@ -64,6 +61,8 @@ type Tzx struct {
 	endBlockPause int
 	mask          byte
 	bitTime       int
+	loopCount     int
+	loopStart     int
 }
 
 // NewTzx creates a new tape
@@ -170,7 +169,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 	switch control.State {
 
 	case tapeStateStart:
-		control.Ear = TapeEarOff
+		control.Ear = tzxStartEar
 		control.State = tapeStateTzxHeader
 
 	case tapeStateTzxHeader:
@@ -180,6 +179,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 			control.Block = tzx.blocks[control.BlockIndex]
 			control.BlockPos = 0
 			tzx.parseHeader(control)
+			// log.Printf("TZX : Playing block #%d . Type : %x", control.BlockIndex, control.Block.Info().Type)
 		}
 
 	case tapeStateLeader:
@@ -230,7 +230,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		if tzx.mask == lastBit {
 			control.BlockPos++
 			tzx.blockLen--
-			if tzx.blockLen > 0 && lastBit == 0 {
+			if tzx.blockLen > 0 {
 				control.State = tapeStateNewByte
 			} else {
 				control.State = tapeStateLastPulse
@@ -245,7 +245,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		control.Timeout = 3500 // TZX 1 ms
 
 	case tapeStatePause:
-		control.Ear = TapeEarOff
+		control.Ear = tzxStartEar
 		control.State = tapeStateTzxHeader
 		if !control.EndOfTape() {
 			control.Timeout = tzx.endBlockPause * tapeTstatesMs
@@ -256,10 +256,10 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		control.State = tapeStatePureToneNochg
 
 	case tapeStatePureToneNochg:
-		tzx.leaderPulses--
 		if tzx.leaderPulses > 0 {
-			control.State = tapeStatePureTone
+			tzx.leaderPulses--
 			control.Timeout = tzx.leaderLenght
+			control.State = tapeStatePureTone
 		} else {
 			control.State = tapeStateTzxHeader
 		}
@@ -269,8 +269,8 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		control.State = tapeStatePulseSequenceNochg
 
 	case tapeStatePulseSequenceNochg:
-		tzx.leaderPulses--
 		if tzx.leaderPulses > 0 {
+			tzx.leaderPulses--
 			control.Timeout = readInt(control.Block.Data(), control.BlockPos)
 			control.BlockPos += 2
 			control.State = tapeStatePulseSequence
@@ -287,8 +287,8 @@ func (tzx *Tzx) Play(control *tape.Control) {
 }
 
 func (tzx *Tzx) parseHeader(control *tape.Control) {
-	id := control.Block.Info().Type
 	data := control.Block.Data()
+	id := control.Block.Info().Type
 	switch id {
 
 	case 0x10:
@@ -301,7 +301,7 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		tzx.endBlockPause = readInt(data, control.BlockPos+1)
 		tzx.blockLen = readInt(data, control.BlockPos+3)
 		control.BlockPos += 5
-		if data[control.BlockPos] < 0x80 {
+		if control.DataAtPos() < 0x80 {
 			tzx.leaderPulses = tapeHeaderPulses
 		} else {
 			tzx.leaderPulses = tapeDataPulses
@@ -362,6 +362,19 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		target := readInt(data, control.BlockPos+1)
 		control.BlockIndex += target
 
+	case 0x24: // Loop Start
+		tzx.loopCount = readInt(data, control.BlockPos+1)
+		control.BlockIndex++
+		tzx.loopStart = control.BlockIndex
+
+	case 0x25: // Loop End
+		tzx.loopCount--
+		if tzx.loopCount == 0 {
+			control.BlockIndex++
+		} else {
+			control.BlockIndex = tzx.loopStart
+		}
+
 	case 0x28: // Select Block
 		control.BlockIndex++
 
@@ -396,7 +409,7 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		control.BlockIndex++
 
 	default:
-		log.Printf("TZX : Playing not implemented block type %x \n", id)
+		log.Printf("TZX : Playing block #%d . Unsupported type : %x", control.BlockIndex, id)
 		control.BlockIndex++
 	}
 }
