@@ -45,7 +45,7 @@ func (block *TzxBlock) Data() []byte {
 	return block.data
 }
 
-// Tzx implements the a tape format .TAP
+// Tzx implements the a tape format .TZX
 type Tzx struct {
 	info          tape.Info    // Tape information
 	data          []byte       // Data buffer
