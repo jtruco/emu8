@@ -53,6 +53,8 @@ func init() {
 // ULA
 // -----------------------------------------------------------------------------
 
+const ulaInPort = 0xfe
+
 // ULA is the Unit Logic Array
 type ULA struct {
 	spectrum *Spectrum
@@ -91,18 +93,23 @@ func (ula *ULA) Read(address uint16) byte {
 	var result byte = 0xff
 	ula.preIO(address)
 	ula.postIO(address)
-	if (address & 0x0001) == 0 {
-		// Read keyboard state
-		var row uint
-		for row = 0; row < 8; row++ {
-			if (address & (1 << (uint16(row) + 8))) == 0 { // bit held low, so scan this row
-				result &= ula.spectrum.keyboard.rowstates[row]
-			}
-		}
+	if (address & 0x0001) == 0 { // ULA selection
+		if (address & 0xff) == ulaInPort {
 
-		// Read tape state
-		if ula.spectrum.tape.IsPlaying() {
-			result &= ula.spectrum.tape.Ear()
+			// Read keyboard state
+			scan := byte(address>>8) ^ 0xff
+			mask := byte(1)
+			for row := 0; row < 8; row++ {
+				if (scan & mask) != 0 { // scan row
+					result &= ula.spectrum.keyboard.rowstates[row]
+				}
+				mask <<= 1
+			}
+
+			// Read tape state
+			if ula.spectrum.tape.IsPlaying() {
+				result &= ula.spectrum.tape.Ear()
+			}
 		}
 	}
 	return result
@@ -113,7 +120,6 @@ func (ula *ULA) Write(address uint16, data byte) {
 	ula.preIO(address)
 	if (address & 0x0001) == 0 {
 		// border
-		ula.spectrum.tv.DoScanlines()
 		ula.spectrum.tv.SetBorder(data & 0x07)
 
 		// beeper & tape output
