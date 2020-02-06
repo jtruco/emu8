@@ -142,6 +142,7 @@ var keyStates = map[keyboard.Key][2]byte{
 
 // ZX Keyboard map
 var zxKeyboardMap = map[keyboard.KeyCode][]keyboard.Key{
+	// tandar mapping
 	keyboard.Key0: {ZxKey0},
 	keyboard.Key1: {ZxKey1},
 	keyboard.Key2: {ZxKey2},
@@ -186,4 +187,31 @@ var zxKeyboardMap = map[keyboard.KeyCode][]keyboard.Key{
 	keyboard.KeyRShift: {ZxKeyCapsShift},
 	keyboard.KeyLCtrl:  {ZxKeySymbolShift},
 	keyboard.KeyRCtrl:  {ZxKeySymbolShift},
+
+	// cursors
+	keyboard.KeyLeft:  {ZxKeyCapsShift, ZxKey5},
+	keyboard.KeyDown:  {ZxKeyCapsShift, ZxKey6},
+	keyboard.KeyUp:    {ZxKeyCapsShift, ZxKey7},
+	keyboard.KeyRight: {ZxKeyCapsShift, ZxKey8},
+
+	// keypad
+	keyboard.KeyPad1:        {ZxKey1},
+	keyboard.KeyPad2:        {ZxKey2},
+	keyboard.KeyPad3:        {ZxKey3},
+	keyboard.KeyPad4:        {ZxKey4},
+	keyboard.KeyPad5:        {ZxKey5},
+	keyboard.KeyPad6:        {ZxKey6},
+	keyboard.KeyPad7:        {ZxKey7},
+	keyboard.KeyPad8:        {ZxKey8},
+	keyboard.KeyPad9:        {ZxKey9},
+	keyboard.KeyPad0:        {ZxKey0},
+	keyboard.KeyPadMultiply: {ZxKeySymbolShift, ZxKeyB},
+	keyboard.KeyPadDivide:   {ZxKeySymbolShift, ZxKeyV},
+	keyboard.KeyPadPlus:     {ZxKeySymbolShift, ZxKeyK},
+	keyboard.KeyPadMinus:    {ZxKeySymbolShift, ZxKeyJ},
+	keyboard.KeyPadEnter:    {ZxKeyEnter},
+
+	// other keyboard maps
+	keyboard.KeyBackspace: {ZxKeyCapsShift, ZxKey0},
+	keyboard.KeyEscape:    {ZxKeyCapsShift, ZxKey1},
 }

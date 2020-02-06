@@ -97,22 +97,21 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 		captured = true
 		switch e.Keysym.Sym {
 		// Emulator
-		case sdl.K_ESCAPE:
-			app.running = false
+		case sdl.K_F4:
+			app.emulator.Start()
 		case sdl.K_F5:
 			app.emulator.Reset()
-		// Tape Drive
 		case sdl.K_F6:
-			app.emulator.Controller().Tape().Drive().Play()
-		case sdl.K_F7:
-			app.emulator.Controller().Tape().Drive().Stop()
-		case sdl.K_F8:
-			app.emulator.Controller().Tape().Drive().Rewind()
-		// Emulator
-		case sdl.K_F9:
-			app.emulator.Start()
-		case sdl.K_F10:
 			app.emulator.Stop()
+		case sdl.K_F10:
+			app.running = false // Exit app
+		// Tape Drive
+		case sdl.K_F7:
+			app.emulator.Controller().Tape().Drive().Play()
+		case sdl.K_F8:
+			app.emulator.Controller().Tape().Drive().Stop()
+		case sdl.K_F9:
+			app.emulator.Controller().Tape().Drive().Rewind()
 		// UI
 		case sdl.K_F11:
 			app.video.ToggleFullscreen()

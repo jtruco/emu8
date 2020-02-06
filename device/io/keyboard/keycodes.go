@@ -67,6 +67,22 @@ const (
 	KeyLeft  = 80
 	KeyDown  = 81
 	KeyUp    = 82
+	// Keypad
+	KeyPadDivide   = 84
+	KeyPadMultiply = 85
+	KeyPadMinus    = 86
+	KeyPadPlus     = 87
+	KeyPadEnter    = 88
+	KeyPad1        = 89
+	KeyPad2        = 90
+	KeyPad3        = 91
+	KeyPad4        = 92
+	KeyPad5        = 93
+	KeyPad6        = 94
+	KeyPad7        = 95
+	KeyPad8        = 96
+	KeyPad9        = 97
+	KeyPad0        = 98
 	// Meta
 	KeyLCtrl  = 224
 	KeyLShift = 225
