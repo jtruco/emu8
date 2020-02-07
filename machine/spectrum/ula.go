@@ -53,11 +53,15 @@ func init() {
 // ULA
 // -----------------------------------------------------------------------------
 
-const ulaInPort = 0xfe
+const (
+	ulaInPort    = 0xfe
+	ulaInDefault = 0xff
+)
 
 // ULA is the Unit Logic Array
 type ULA struct {
-	spectrum *Spectrum
+	spectrum    *Spectrum
+	currentRead byte
 }
 
 // NewULA creates
@@ -78,7 +82,9 @@ func (ula *ULA) ProcessBusEvent(event *device.BusEvent) {
 // Device
 
 // Init initializes ULA
-func (ula *ULA) Init() {}
+func (ula *ULA) Init() {
+	ula.currentRead = ulaInDefault
+}
 
 // Reset resets ULA
 func (ula *ULA) Reset() {}
@@ -93,7 +99,8 @@ func (ula *ULA) Read(address uint16) byte {
 	var result byte = 0xff
 	ula.preIO(address)
 	ula.postIO(address)
-	if (address & 0x0001) == 0 { // ULA selection
+	if (address & 0x0001) == 0 { // ULA selected
+		result = ula.currentRead
 		if (address & 0xff) == ulaInPort {
 
 			// Read keyboard state
@@ -118,7 +125,7 @@ func (ula *ULA) Read(address uint16) byte {
 // Write bus at address
 func (ula *ULA) Write(address uint16, data byte) {
 	ula.preIO(address)
-	if (address & 0x0001) == 0 {
+	if (address & 0x0001) == 0 { // ULA selected
 		// border
 		ula.spectrum.tv.SetBorder(data & 0x07)
 
@@ -134,6 +141,12 @@ func (ula *ULA) Write(address uint16, data byte) {
 			}
 		}
 		ula.spectrum.beeper.SetLevel(tstate, beeper)
+
+		// default read
+		ula.currentRead = ulaInDefault
+		if (data & 0x18) == 0 { // ISSUE 2
+			ula.currentRead ^= 0x40
+		}
 	}
 	ula.postIO(address)
 }
