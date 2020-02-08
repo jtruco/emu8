@@ -204,15 +204,15 @@ func (spectrum *Spectrum) EndFrame() {}
 func (spectrum *Spectrum) LoadFile(filename string) {
 	filefmt, ext := spectrum.controller.File().FileFormat(filename)
 	if filefmt == controller.FormatUnknown {
-		log.Println("Spectrum : Not supported format ", ext)
-		return
-	}
-	data, err := spectrum.controller.File().LoadFileFormat(filename, filefmt)
-	if err != nil {
-		log.Println("Spectrum : Error loading file ", ext)
+		log.Println("Spectrum : Not supported format:", ext)
 		return
 	}
 	name := spectrum.controller.File().BaseName(filename)
+	data, err := spectrum.controller.File().LoadFileFormat(filename, filefmt)
+	if err != nil {
+		log.Println("Spectrum : Error loading file:", name)
+		return
+	}
 	// load snapshop formats
 	if filefmt == controller.FormatSnap {
 		var snap *format.Snapshot
@@ -222,7 +222,7 @@ func (spectrum *Spectrum) LoadFile(filename string) {
 		case formatZ80:
 			snap = format.LoadZ80(data)
 		default:
-			log.Println("Spectrum : Not implemented format ", ext)
+			log.Println("Spectrum : Not implemented format:", ext)
 		}
 		if snap != nil {
 			spectrum.LoadState(snap)

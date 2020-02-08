@@ -113,8 +113,8 @@ func (tap *Tap) Play(control *tape.Control) {
 			tap.pilotPulses = tapeDataPulses
 		}
 		control.Ear = TapeEarOff
-		control.State = tapeStatePilot
 		control.Timeout = tapeTimingPilot
+		control.State = tapeStatePilot
 		// log.Println("TAP : Load block ", control.Block.(*TapBlock).header.filename)
 
 	case tapeStatePilot:
@@ -123,14 +123,14 @@ func (tap *Tap) Play(control *tape.Control) {
 		if tap.pilotPulses > 0 {
 			control.Timeout = tapeTimingPilot
 		} else {
-			control.State = tapeStateSync
 			control.Timeout = tapeTimingSync1
+			control.State = tapeStateSync
 		}
 
 	case tapeStateSync:
 		control.Ear ^= TapeEarMask
-		control.State = tapeStateByte
 		control.Timeout = tapeTimingSync2
+		control.State = tapeStateByte
 
 	case tapeStateByte:
 		tap.bitMask = 0x80
@@ -143,8 +143,8 @@ func (tap *Tap) Play(control *tape.Control) {
 		} else {
 			tap.bitTime = tapeTimingOne
 		}
-		control.State = tapeStateBit2
 		control.Timeout = tap.bitTime
+		control.State = tapeStateBit2
 
 	case tapeStateBit2:
 		control.Ear ^= TapeEarMask
@@ -163,8 +163,8 @@ func (tap *Tap) Play(control *tape.Control) {
 
 	case tapeStatePause:
 		control.Ear ^= TapeEarMask
-		control.State = tapeStatePauseStop
 		control.Timeout = tapeTimingEoB
+		control.State = tapeStatePauseStop
 
 	case tapeStatePauseStop:
 		control.BlockIndex++

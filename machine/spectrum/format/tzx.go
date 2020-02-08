@@ -189,17 +189,17 @@ func (tzx *Tzx) Play(control *tape.Control) {
 	case tapeStatePilotNc:
 		tzx.pilotPulses--
 		if tzx.pilotPulses > 0 {
-			control.State = tapeStatePilot
 			control.Timeout = tzx.pilotTiming
+			control.State = tapeStatePilot
 		} else {
-			control.State = tapeStateSync
 			control.Timeout = tzx.sync1Timing
+			control.State = tapeStateSync
 		}
 
 	case tapeStateSync:
 		control.Ear ^= TapeEarMask
-		control.State = tapeStateByte
 		control.Timeout = tzx.sync2timing
+		control.State = tapeStateByte
 
 	case tapeStateByteNc:
 		control.Ear ^= TapeEarMask
@@ -216,8 +216,8 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		} else {
 			tzx.bitTime = tzx.oneTiming
 		}
-		control.State = tapeStateBit2
 		control.Timeout = tzx.bitTime
+		control.State = tapeStateBit2
 
 	case tapeStateBit2:
 		control.Ear ^= TapeEarMask
@@ -242,14 +242,6 @@ func (tzx *Tzx) Play(control *tape.Control) {
 	case tapeStateLastPulse:
 		control.Ear ^= TapeEarMask
 		control.State = tapeStatePause
-		control.Timeout = 3500 // TZX 1 ms
-
-	case tapeStatePause:
-		control.Ear = tzxStartEar
-		control.State = tapeStateTzxHeader
-		if !control.EndOfTape() {
-			control.Timeout = tzx.endBlockPause * tapeTimingEoB
-		}
 
 	case tapeStatePureTone:
 		control.Ear ^= TapeEarMask
@@ -277,6 +269,12 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		} else {
 			control.State = tapeStateTzxHeader
 		}
+
+	case tapeStatePause:
+		if !control.EndOfTape() {
+			control.Timeout = tzx.endBlockPause * tapeTimingEoB
+		}
+		control.State = tapeStateTzxHeader
 
 	case tapeStateStop:
 		control.Playing = false // Stop
