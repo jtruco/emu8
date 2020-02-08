@@ -44,12 +44,12 @@ func (block *TapBlock) Data() []byte {
 
 // Tap implements the a tape format .TAP
 type Tap struct {
-	info         tape.Info    // Tape information
-	data         []byte       // Data buffer
-	blocks       []tape.Block // block array
-	leaderPulses int
-	mask         byte
-	bitTime      int
+	info        tape.Info    // Tape information
+	data        []byte       // Data buffer
+	blocks      []tape.Block // Block array
+	pilotPulses int          // Pilot pulses
+	bitMask     byte         // Current bit mask
+	bitTime     int          // Current bit time
 }
 
 // NewTap creates a new tape
@@ -108,70 +108,70 @@ func (tap *Tap) Play(control *tape.Control) {
 		control.Block = tap.blocks[control.BlockIndex]
 		control.BlockPos = 0
 		if control.Block.Info().Type == tapBlockHeader {
-			tap.leaderPulses = tapeHeaderPulses
+			tap.pilotPulses = tapeHeaderPulses
 		} else {
-			tap.leaderPulses = tapeDataPulses
+			tap.pilotPulses = tapeDataPulses
 		}
 		control.Ear = TapeEarOff
-		control.State = tapeStateLeader
-		control.Timeout = tapeLeaderLenght
+		control.State = tapeStatePilot
+		control.Timeout = tapeTimingPilot
 		// log.Println("TAP : Load block ", control.Block.(*TapBlock).header.filename)
 
-	case tapeStateLeader:
+	case tapeStatePilot:
 		control.Ear ^= TapeEarMask
-		tap.leaderPulses--
-		if tap.leaderPulses > 0 {
-			control.Timeout = tapeLeaderLenght
+		tap.pilotPulses--
+		if tap.pilotPulses > 0 {
+			control.Timeout = tapeTimingPilot
 		} else {
 			control.State = tapeStateSync
-			control.Timeout = tapeSync1Lenght
+			control.Timeout = tapeTimingSync1
 		}
 
 	case tapeStateSync:
 		control.Ear ^= TapeEarMask
-		control.State = tapeStateNewByte
-		control.Timeout = tapeSync2Lenght
+		control.State = tapeStateByte
+		control.Timeout = tapeTimingSync2
 
-	case tapeStateNewByte:
-		tap.mask = 0x80
-		control.State = tapeStateNewBit
+	case tapeStateByte:
+		tap.bitMask = 0x80
+		control.State = tapeStateBit1
 
-	case tapeStateNewBit:
+	case tapeStateBit1:
 		control.Ear ^= TapeEarMask
-		if (control.DataAtPos() & tap.mask) == 0 {
-			tap.bitTime = tapeZeroLenght
+		if (control.DataAtPos() & tap.bitMask) == 0 {
+			tap.bitTime = tapeTimingZero
 		} else {
-			tap.bitTime = tapeOneLenght
+			tap.bitTime = tapeTimingOne
 		}
-		control.State = tapeStateHalf2
+		control.State = tapeStateBit2
 		control.Timeout = tap.bitTime
 
-	case tapeStateHalf2:
+	case tapeStateBit2:
 		control.Ear ^= TapeEarMask
 		control.Timeout = tap.bitTime
-		tap.mask >>= 1
-		if tap.mask == 0 {
+		tap.bitMask >>= 1
+		if tap.bitMask == 0 {
 			control.BlockPos++
 			if !control.EndOfBlock() {
-				control.State = tapeStateNewByte
+				control.State = tapeStateByte
 			} else {
 				control.State = tapeStatePause
 			}
 		} else {
-			control.State = tapeStateNewBit
+			control.State = tapeStateBit1
 		}
 
 	case tapeStatePause:
 		control.Ear ^= TapeEarMask
 		control.State = tapeStatePauseStop
-		control.Timeout = 3500
+		control.Timeout = tapeTimingEoB
 
 	case tapeStatePauseStop:
 		control.BlockIndex++
 		if control.EndOfTape() {
 			control.State = tapeStateStop
 		} else {
-			control.State = tapeStateStart // Next block
+			control.State = tapeStateStart
 		}
 
 	case tapeStateStop:

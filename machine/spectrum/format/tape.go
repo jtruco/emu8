@@ -22,11 +22,11 @@ const (
 // Tape play states
 const (
 	tapeStateStart = iota
-	tapeStateLeader
+	tapeStatePilot
 	tapeStateSync
-	tapeStateNewByte
-	tapeStateNewBit
-	tapeStateHalf2
+	tapeStateByte
+	tapeStateBit1
+	tapeStateBit2
 	tapeStatePause
 	tapeStatePauseStop
 	tapeStateStop
@@ -34,15 +34,15 @@ const (
 
 // Tape tstate constants
 const (
-	tapeLeaderLenght  = 2168
-	tapeSync1Lenght   = 667
-	tapeSync2Lenght   = 735
-	tapeZeroLenght    = 855
-	tapeOneLenght     = 1710
+	tapeTimingPilot   = 2168
+	tapeTimingSync1   = 667
+	tapeTimingSync2   = 735
+	tapeTimingZero    = 855
+	tapeTimingOne     = 1710
 	tapeHeaderPulses  = 8063
 	tapeDataPulses    = 3223
 	tapeEndBlockPause = 3494400 // 3494400 Ts/s
-	tapeTstatesMs     = tapeEndBlockPause / 1000
+	tapeTimingEoB     = tapeEndBlockPause / 1000
 )
 
 // -----------------------------------------------------------------------------

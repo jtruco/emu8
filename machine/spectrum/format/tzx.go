@@ -20,13 +20,13 @@ const (
 const (
 	_ = iota + tapeStateStop
 	tapeStateTzxHeader
-	tapeStateLeaderNochg
-	tapeStateNewByteNochg
+	tapeStatePilotNc
+	tapeStateByteNc
 	tapeStateLastPulse
 	tapeStatePureTone
-	tapeStatePureToneNochg
-	tapeStatePulseSequence
-	tapeStatePulseSequenceNochg
+	tapeStatePureToneNc
+	tapeStatePulseSeq
+	tapeStatePulseSeqNc
 )
 
 // TzxBlock is a tape block
@@ -50,19 +50,19 @@ type Tzx struct {
 	info          tape.Info    // Tape information
 	data          []byte       // Data buffer
 	blocks        []tape.Block // block array
-	blockLen      int
-	leaderPulses  int
-	leaderLenght  int
-	sync1Lenght   int
-	sync2Lenght   int
-	zeroLenght    int
-	oneLenght     int
-	bitsLastByte  byte
-	endBlockPause int
-	mask          byte
-	bitTime       int
-	loopCount     int
-	loopStart     int
+	blockLength   int          // Block lenght
+	pilotPulses   int          // Pilot pulses
+	pilotTiming   int          // Pilot timing
+	sync1Timing   int          // Sync1 timing
+	sync2timing   int          // Sync2 timing
+	zeroTiming    int          // Timing of 0 bit
+	oneTiming     int          // Timing of 1 bit
+	bitsLastByte  byte         // Number of bits of last byte
+	endBlockPause int          // Pause at end of block
+	bitMask       byte         // Current bit mask
+	bitTime       int          // Curent bit time
+	loopCount     int          // Control loop count
+	loopStart     int          // Control loop start
 }
 
 // NewTzx creates a new tape
@@ -182,61 +182,61 @@ func (tzx *Tzx) Play(control *tape.Control) {
 			// log.Printf("TZX : Playing block #%d . Type : %x", control.BlockIndex, control.Block.Info().Type)
 		}
 
-	case tapeStateLeader:
+	case tapeStatePilot:
 		control.Ear ^= TapeEarMask
-		control.State = tapeStateLeaderNochg
+		control.State = tapeStatePilotNc
 
-	case tapeStateLeaderNochg:
-		tzx.leaderPulses--
-		if tzx.leaderPulses > 0 {
-			control.State = tapeStateLeader
-			control.Timeout = tzx.leaderLenght
+	case tapeStatePilotNc:
+		tzx.pilotPulses--
+		if tzx.pilotPulses > 0 {
+			control.State = tapeStatePilot
+			control.Timeout = tzx.pilotTiming
 		} else {
 			control.State = tapeStateSync
-			control.Timeout = tzx.sync1Lenght
+			control.Timeout = tzx.sync1Timing
 		}
 
 	case tapeStateSync:
 		control.Ear ^= TapeEarMask
-		control.State = tapeStateNewByte
-		control.Timeout = tzx.sync2Lenght
+		control.State = tapeStateByte
+		control.Timeout = tzx.sync2timing
 
-	case tapeStateNewByteNochg:
+	case tapeStateByteNc:
 		control.Ear ^= TapeEarMask
-		control.State = tapeStateNewByte
+		control.State = tapeStateByte
 
-	case tapeStateNewByte:
-		tzx.mask = 0x80
-		control.State = tapeStateNewBit
+	case tapeStateByte:
+		tzx.bitMask = 0x80
+		control.State = tapeStateBit1
 
-	case tapeStateNewBit:
+	case tapeStateBit1:
 		control.Ear ^= TapeEarMask
-		if (control.DataAtPos() & tzx.mask) == 0 {
-			tzx.bitTime = tzx.zeroLenght
+		if (control.DataAtPos() & tzx.bitMask) == 0 {
+			tzx.bitTime = tzx.zeroTiming
 		} else {
-			tzx.bitTime = tzx.oneLenght
+			tzx.bitTime = tzx.oneTiming
 		}
-		control.State = tapeStateHalf2
+		control.State = tapeStateBit2
 		control.Timeout = tzx.bitTime
 
-	case tapeStateHalf2:
+	case tapeStateBit2:
 		control.Ear ^= TapeEarMask
 		control.Timeout = tzx.bitTime
-		tzx.mask >>= 1
+		tzx.bitMask >>= 1
 		lastBit := byte(0)
-		if tzx.blockLen == 1 {
+		if tzx.blockLength == 1 {
 			lastBit = 0x80 >> tzx.bitsLastByte
 		}
-		if tzx.mask == lastBit {
+		if tzx.bitMask == lastBit {
 			control.BlockPos++
-			tzx.blockLen--
-			if tzx.blockLen > 0 {
-				control.State = tapeStateNewByte
+			tzx.blockLength--
+			if tzx.blockLength > 0 {
+				control.State = tapeStateByte
 			} else {
 				control.State = tapeStateLastPulse
 			}
 		} else {
-			control.State = tapeStateNewBit
+			control.State = tapeStateBit1
 		}
 
 	case tapeStateLastPulse:
@@ -248,32 +248,32 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		control.Ear = tzxStartEar
 		control.State = tapeStateTzxHeader
 		if !control.EndOfTape() {
-			control.Timeout = tzx.endBlockPause * tapeTstatesMs
+			control.Timeout = tzx.endBlockPause * tapeTimingEoB
 		}
 
 	case tapeStatePureTone:
 		control.Ear ^= TapeEarMask
-		control.State = tapeStatePureToneNochg
+		control.State = tapeStatePureToneNc
 
-	case tapeStatePureToneNochg:
-		if tzx.leaderPulses > 0 {
-			tzx.leaderPulses--
-			control.Timeout = tzx.leaderLenght
+	case tapeStatePureToneNc:
+		if tzx.pilotPulses > 0 {
+			tzx.pilotPulses--
+			control.Timeout = tzx.pilotTiming
 			control.State = tapeStatePureTone
 		} else {
 			control.State = tapeStateTzxHeader
 		}
 
-	case tapeStatePulseSequence:
+	case tapeStatePulseSeq:
 		control.Ear ^= TapeEarMask
-		control.State = tapeStatePulseSequenceNochg
+		control.State = tapeStatePulseSeqNc
 
-	case tapeStatePulseSequenceNochg:
-		if tzx.leaderPulses > 0 {
-			tzx.leaderPulses--
+	case tapeStatePulseSeqNc:
+		if tzx.pilotPulses > 0 {
+			tzx.pilotPulses--
 			control.Timeout = readInt(control.Block.Data(), control.BlockPos)
 			control.BlockPos += 2
-			control.State = tapeStatePulseSequence
+			control.State = tapeStatePulseSeq
 		} else {
 			control.State = tapeStateTzxHeader
 		}
@@ -292,58 +292,58 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 	switch id {
 
 	case 0x10:
-		tzx.leaderLenght = tapeLeaderLenght
-		tzx.sync1Lenght = tapeSync1Lenght
-		tzx.sync2Lenght = tapeSync2Lenght
-		tzx.zeroLenght = tapeZeroLenght
-		tzx.oneLenght = tapeOneLenght
+		tzx.pilotTiming = tapeTimingPilot
+		tzx.sync1Timing = tapeTimingSync1
+		tzx.sync2timing = tapeTimingSync2
+		tzx.zeroTiming = tapeTimingZero
+		tzx.oneTiming = tapeTimingOne
 		tzx.bitsLastByte = 8
 		tzx.endBlockPause = readInt(data, control.BlockPos+1)
-		tzx.blockLen = readInt(data, control.BlockPos+3)
+		tzx.blockLength = readInt(data, control.BlockPos+3)
 		control.BlockPos += 5
 		if control.DataAtPos() < 0x80 {
-			tzx.leaderPulses = tapeHeaderPulses
+			tzx.pilotPulses = tapeHeaderPulses
 		} else {
-			tzx.leaderPulses = tapeDataPulses
+			tzx.pilotPulses = tapeDataPulses
 		}
-		control.State = tapeStateLeaderNochg
+		control.State = tapeStatePilotNc
 		control.BlockIndex++
 
 	case 0x11:
-		tzx.leaderLenght = readInt(data, control.BlockPos+1)
-		tzx.sync1Lenght = readInt(data, control.BlockPos+3)
-		tzx.sync2Lenght = readInt(data, control.BlockPos+5)
-		tzx.zeroLenght = readInt(data, control.BlockPos+7)
-		tzx.oneLenght = readInt(data, control.BlockPos+9)
-		tzx.leaderPulses = readInt(data, control.BlockPos+11)
+		tzx.pilotTiming = readInt(data, control.BlockPos+1)
+		tzx.sync1Timing = readInt(data, control.BlockPos+3)
+		tzx.sync2timing = readInt(data, control.BlockPos+5)
+		tzx.zeroTiming = readInt(data, control.BlockPos+7)
+		tzx.oneTiming = readInt(data, control.BlockPos+9)
+		tzx.pilotPulses = readInt(data, control.BlockPos+11)
 		tzx.bitsLastByte = data[control.BlockPos+13]
 		tzx.endBlockPause = readInt(data, control.BlockPos+14)
-		tzx.blockLen = readIntN(data, control.BlockPos+16, 3)
+		tzx.blockLength = readIntN(data, control.BlockPos+16, 3)
 		control.BlockPos += 19
-		control.State = tapeStateLeaderNochg
+		control.State = tapeStatePilotNc
 		control.BlockIndex++
 
 	case 0x12: // Pure Tone Block
-		tzx.leaderLenght = readInt(data, control.BlockPos+1)
-		tzx.leaderPulses = readInt(data, control.BlockPos+3)
+		tzx.pilotTiming = readInt(data, control.BlockPos+1)
+		tzx.pilotPulses = readInt(data, control.BlockPos+3)
 		control.BlockPos += 5
-		control.State = tapeStatePureToneNochg
+		control.State = tapeStatePureToneNc
 		control.BlockIndex++
 
 	case 0x13: // Pulse Sequence Block
-		tzx.leaderPulses = int(data[control.BlockPos+1])
+		tzx.pilotPulses = int(data[control.BlockPos+1])
 		control.BlockPos += 2
-		control.State = tapeStatePulseSequenceNochg
+		control.State = tapeStatePulseSeqNc
 		control.BlockIndex++
 
 	case 0x14: // Pure Data Block
-		tzx.zeroLenght = readInt(data, control.BlockPos+1)
-		tzx.oneLenght = readInt(data, control.BlockPos+3)
+		tzx.zeroTiming = readInt(data, control.BlockPos+1)
+		tzx.oneTiming = readInt(data, control.BlockPos+3)
 		tzx.bitsLastByte = data[control.BlockPos+5]
 		tzx.endBlockPause = readInt(data, control.BlockPos+6)
-		tzx.blockLen = readIntN(data, control.BlockPos+8, 3)
+		tzx.blockLength = readIntN(data, control.BlockPos+8, 3)
 		control.BlockPos += 11
-		control.State = tapeStateNewByteNochg
+		control.State = tapeStateByteNc
 		control.BlockIndex++
 
 	case 0x20: // Pause (silence) or 'Stop the Tape' command
