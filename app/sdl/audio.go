@@ -9,13 +9,15 @@ import (
 
 // Audio the SDL audio engine
 type Audio struct {
-	app *App // The SDL app
+	app  *App // The SDL app
+	mute bool // Audio mute
 }
 
 // NewAudio the SDL audio
 func NewAudio(app *App) *Audio {
 	audio := &Audio{}
 	audio.app = app
+	audio.mute = app.config.MuteAudio
 	return audio
 }
 
@@ -38,5 +40,7 @@ func (audio *Audio) Init() bool {
 
 // Play plays the audio buffer
 func (audio *Audio) Play(buffer *audio.Buffer) {
-	sdl.QueueAudio(1, buffer.Data())
+	if !audio.mute {
+		sdl.QueueAudio(1, buffer.Data())
+	}
 }

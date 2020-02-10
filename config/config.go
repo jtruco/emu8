@@ -11,6 +11,7 @@ const (
 	DefaultMachineModel = "ZXSpectrum48k"
 	DefaultVideoScale   = 2
 	DefaultFullScreen   = false
+	DefaultMuteAudio    = false
 )
 
 // Config is the main configuration
@@ -22,6 +23,7 @@ type Config struct {
 	FileName     string
 	VideoScale   int
 	FullScreen   bool
+	MuteAudio    bool
 }
 
 // config is the application main configuration
@@ -45,6 +47,7 @@ func parseArgs() {
 	flag.StringVar(&config.FileName, "f", "", "Load file")
 	flag.IntVar(&config.VideoScale, "vs", DefaultVideoScale, "Video scale (1..4)")
 	flag.BoolVar(&config.FullScreen, "vf", DefaultFullScreen, "Video in full screen mode")
+	flag.BoolVar(&config.MuteAudio, "ma", DefaultMuteAudio, "No Audio")
 	flag.Parse()
 	if len(flag.Args()) > 0 {
 		config.FileName = flag.Args()[0]
@@ -59,4 +62,5 @@ func init() {
 	config.MachineModel = DefaultMachineModel
 	config.VideoScale = DefaultVideoScale
 	config.FullScreen = DefaultFullScreen
+	config.MuteAudio = DefaultMuteAudio
 }
