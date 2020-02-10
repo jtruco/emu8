@@ -61,6 +61,7 @@ type Tzx struct {
 	endBlockPause int          // Pause at end of block
 	bitMask       byte         // Current bit mask
 	bitTime       int          // Curent bit time
+	lastBit       byte         // Last bit of current byte
 	loopCount     int          // Control loop count
 	loopStart     int          // Control loop start
 }
@@ -207,6 +208,10 @@ func (tzx *Tzx) Play(control *tape.Control) {
 
 	case tapeStateByte:
 		tzx.bitMask = 0x80
+		tzx.lastBit = 0x00
+		if tzx.blockLength == 1 {
+			tzx.lastBit = 0x80 >> tzx.bitsLastByte
+		}
 		control.State = tapeStateBit1
 
 	case tapeStateBit1:
@@ -223,11 +228,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		control.Ear ^= TapeEarMask
 		control.Timeout = tzx.bitTime
 		tzx.bitMask >>= 1
-		lastBit := byte(0)
-		if tzx.blockLength == 1 {
-			lastBit = 0x80 >> tzx.bitsLastByte
-		}
-		if tzx.bitMask == lastBit {
+		if tzx.bitMask == tzx.lastBit {
 			control.BlockPos++
 			tzx.blockLength--
 			if tzx.blockLength > 0 {
@@ -241,7 +242,12 @@ func (tzx *Tzx) Play(control *tape.Control) {
 
 	case tapeStateLastPulse:
 		control.Ear ^= TapeEarMask
-		control.State = tapeStatePause
+		if tzx.endBlockPause > 0 {
+			control.Timeout = tapeTimingEoB
+			control.State = tapeStatePause
+		} else {
+			control.State = tapeStateTzxHeader
+		}
 
 	case tapeStatePureTone:
 		control.Ear ^= TapeEarMask
@@ -271,10 +277,22 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		}
 
 	case tapeStatePause:
+		control.Ear = tzxStartEar
 		if !control.EndOfTape() {
 			control.Timeout = tzx.endBlockPause * tapeTimingEoB
+			control.State = tapeStateTzxHeader
+		} else {
+			control.State = tapeStateStop
 		}
-		control.State = tapeStateTzxHeader
+
+	case tapeStatePauseStop:
+		if tzx.endBlockPause > 0 {
+			control.Ear = tzxStartEar
+			control.Timeout = tzx.endBlockPause * tapeTimingEoB
+			control.State = tapeStateTzxHeader
+		} else {
+			control.State = tapeStateStop
+		}
 
 	case tapeStateStop:
 		control.Playing = false // Stop
