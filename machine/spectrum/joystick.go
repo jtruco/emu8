@@ -7,8 +7,8 @@ package spectrum
 
 // Joystick models
 const (
-	JoystickNone     = iota
-	JoystickKempston = iota
+	JoystickNone = iota
+	JoystickKempston
 )
 
 // Kempston constants
