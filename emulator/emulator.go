@@ -91,9 +91,9 @@ func (emulator *Emulator) runEmulation() {
 		case <-ticker.C:
 			{
 				// do frame
-				emulator.flushInput()
+				emulator.controller.Flush()
 				emulator.emulateFrame()
-				emulator.refreshUI()
+				emulator.controller.Refresh()
 			}
 		}
 	}
@@ -112,18 +112,4 @@ func (emulator *Emulator) emulateFrame() {
 		machine.Emulate()
 	}
 	machine.EndFrame()
-}
-
-// flushInput flushes input events
-func (emulator *Emulator) flushInput() {
-	// Keyboard & Joystick events
-	emulator.controller.Keyboard().Flush()
-	emulator.controller.Joystick().Flush()
-}
-
-// refreshUI refresh UI asynchronusly
-func (emulator *Emulator) refreshUI() {
-	// Video & Audio refresh
-	emulator.controller.Audio().Flush()
-	emulator.controller.Video().Refresh()
 }

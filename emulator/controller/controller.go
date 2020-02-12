@@ -18,6 +18,10 @@ type Controller interface {
 	Joystick() *JoystickController
 	// Tape returns the tape controller
 	Tape() *TapeController
+	// Flush process input events
+	Flush()
+	// Refresh refresh UI and output events
+	Refresh()
 }
 
 // EmulatorController is the emulator controller implementation.
@@ -70,4 +74,20 @@ func (controller *EmulatorController) Joystick() *JoystickController {
 // Tape the tape controller
 func (controller *EmulatorController) Tape() *TapeController {
 	return controller.tape
+}
+
+// Emulation control
+
+// Flush flushes input events
+func (controller *EmulatorController) Flush() {
+	// Keyboard & Joystick events
+	controller.Keyboard().Flush()
+	controller.Joystick().Flush()
+}
+
+// Refresh refresh UI and output events
+func (controller *EmulatorController) Refresh() {
+	// Video & Audio refresh
+	controller.Audio().Flush()
+	controller.Video().Refresh()
 }
