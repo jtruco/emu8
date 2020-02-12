@@ -116,8 +116,9 @@ func (emulator *Emulator) emulateFrame() {
 
 // flushInput flushes input events
 func (emulator *Emulator) flushInput() {
-	// Keyboard events
+	// Keyboard & Joystick events
 	emulator.controller.Keyboard().Flush()
+	emulator.controller.Joystick().Flush()
 }
 
 // refreshUI refresh UI asynchronusly

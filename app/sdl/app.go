@@ -31,9 +31,16 @@ func NewApp() *App {
 // Init the SDL App
 func (app *App) Init() bool {
 	// init sdl
-	if err := sdl.Init(sdl.INIT_VIDEO | sdl.INIT_AUDIO); err != nil {
+	if err := sdl.Init(sdl.INIT_VIDEO | sdl.INIT_AUDIO | sdl.INIT_JOYSTICK); err != nil {
 		log.Println("Error initializing SDL : " + err.Error())
 		return false
+	}
+	// open sdl joystick (only one supported)
+	if sdl.NumJoysticks() > 0 {
+		joystick := sdl.JoystickOpen(0)
+		if joystick != nil {
+			log.Println("Joystick found ...", sdl.JoystickNameForIndex(0))
+		}
 	}
 	// init emulator
 	emulator := emulator.FromModel(app.config.MachineModel)
@@ -73,6 +80,12 @@ func (app *App) Run() {
 				app.running = false
 			case *sdl.KeyboardEvent:
 				app.processKeyboard(e)
+			case *sdl.JoyAxisEvent:
+				app.emulator.Controller().Joystick().AxisEvent(
+					byte(e.Which), e.Axis, byte(e.Value>>8))
+			case *sdl.JoyButtonEvent:
+				app.emulator.Controller().Joystick().ButtonEvent(
+					byte(e.Which), e.Button, e.State)
 			}
 		}
 		if count == 0 {

@@ -52,7 +52,8 @@ type Spectrum struct {
 	tv         *TVVideo              // The spectrum TV video output
 	beeper     *audio.Beeper         // The spectrum Beeper
 	keyboard   *Keyboard             // The spectrum Keyboard
-	tape       *tape.Drive           // The spectrum tape drive
+	tape       *tape.Drive           // The spectrum Tape drive
+	joystick   *Joystick             // The spectrum Joystick
 }
 
 // NewSpectrum returns a new ZX Spectrum
@@ -77,6 +78,7 @@ func (spectrum *Spectrum) buildMachine() {
 	spectrum.beeper.SetMap(beeperMap)
 	spectrum.keyboard = NewKeyboard()
 	spectrum.tape = tape.New(spectrum.clock)
+	spectrum.joystick = NewJoystick()
 
 	// register components
 	spectrum.registerComponents()
@@ -100,15 +102,16 @@ func (spectrum *Spectrum) buildMemory() {
 
 // register components
 func (spectrum *Spectrum) registerComponents() {
-	spectrum.components = device.NewComponents(8)
+	spectrum.components = device.NewComponents(9)
 	spectrum.components.Add(spectrum.clock)
 	spectrum.components.Add(spectrum.memory)
 	spectrum.components.Add(spectrum.ula)
 	spectrum.components.Add(spectrum.cpu)
-	spectrum.components.Add(spectrum.keyboard)
 	spectrum.components.Add(spectrum.tv)
 	spectrum.components.Add(spectrum.beeper)
+	spectrum.components.Add(spectrum.keyboard)
 	spectrum.components.Add(spectrum.tape)
+	spectrum.components.Add(spectrum.joystick)
 }
 
 // Device interface
@@ -170,6 +173,7 @@ func (spectrum *Spectrum) SetController(cntrlr controller.Controller) {
 	spectrum.controller.File().RegisterFormat(controller.FormatSnap, snapFormats)
 	spectrum.controller.File().RegisterFormat(controller.FormatTape, tapeFormats)
 	spectrum.controller.Tape().SetDrive(spectrum.tape)
+	spectrum.controller.Joystick().AddReceiver(spectrum.joystick, 0)
 }
 
 // VideoMemory gets the video memory bank

@@ -119,6 +119,9 @@ func (ula *ULA) Read(address uint16) byte {
 			}
 		}
 	}
+	if (address & 0x00e0) == 0 { // Kempston
+		result &= ula.spectrum.joystick.GetKempston()
+	}
 	return result
 }
 
