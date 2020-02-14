@@ -63,6 +63,7 @@ var zxPalette = []int32{
 type TVVideo struct {
 	screen   *video.Screen // The video screen
 	spectrum *Spectrum     // The Spectrum machine
+	srcdata  []byte        // The screen data
 	tstate   int           // Current videoframe tstate
 	palette  []int32       // The video palette
 	border   byte          // The border current colour index
@@ -78,6 +79,7 @@ func NewTVVideo(spectrum *Spectrum) *TVVideo {
 	tv.screen = video.NewScreen(tvTotalWidth, tvTotalHeight, tv.palette)
 	tv.screen.SetDisplay(tvDisplayLeft, tvDisplayTop, tvDisplayWidth, tvDisplayHeight)
 	tv.spectrum = spectrum
+	tv.srcdata = spectrum.VideoMemory().Data()
 	spectrum.VideoMemory().AddBusListener(tv)
 	tv.accurate = true
 	return tv
@@ -140,7 +142,6 @@ func (tv *TVVideo) Screen() *video.Screen { return tv.screen }
 // paintScreen is a simple screen emulation
 func (tv *TVVideo) paintScreen() {
 	// 3 banks, of 8 rows, of 8 lines, of 32 cols
-	screendata := tv.spectrum.VideoMemory().Data()
 	baddr := 0
 	y, sy := 0, tvBorderTop
 	for b := 0; b < 3; b++ {
@@ -151,8 +152,8 @@ func (tv *TVVideo) paintScreen() {
 				aaddr := tvAttrAddr + (y>>3)<<5
 				sx := tvBorderLeft
 				for c := 0; c < 32; c++ {
-					data := screendata[caddr]
-					attr := screendata[aaddr]
+					data := tv.srcdata[caddr]
+					attr := tv.srcdata[aaddr]
 					tv.paintByte(sy, sx, data, attr, tv.flash)
 					caddr++
 					aaddr++
@@ -274,7 +275,7 @@ func (tv *TVVideo) DoScanlines() {
 
 func (tv *TVVideo) scanlineScreen(y, x1, x2 int) {
 	var attr, data, ink, paper, mask byte
-	screendata := tv.spectrum.VideoMemory().Data()
+
 	xx := x1 - tvBorderLeft
 	yy := y - tvBorderTop
 	scrAddr := 0x800*(yy>>6) | tvLineBytes*((yy&0x38)>>3) | ((yy & 0x07) << 8) | xx>>3
@@ -286,8 +287,8 @@ func (tv *TVVideo) scanlineScreen(y, x1, x2 int) {
 		if readmem {
 			readmem = false
 			// read memory data & attr
-			data = screendata[scrAddr]
-			attr = screendata[attrAddr]
+			data = tv.srcdata[scrAddr]
+			attr = tv.srcdata[attrAddr]
 			scrAddr++
 			attrAddr++
 			// calculate ink + paper
