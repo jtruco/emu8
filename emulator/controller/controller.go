@@ -81,13 +81,13 @@ func (controller *EmulatorController) Tape() *TapeController {
 // Flush flushes input events
 func (controller *EmulatorController) Flush() {
 	// Keyboard & Joystick events
-	controller.Keyboard().Flush()
-	controller.Joystick().Flush()
+	controller.keyboard.Flush()
+	controller.joystick.Flush()
 }
 
 // Refresh refresh UI and output events
 func (controller *EmulatorController) Refresh() {
 	// Video & Audio refresh
-	controller.Audio().Flush()
-	controller.Video().Refresh()
+	controller.audio.Flush()
+	controller.video.Refresh()
 }

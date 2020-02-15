@@ -40,6 +40,9 @@ func (controller *VideoController) SetVideo(video video.Video) {
 
 // Refresh video screen to output renderer
 func (controller *VideoController) Refresh() {
+	if controller.video == nil {
+		return
+	}
 	controller.video.EndFrame()
 	screen := controller.video.Screen()
 	if screen.IsDirty() {
