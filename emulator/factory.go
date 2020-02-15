@@ -3,6 +3,7 @@ package emulator
 import (
 	"log"
 
+	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/machine"
 	"github.com/jtruco/emu8/machine/spectrum"
 )
@@ -10,6 +11,11 @@ import (
 // -----------------------------------------------------------------------------
 // Machine factory
 // -----------------------------------------------------------------------------
+
+// GetDefault returns the configured emulator
+func GetDefault() *Emulator {
+	return FromModel(config.Get().MachineModel)
+}
 
 // FromModel returns an emulator for a machine model
 func FromModel(modelname string) *Emulator {

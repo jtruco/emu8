@@ -9,6 +9,8 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+const loopSleep = 20 * time.Millisecond // 50 Hz
+
 // App is the SDL application
 type App struct {
 	title    string
@@ -29,7 +31,7 @@ func NewApp() *App {
 }
 
 // Init the SDL App
-func (app *App) Init() bool {
+func (app *App) Init(e *emulator.Emulator) bool {
 	// init sdl
 	if err := sdl.Init(sdl.INIT_VIDEO | sdl.INIT_AUDIO | sdl.INIT_JOYSTICK); err != nil {
 		log.Println("Error initializing SDL : " + err.Error())
@@ -43,18 +45,9 @@ func (app *App) Init() bool {
 		}
 	}
 	// init emulator
-	emulator := emulator.FromModel(app.config.MachineModel)
-	if emulator == nil {
-		log.Println("Error initializing emulator : machine model is not valid.")
-		return false
-	}
-	emulator.Controller().Video().SetRenderer(app.video)
-	emulator.Controller().Audio().SetPlayer(app.audio)
-	emulator.Init()
-	if app.config.FileName != "" {
-		emulator.Machine().LoadFile(app.config.FileName)
-	}
-	app.emulator = emulator
+	app.emulator = e
+	app.emulator.Controller().Video().SetRenderer(app.video)
+	app.emulator.Controller().Audio().SetPlayer(app.audio)
 	// init SDL video output
 	if !app.video.Init() {
 		return false
@@ -68,8 +61,15 @@ func (app *App) Init() bool {
 
 // Run the SDL App
 func (app *App) Run() {
-	const sleep = 20 * time.Millisecond // 50 Hz
+
+	// init emulator
+	app.emulator.Init()
+	if app.config.FileName != "" { // fixme : move to emulator init
+		app.emulator.Machine().LoadFile(app.config.FileName)
+	}
 	app.emulator.Start()
+
+	// event loop
 	app.running = true
 	for app.running {
 		count := 0
@@ -89,7 +89,7 @@ func (app *App) Run() {
 			}
 		}
 		if count == 0 {
-			time.Sleep(sleep)
+			time.Sleep(loopSleep)
 		}
 	}
 	app.emulator.Stop()
