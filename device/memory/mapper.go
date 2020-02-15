@@ -120,7 +120,7 @@ func (mapper *DefaultMapper) SelectBankWrite(address uint16) (*BankMap, uint16) 
 // selectInternal internal bank selection
 func (mapper *DefaultMapper) selectInternal(address uint16, write bool) (*BankMap, uint16) {
 	for _, bank := range mapper.memory.banks {
-		if bank != nil && bank.active && bank.write == write {
+		if bank != nil && bank.active && (!write || bank.write == write) {
 			if address >= bank.address && address <= bank.endaddress {
 				return bank, address - bank.address
 			}
