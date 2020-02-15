@@ -62,30 +62,7 @@ func NewSpectrum(model int) *Spectrum {
 	spectrum.config.Model = model
 	spectrum.config.FrameTStates = frameTStates
 	spectrum.config.SetFPS(fps)
-	spectrum.buildMachine()
-	return spectrum
-}
-
-// buildMachine create and connect machine components
-func (spectrum *Spectrum) buildMachine() {
-	// Build components
-	spectrum.clock = cpu.NewClock()
-	spectrum.buildMemory()
-	spectrum.ula = NewULA(spectrum)
-	spectrum.cpu = z80.New(spectrum.clock, spectrum.memory, spectrum.ula)
-	spectrum.tv = NewTVVideo(spectrum)
-	spectrum.beeper = audio.NewBeeper(config.AudioFrecuency, fps, frameTStates)
-	spectrum.beeper.SetMap(beeperMap)
-	spectrum.keyboard = NewKeyboard()
-	spectrum.tape = tape.New(spectrum.clock)
-	spectrum.joystick = NewJoystick()
-
-	// register components
-	spectrum.registerComponents()
-}
-
-// buildMemory builds memory mapping
-func (spectrum *Spectrum) buildMemory() {
+	// memory mapping
 	if spectrum.config.Model == machine.ZXSpectrum16k {
 		spectrum.memory = memory.New(memory.Size32K, 2)
 		spectrum.memory.SetMap(0, memory.NewROM(0x0000, memory.Size16K))
@@ -98,10 +75,17 @@ func (spectrum *Spectrum) buildMemory() {
 		spectrum.memory.SetMap(3, memory.NewRAM(0xC000, memory.Size16K))
 	}
 	spectrum.memory.SetMapper(&memory.BusMapper{Shift: 14, Mask: 0x3fff})
-}
-
-// register components
-func (spectrum *Spectrum) registerComponents() {
+	// build device components
+	spectrum.clock = cpu.NewClock()
+	spectrum.ula = NewULA(spectrum)
+	spectrum.cpu = z80.New(spectrum.clock, spectrum.memory, spectrum.ula)
+	spectrum.tv = NewTVVideo(spectrum)
+	spectrum.beeper = audio.NewBeeper(config.AudioFrecuency, fps, frameTStates)
+	spectrum.beeper.SetMap(beeperMap)
+	spectrum.keyboard = NewKeyboard()
+	spectrum.tape = tape.New(spectrum.clock)
+	spectrum.joystick = NewJoystick()
+	// register all components
 	spectrum.components = device.NewComponents(9)
 	spectrum.components.Add(spectrum.clock)
 	spectrum.components.Add(spectrum.memory)
@@ -112,6 +96,8 @@ func (spectrum *Spectrum) registerComponents() {
 	spectrum.components.Add(spectrum.keyboard)
 	spectrum.components.Add(spectrum.tape)
 	spectrum.components.Add(spectrum.joystick)
+
+	return spectrum
 }
 
 // Device interface
@@ -132,6 +118,7 @@ func (spectrum *Spectrum) Reset() {
 	spectrum.initSpectrum()
 }
 
+// initSpectrum commont init tasks
 func (spectrum *Spectrum) initSpectrum() {
 	// load ROM at bank 0
 	data, err := spectrum.controller.File().LoadROM(romName)
