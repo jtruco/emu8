@@ -74,7 +74,8 @@ func NewSpectrum(model int) *Spectrum {
 		spectrum.memory.SetMap(2, memory.NewRAM(0x8000, memory.Size16K))
 		spectrum.memory.SetMap(3, memory.NewRAM(0xC000, memory.Size16K))
 	}
-	spectrum.memory.SetMapper(&memory.BusMapper{Shift: 14, Mask: 0x3fff})
+	mapper := &memory.MaskMapper{Shift: 14, Mask: 0x3fff}
+	spectrum.memory.SetMapper(mapper)
 	// build device components
 	spectrum.clock = cpu.NewClock()
 	spectrum.ula = NewULA(spectrum)
@@ -125,7 +126,7 @@ func (spectrum *Spectrum) initSpectrum() {
 	if err != nil {
 		return
 	}
-	rom := spectrum.memory.GetBankMap(0).Bank()
+	rom := spectrum.memory.Map(0).Bank()
 	rom.Load(0, data[0:0x4000])
 }
 
@@ -165,7 +166,7 @@ func (spectrum *Spectrum) SetController(cntrlr controller.Controller) {
 
 // VideoMemory gets the video memory bank
 func (spectrum *Spectrum) VideoMemory() *memory.Bank {
-	return spectrum.memory.GetBankMap(1).Bank()
+	return spectrum.memory.Map(1).Bank()
 }
 
 // Emulation control

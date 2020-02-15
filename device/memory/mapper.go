@@ -3,7 +3,7 @@ package memory
 import "github.com/jtruco/emu8/device"
 
 // -----------------------------------------------------------------------------
-// BankMap mapping information
+// BankMap & Mapper
 // -----------------------------------------------------------------------------
 
 // BankMap contains a bank bus and mapping information
@@ -14,6 +14,17 @@ type BankMap struct {
 	endaddress uint16
 	active     bool
 	init       bool
+	write      bool
+}
+
+// Mapper memory bank mapper interface
+type Mapper interface {
+	// Init inits the mapper
+	Init(memory *Memory)
+	// SelectBank for Read access
+	SelectBank(address uint16) (*BankMap, uint16)
+	// SelectBank for Write access
+	SelectBankWrite(address uint16) (*BankMap, uint16)
 }
 
 // NewBankMap creates a memory bank map
@@ -25,6 +36,7 @@ func NewBankMap(address uint16, size int, readonly bool, active bool) *BankMap {
 	bmap.endaddress = address + uint16(size) - 1
 	bmap.active = active
 	bmap.init = active
+	bmap.write = !readonly
 	return &bmap
 }
 
@@ -49,6 +61,18 @@ func NewBusMap(bus device.Bus, address uint16, size int, readonly bool, active b
 	return &bmap
 }
 
+// Init inits bank
+func (bmap *BankMap) Init() {
+	bmap.Bus().Init()
+	bmap.active = bmap.init
+}
+
+// Reset resets bank
+func (bmap *BankMap) Reset() {
+	bmap.Bus().Reset()
+	bmap.active = bmap.init
+}
+
 // Active is bank active
 func (bmap *BankMap) Active() bool {
 	return bmap.active
@@ -70,21 +94,33 @@ func (bmap *BankMap) SetActive(active bool) {
 }
 
 // -----------------------------------------------------------------------------
-// Mapper memory bank mapper
+// Default Mapper implementation
 // -----------------------------------------------------------------------------
 
-// Mapper memory bank mapper interface
-type Mapper interface {
-	SelectBank(m *Memory, address uint16) (*BankMap, uint16)
+// DefaultMapper is a simple but inefficent memory mapper
+type DefaultMapper struct {
+	memory *Memory
 }
 
-// DefaultMapper is a simple but inefficent memory mapper
-type DefaultMapper struct{}
+// Init inits the mapper
+func (mapper *DefaultMapper) Init(memory *Memory) {
+	mapper.memory = memory
+}
 
 // SelectBank selects the first active bank mapped at address
-func (mapper *DefaultMapper) SelectBank(memory *Memory, address uint16) (*BankMap, uint16) {
-	for _, bank := range memory.banks {
-		if bank != nil && bank.active {
+func (mapper *DefaultMapper) SelectBank(address uint16) (*BankMap, uint16) {
+	return mapper.selectInternal(address, false)
+}
+
+// SelectBankWrite selects the first active bank mapped at address for write
+func (mapper *DefaultMapper) SelectBankWrite(address uint16) (*BankMap, uint16) {
+	return mapper.selectInternal(address, true)
+}
+
+// selectInternal internal bank selection
+func (mapper *DefaultMapper) selectInternal(address uint16, write bool) (*BankMap, uint16) {
+	for _, bank := range mapper.memory.banks {
+		if bank != nil && bank.active && bank.write == write {
 			if address >= bank.address && address <= bank.endaddress {
 				return bank, address - bank.address
 			}
@@ -93,13 +129,28 @@ func (mapper *DefaultMapper) SelectBank(memory *Memory, address uint16) (*BankMa
 	return nil, 0
 }
 
-// BusMapper is a efficent memory mapper based on address bits (shift and mask)
-type BusMapper struct {
-	Shift uint
-	Mask  uint16
+// -----------------------------------------------------------------------------
+// MaskMapper
+// -----------------------------------------------------------------------------
+
+// MaskMapper is a efficent memory mapper based on address bits (shift and mask)
+type MaskMapper struct {
+	memory *Memory
+	Shift  uint
+	Mask   uint16
 }
 
-// SelectBank selects bank mapped by high bits of bus address
-func (mapper *BusMapper) SelectBank(memory *Memory, address uint16) (*BankMap, uint16) {
-	return memory.banks[address>>mapper.Shift], address & mapper.Mask
+// Init inits the mapper
+func (mapper *MaskMapper) Init(memory *Memory) {
+	mapper.memory = memory
+}
+
+// SelectBank selects read bank mapped at address
+func (mapper *MaskMapper) SelectBank(address uint16) (*BankMap, uint16) {
+	return mapper.memory.banks[address>>mapper.Shift], address & mapper.Mask
+}
+
+// SelectBankWrite selects write bank mapped at address
+func (mapper *MaskMapper) SelectBankWrite(address uint16) (*BankMap, uint16) {
+	return mapper.SelectBank(address)
 }

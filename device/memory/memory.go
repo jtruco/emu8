@@ -36,7 +36,7 @@ func New(size int, banks int) *Memory {
 	memory := &Memory{}
 	memory.size = size
 	memory.banks = make([]*BankMap, banks)
-	memory.mapper = &DefaultMapper{}
+	memory.SetMapper(&DefaultMapper{})
 	return memory
 }
 
@@ -45,32 +45,14 @@ func (memory *Memory) Banks() []*BankMap {
 	return memory.banks
 }
 
-// GetBankMap returns bank map at index
-func (memory *Memory) GetBankMap(index int) *BankMap {
+// Map returns bank map at index
+func (memory *Memory) Map(index int) *BankMap {
 	return memory.banks[index]
-}
-
-// Load data to memory
-func (memory *Memory) Load(address uint16, data []byte) {
-	length := uint16(len(data))
-	offset := uint16(0)
-	last := uint16(0)
-	for offset < length {
-		info, rel := memory.mapper.SelectBank(memory, address+offset)
-		last = offset + uint16(info.bank.size)
-		info.bank.Load(rel, data[offset:last])
-		offset = last
-	}
 }
 
 // SetMap sets the bank map at index
 func (memory *Memory) SetMap(index int, bank *BankMap) {
 	memory.banks[index] = bank
-}
-
-// SetMapper sets the bank mapper
-func (memory *Memory) SetMapper(mapper Mapper) {
-	memory.mapper = mapper
 }
 
 // Switch switchs two memory banks and update its active state
@@ -80,14 +62,35 @@ func (memory *Memory) Switch(current, new int) {
 	curbank.active, newbank.active = false, true
 }
 
+// Mapper returns the bank mapper
+func (memory *Memory) Mapper() Mapper { return memory.mapper }
+
+// SetMapper sets the bank mapper
+func (memory *Memory) SetMapper(mapper Mapper) {
+	mapper.Init(memory)
+	memory.mapper = mapper
+}
+
+// Load data to memory
+func (memory *Memory) Load(address uint16, data []byte) {
+	length := uint16(len(data))
+	offset := uint16(0)
+	last := uint16(0)
+	for offset < length {
+		info, rel := memory.mapper.SelectBank(address + offset)
+		last = offset + uint16(info.bank.size)
+		info.bank.Load(rel, data[offset:last])
+		offset = last
+	}
+}
+
 // Device interface
 
 // Init initializes the memory
 func (memory *Memory) Init() {
 	for _, b := range memory.banks {
 		if b != nil {
-			b.active = b.init
-			b.bus.Init()
+			b.Init()
 		}
 	}
 }
@@ -95,8 +98,7 @@ func (memory *Memory) Init() {
 // Reset resets the memory data at initial state
 func (memory *Memory) Reset() {
 	for _, b := range memory.banks {
-		b.active = b.init
-		b.bus.Reset()
+		b.Reset()
 	}
 }
 
@@ -104,7 +106,7 @@ func (memory *Memory) Reset() {
 
 // Access access memory at address
 func (memory *Memory) Access(address uint16) {
-	bank, bankAddr := memory.mapper.SelectBank(memory, address)
+	bank, bankAddr := memory.mapper.SelectBank(address)
 	if bank != nil {
 		bank.bus.Access(bankAddr)
 	}
@@ -112,7 +114,7 @@ func (memory *Memory) Access(address uint16) {
 
 // Read reads a byte from memory
 func (memory *Memory) Read(address uint16) byte {
-	bank, bankAddr := memory.mapper.SelectBank(memory, address)
+	bank, bankAddr := memory.mapper.SelectBank(address)
 	if bank != nil {
 		return bank.bus.Read(bankAddr)
 	}
@@ -121,7 +123,7 @@ func (memory *Memory) Read(address uint16) byte {
 
 // Write writes a byte to the memory
 func (memory *Memory) Write(address uint16, data byte) {
-	bank, bankAddr := memory.mapper.SelectBank(memory, address)
+	bank, bankAddr := memory.mapper.SelectBankWrite(address)
 	if bank != nil {
 		bank.bus.Write(bankAddr, data)
 	}
