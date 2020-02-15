@@ -3,6 +3,7 @@ package sdl
 import (
 	"log"
 
+	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/device/audio"
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -24,7 +25,7 @@ func NewAudio(app *App) *Audio {
 // Init the SDL audio
 func (audio *Audio) Init() bool {
 	var want, spec sdl.AudioSpec
-	want.Freq = 48000
+	want.Freq = config.AudioFrecuency
 	want.Format = sdl.AUDIO_S16LSB
 	want.Channels = 1
 	want.Samples = 1024

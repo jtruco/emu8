@@ -4,6 +4,11 @@ import (
 	"flag"
 )
 
+// Default values
+const (
+	AudioFrecuency = 48000 // 48 KHz
+)
+
 // Default configuration constants
 const (
 	DefaultAppTitle     = "emu8"

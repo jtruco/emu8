@@ -4,6 +4,7 @@ package spectrum
 import (
 	"log"
 
+	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/cpu"
 	"github.com/jtruco/emu8/cpu/z80"
 	"github.com/jtruco/emu8/device"
@@ -21,10 +22,9 @@ import (
 
 // Default ZX Spectrum constants
 const (
-	fps            = 50    // 50 Hz (50.08 Hz)
-	frameTStates   = 69888 // TStates per frame
-	audioFrecuency = 48000 // 48 KHz
-	romName        = "zxspectrum.rom"
+	fps          = 50    // 50 Hz (50.08 Hz)
+	frameTStates = 69888 // TStates per frame
+	romName      = "zxspectrum.rom"
 )
 
 // ZX Spectrum formats
@@ -74,7 +74,7 @@ func (spectrum *Spectrum) buildMachine() {
 	spectrum.ula = NewULA(spectrum)
 	spectrum.cpu = z80.New(spectrum.clock, spectrum.memory, spectrum.ula)
 	spectrum.tv = NewTVVideo(spectrum)
-	spectrum.beeper = audio.NewBeeper(audioFrecuency, fps, frameTStates)
+	spectrum.beeper = audio.NewBeeper(config.AudioFrecuency, fps, frameTStates)
 	spectrum.beeper.SetMap(beeperMap)
 	spectrum.keyboard = NewKeyboard()
 	spectrum.tape = tape.New(spectrum.clock)
