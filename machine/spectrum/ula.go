@@ -54,7 +54,6 @@ func init() {
 // -----------------------------------------------------------------------------
 
 const (
-	ulaInPort    = 0xfe
 	ulaInDefault = 0xff
 )
 
@@ -99,24 +98,22 @@ func (ula *ULA) Read(address uint16) byte {
 	var result byte = 0xff
 	ula.preIO(address)
 	ula.postIO(address)
-	if (address & 0x0001) == 0 { // ULA selected
+	if (address & 0x0001) == 0x00 { // ULA selected
 		result = ula.currentRead
-		if (address & 0xff) == ulaInPort {
 
-			// Read keyboard state
-			scan := byte(address>>8) ^ 0xff
-			mask := byte(1)
-			for row := 0; row < 8; row++ {
-				if (scan & mask) != 0 { // scan row
-					result &= ula.spectrum.keyboard.rowstates[row]
-				}
-				mask <<= 1
+		// Read keyboard state
+		scan := byte(address>>8) ^ 0xff
+		mask := byte(1)
+		for row := 0; row < 8; row++ {
+			if (scan & mask) != 0 { // scan row
+				result &= ula.spectrum.keyboard.rowstates[row]
 			}
+			mask <<= 1
+		}
 
-			// Read tape state
-			if ula.spectrum.tape.IsPlaying() {
-				result &= ula.spectrum.tape.Ear()
-			}
+		// Read tape state
+		if ula.spectrum.tape.IsPlaying() {
+			result &= ula.spectrum.tape.Ear()
 		}
 	}
 	if (address & 0x00e0) == 0 { // Kempston
