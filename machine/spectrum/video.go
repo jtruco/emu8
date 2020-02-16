@@ -174,14 +174,14 @@ func (tv *TVVideo) paintBorder() {
 	border := tv.palette[tv.border]
 	display := tv.screen.Display()
 	for y := display.Y; y < tvBorderTop; y++ {
-		tv.scanlineBorder(y, 0, tvTotalWidth, border)
+		tv.scanlineBorder(y, 0, tvTotalWidth-1, border)
 	}
 	for y := tvBorderTop + tvScreenHeight; y < display.Y+display.H; y++ {
-		tv.scanlineBorder(y, 0, tvTotalWidth, border)
+		tv.scanlineBorder(y, 0, tvTotalWidth-1, border)
 	}
 	for y := tvBorderTop; y < display.Y+display.H; y++ {
 		tv.scanlineBorder(y, 0, tvBorderLeft-1, border)
-		tv.scanlineBorder(y, tvBorderLeft+tvScreenWidth, tvTotalWidth, border)
+		tv.scanlineBorder(y, tvBorderLeft+tvScreenWidth, tvTotalWidth-1, border)
 	}
 }
 
