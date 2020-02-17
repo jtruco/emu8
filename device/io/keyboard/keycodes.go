@@ -57,16 +57,52 @@ const (
 	Key9 = 38
 	Key0 = 39
 	// Special
-	KeyReturn    = 40
-	KeyEscape    = 41
-	KeyBackspace = 42
-	KeyTab       = 43
-	KeySpace     = 44
-	// Cursor
-	KeyRight = 79
-	KeyLeft  = 80
-	KeyDown  = 81
-	KeyUp    = 82
+	KeyReturn       = 40
+	KeyEscape       = 41
+	KeyBackspace    = 42
+	KeyTab          = 43
+	KeySpace        = 44
+	KeyMinus        = 45
+	KeyEquals       = 46
+	KeyLeftBracket  = 47
+	KeyRightBracket = 48
+	KeyBackSlash    = 49
+	KeyNonUsHash    = 50
+	KeySemicolon    = 51
+	KeyApostrophe   = 52
+	KeyGrave        = 53
+	KeyComma        = 54
+	KeyPeriod       = 55
+	KeySlash        = 56
+	KeyCapsLock     = 57
+	// Function
+	KeyF1  = 58
+	KeyF2  = 59
+	KeyF3  = 60
+	KeyF4  = 61
+	KeyF5  = 62
+	KeyF6  = 63
+	KeyF7  = 64
+	KeyF8  = 65
+	KeyF9  = 66
+	KeyF10 = 67
+	KeyF11 = 68
+	KeyF12 = 69
+	// Special function
+	KeyPrintScreen = 70
+	KeyScrollLock  = 71
+	KeyPause       = 72
+	// Cursor & Edit
+	KeyInsert   = 73
+	KeyHome     = 74
+	KeyPageUp   = 75
+	KeyDelete   = 76
+	KeyEnd      = 77
+	KeyPageDown = 78
+	KeyRight    = 79
+	KeyLeft     = 80
+	KeyDown     = 81
+	KeyUp       = 82
 	// Keypad
 	KeyPadDivide   = 84
 	KeyPadMultiply = 85
@@ -83,6 +119,7 @@ const (
 	KeyPad8        = 96
 	KeyPad9        = 97
 	KeyPad0        = 98
+	KeyPadPeriod   = 99
 	// Meta
 	KeyLCtrl  = 224
 	KeyLShift = 225
