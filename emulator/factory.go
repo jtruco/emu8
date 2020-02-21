@@ -5,6 +5,7 @@ import (
 
 	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/machine"
+	"github.com/jtruco/emu8/machine/cpc"
 	"github.com/jtruco/emu8/machine/spectrum"
 )
 
@@ -35,7 +36,10 @@ func CreateMachine(model int) machine.Machine {
 	case machine.ZXSpectrum:
 		return spectrum.NewSpectrum(model)
 
-	// TODO : AmstradCPC, Commodore64, MSX
+	case machine.AmstradCPC:
+		return cpc.NewAmstradCPC(model)
+
+	// TODO :Commodore64, MSX
 
 	case machine.UnknownMachine:
 		log.Println("Emulator : Unknown machine model")
