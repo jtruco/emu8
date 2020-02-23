@@ -16,8 +16,6 @@ type Memory struct {
 	data [0x10000]byte
 }
 
-func (m *Memory) Access(address uint16) {}
-
 func (m *Memory) Read(address uint16) byte {
 	return m.data[address]
 }

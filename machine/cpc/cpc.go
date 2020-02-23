@@ -163,9 +163,6 @@ func (cpc *AmstradCPC) LoadFile(filename string) {
 // CPC IO bus
 // -----------------------------------------------------------------------------
 
-// Access access bus
-func (cpc *AmstradCPC) Access(address uint16) {}
-
 // Read bus at address
 func (cpc *AmstradCPC) Read(address uint16) byte {
 	var result byte = 0xff

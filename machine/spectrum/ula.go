@@ -90,9 +90,6 @@ func (ula *ULA) Reset() {}
 
 // DataBus
 
-// Access access bus
-func (ula *ULA) Access(address uint16) {}
-
 // Read bus at address
 func (ula *ULA) Read(address uint16) byte {
 	var result byte = 0xff

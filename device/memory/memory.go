@@ -104,14 +104,6 @@ func (memory *Memory) Reset() {
 
 // Bus interface
 
-// Access access memory at address
-func (memory *Memory) Access(address uint16) {
-	bank, bankAddr := memory.mapper.SelectBank(address)
-	if bank != nil {
-		bank.bus.Access(bankAddr)
-	}
-}
-
 // Read reads a byte from memory
 func (memory *Memory) Read(address uint16) byte {
 	bank, bankAddr := memory.mapper.SelectBank(address)

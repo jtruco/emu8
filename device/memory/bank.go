@@ -55,14 +55,6 @@ func (bank *Bank) Reset() {
 
 // Bus interface
 
-// Access access to data address
-func (bank *Bank) Access(address uint16) {
-	if len(bank.listeners) > 0 {
-		bank.notifyListeners(address, device.EventBusAccess, device.OrderBefore)
-		bank.notifyListeners(address, device.EventBusAccess, device.OrderAfter)
-	}
-}
-
 // Read reads a byte from the bank address
 func (bank *Bank) Read(address uint16) byte {
 	if len(bank.listeners) > 0 {

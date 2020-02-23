@@ -124,8 +124,8 @@ func (z80 *Z80) readBytePC() byte {
 // readNoReq only puts address on bus (no MREQ) during n tstates
 func (z80 *Z80) readNoReq(address uint16, n int) {
 	for i := 0; i < n; i++ {
-		z80.mem.Access(address)
-		z80.clock.Inc() // +1 tstates in bus access
+		z80.mem.Read(address) // only bus access
+		z80.clock.Inc()       // +1 tstates in bus access
 	}
 }
 
@@ -144,8 +144,8 @@ func (z80 *Z80) writeByte(address uint16, value byte) {
 // writeNoReq only puts address on bus (no MREQ) during n tstates
 func (z80 *Z80) writeNoReq(address uint16, n int) {
 	for i := 0; i < n; i++ {
-		z80.mem.Access(address)
-		z80.clock.Inc() // +1 tstates in bus access
+		z80.mem.Read(address) // only bus acccess
+		z80.clock.Inc()       // +1 tstates in bus access
 	}
 }
 
