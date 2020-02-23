@@ -1,9 +1,7 @@
 // Package z80 a Zyxel Z80 CPU emulator
 package z80
 
-import (
-	"github.com/jtruco/emu8/cpu"
-)
+import "github.com/jtruco/emu8/device/cpu"
 
 // -----------------------------------------------------------------------------
 // Z80 - Zyxel Z80 CPU

@@ -2,9 +2,9 @@
 package cpc
 
 import (
-	"github.com/jtruco/emu8/cpu"
-	"github.com/jtruco/emu8/cpu/z80"
 	"github.com/jtruco/emu8/device"
+	"github.com/jtruco/emu8/device/cpu"
+	"github.com/jtruco/emu8/device/cpu/z80"
 	"github.com/jtruco/emu8/device/memory"
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/machine"

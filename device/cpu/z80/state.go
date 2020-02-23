@@ -1,6 +1,6 @@
 package z80
 
-import "github.com/jtruco/emu8/cpu"
+import "github.com/jtruco/emu8/device/cpu"
 
 // -----------------------------------------------------------------------------
 // State - Z80 CPU State

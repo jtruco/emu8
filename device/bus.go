@@ -1,6 +1,6 @@
 package device
 
-import "github.com/jtruco/emu8/cpu"
+import "github.com/jtruco/emu8/device/cpu"
 
 // -----------------------------------------------------------------------------
 // Bus device
@@ -8,9 +8,8 @@ import "github.com/jtruco/emu8/cpu"
 
 // Bus event types
 const (
-	EventBusAccess = 10 // Access is a bus access event
-	EventBusRead   = 11 // Read is a bus read event
-	EventBusWrite  = 12 // Write is a bus write event
+	EventBusRead  = 11 // Read is a bus read event
+	EventBusWrite = 12 // Write is a bus write event
 )
 
 // Bus is the device databus interface

@@ -5,10 +5,10 @@ import (
 	"log"
 
 	"github.com/jtruco/emu8/config"
-	"github.com/jtruco/emu8/cpu"
-	"github.com/jtruco/emu8/cpu/z80"
 	"github.com/jtruco/emu8/device"
 	"github.com/jtruco/emu8/device/audio"
+	"github.com/jtruco/emu8/device/cpu"
+	"github.com/jtruco/emu8/device/cpu/z80"
 	"github.com/jtruco/emu8/device/memory"
 	"github.com/jtruco/emu8/device/tape"
 	"github.com/jtruco/emu8/emulator/controller"

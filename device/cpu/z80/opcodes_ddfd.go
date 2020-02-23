@@ -1,8 +1,6 @@
 package z80
 
-import (
-	"github.com/jtruco/emu8/cpu"
-)
+import "github.com/jtruco/emu8/device/cpu"
 
 // executeDD decodes and executes Z80 DD extended opcodes
 func (z80 *Z80) executeDD(opcode byte) {

@@ -1,8 +1,6 @@
 package z80
 
-import (
-	"github.com/jtruco/emu8/cpu"
-)
+import "github.com/jtruco/emu8/device/cpu"
 
 // executeDDFDCB decodes and executes Z80 DDFFD/CB extended opcodes
 func (z80 *Z80) executeDDFDCB(opcode byte, reg *cpu.Register16) {

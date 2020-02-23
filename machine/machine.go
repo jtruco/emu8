@@ -2,8 +2,8 @@
 package machine
 
 import (
-	"github.com/jtruco/emu8/cpu"
 	"github.com/jtruco/emu8/device"
+	"github.com/jtruco/emu8/device/cpu"
 	"github.com/jtruco/emu8/emulator/controller"
 )
 

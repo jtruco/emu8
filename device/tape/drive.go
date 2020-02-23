@@ -3,7 +3,7 @@ package tape
 import (
 	"log"
 
-	"github.com/jtruco/emu8/cpu"
+	"github.com/jtruco/emu8/device/cpu"
 )
 
 // -----------------------------------------------------------------------------
