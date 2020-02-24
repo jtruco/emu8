@@ -12,6 +12,7 @@ type GateArray struct {
 	mode    byte
 	slCount int
 	ts      int
+	vsync   int
 }
 
 // NewGateArray creates a GA
@@ -39,34 +40,22 @@ func (ga *GateArray) Reset() {
 }
 
 // Mode gets current mode
-func (ga *GateArray) Mode() byte {
-	return ga.mode
-}
+func (ga *GateArray) Mode() byte { return ga.mode }
 
 // SetMode sets current mode
-func (ga *GateArray) SetMode(mode byte) {
-	ga.mode = mode
-}
+func (ga *GateArray) SetMode(mode byte) { ga.mode = mode }
 
 // Pen gets current pen
-func (ga *GateArray) Pen() byte {
-	return ga.pen
-}
+func (ga *GateArray) Pen() byte { return ga.pen }
 
 // SetPen sets current pen
-func (ga *GateArray) SetPen(pen byte) {
-	ga.pen = pen
-}
+func (ga *GateArray) SetPen(pen byte) { ga.pen = pen }
 
 // Border returns the border color
-func (ga *GateArray) Border() byte {
-	return ga.palette[0x10]
-}
+func (ga *GateArray) Border() byte { return ga.palette[0x10] }
 
 // Palette returns the active pen colors
-func (ga *GateArray) Palette() []byte {
-	return ga.palette
-}
+func (ga *GateArray) Palette() []byte { return ga.palette }
 
 // SetInk set ink colour & palette
 func (ga *GateArray) SetInk(ink byte) {
@@ -79,19 +68,26 @@ func (ga *GateArray) SetInk(ink byte) {
 
 // Emulate gate array
 func (ga *GateArray) Emulate() {
-	// Simple interrupt emulation
-	// every 52 scanlines / 1sl ~ 250 Ts
+	// FIXME : Simple interrupt emulation
+	// every 52 scanlines / 1sl ~ 256 Ts
 	ts := ga.cpc.Clock().Tstates()
 	tsCount := ts - ga.ts
 	if tsCount < 0 {
 		tsCount += cpcFrameTStates
+		ga.vsync = 4                 // 4 sl
+		ga.cpc.crtc.AddFlags(CrtcVS) // vsync
 	}
-	if tsCount >= 250 {
+	if tsCount >= 256 {
 		ga.slCount++
 		ga.ts = ts
 		if ga.slCount == 52 {
 			ga.slCount = 0
 			ga.cpc.cpu.Interrupt() // Z80 interrupt
+		}
+		if ga.vsync > 0 {
+			ga.vsync--
+		} else if ga.vsync == 0 {
+			ga.cpc.crtc.RemoveFlags(CrtcVS) // vsync
 		}
 	}
 }

@@ -22,9 +22,7 @@ func NewPpi(cpc *AmstradCPC) *Ppi {
 }
 
 // Init the PPI
-func (ppi *Ppi) Init() {
-	ppi.Reset()
-}
+func (ppi *Ppi) Init() { ppi.Reset() }
 
 // Reset the PPI
 func (ppi *Ppi) Reset() {
@@ -47,7 +45,9 @@ func (ppi *Ppi) Read(port byte) byte {
 		}
 	case 1: // port B
 		if (ppi.control & 0x02) != 0 { // input
-			data = ppi.jumpers // TODO : tape, vsync,...
+			data = ppi.jumpers
+			data |= (ppi.cpc.crtc.Flags() & CrtcVS) // vsync
+			// TODO : tape,...
 		} else {
 			data = ppi.portB
 		}

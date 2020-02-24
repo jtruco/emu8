@@ -21,9 +21,7 @@ func NewPsg(cpc *AmstradCPC) *Psg {
 }
 
 // Init the PSG
-func (psg *Psg) Init() {
-	psg.Reset()
-}
+func (psg *Psg) Init() { psg.Reset() }
 
 // Reset the PSG
 func (psg *Psg) Reset() {

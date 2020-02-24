@@ -37,6 +37,7 @@ type AmstradCPC struct {
 	gatearray  *GateArray            // The Gate-Array
 	ppi        *Ppi                  // The Parallel Peripheral Interface
 	psg        *Psg                  // The Programmable Sound Generator
+	crtc       *Crtc                 // The Cathode Ray Tube Controller
 }
 
 // NewAmstradCPC returns a new Amstrad CPC
@@ -61,18 +62,20 @@ func NewAmstradCPC(model int) *AmstradCPC {
 	cpc.video = NewVduVideo(cpc)
 	cpc.keyboard = NewKeyboard()
 	cpc.gatearray = NewGateArray(cpc)
-	cpc.ppi = NewPpi(cpc)
+	cpc.crtc = NewCrtc(cpc)
 	cpc.psg = NewPsg(cpc)
+	cpc.ppi = NewPpi(cpc)
 	// register all components
-	cpc.components = device.NewComponents(8)
+	cpc.components = device.NewComponents(9)
 	cpc.components.Add(cpc.clock)
 	cpc.components.Add(cpc.cpu)
 	cpc.components.Add(cpc.memory)
 	cpc.components.Add(cpc.video)
 	cpc.components.Add(cpc.keyboard)
 	cpc.components.Add(cpc.gatearray)
-	cpc.components.Add(cpc.ppi)
+	cpc.components.Add(cpc.crtc)
 	cpc.components.Add(cpc.psg)
+	cpc.components.Add(cpc.ppi)
 	return cpc
 }
 
@@ -167,13 +170,15 @@ func (cpc *AmstradCPC) LoadFile(filename string) {
 func (cpc *AmstradCPC) Read(address uint16) byte {
 	var result byte = 0xff
 	if address&0x4000 == 0 { // CRTC
-		// TODO
+		port := byte(address>>8) & 0x3
+		result &= cpc.crtc.Read(port)
 	}
 	if address&0xC000 == 0x4000 { // Gate-Array
 		result &= cpc.gatearray.Read()
 	}
 	if address&0x0800 == 0 { // PPI select
-		result &= cpc.ppi.Read(byte(address>>8) & 0x3)
+		port := byte(address>>8) & 0x3
+		result &= cpc.ppi.Read(port)
 	}
 	return result
 }
@@ -181,7 +186,8 @@ func (cpc *AmstradCPC) Read(address uint16) byte {
 // Write bus at address
 func (cpc *AmstradCPC) Write(address uint16, data byte) {
 	if address&0x4000 == 0 { // CRTC
-		// TODO
+		port := byte(address>>8) & 0x3
+		cpc.crtc.Write(port, data)
 	}
 	if address&0xC000 == 0x4000 { // Gate-Array
 		cpc.gatearray.Write(data)
@@ -190,6 +196,7 @@ func (cpc *AmstradCPC) Write(address uint16, data byte) {
 		// TODO
 	}
 	if address&0x0800 == 0 { // PPI select
-		cpc.ppi.Write(byte(address>>8)&0x3, data)
+		port := byte(address>>8) & 0x3
+		cpc.ppi.Write(port, data)
 	}
 }
