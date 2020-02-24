@@ -52,7 +52,7 @@ func parseArgs() {
 	flag.StringVar(&config.FileName, "f", "", "Load file")
 	flag.IntVar(&config.VideoScale, "vs", DefaultVideoScale, "Video scale (1..4)")
 	flag.BoolVar(&config.FullScreen, "vf", DefaultFullScreen, "Video in full screen mode")
-	flag.BoolVar(&config.MuteAudio, "ma", DefaultMuteAudio, "No Audio")
+	flag.BoolVar(&config.MuteAudio, "am", DefaultMuteAudio, "Audio Mute")
 	flag.Parse()
 	if len(flag.Args()) > 0 {
 		config.FileName = flag.Args()[0]
