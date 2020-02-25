@@ -28,6 +28,8 @@ type Screen struct {
 	refresh []bool  // Regions to refresh
 	rlimit  int     // Refresh limit optimization
 	buffer  []*Rect // Dirty regions buffer
+	wscale  float32 // Width scale factor
+	hscale  float32 // Height scale factor
 }
 
 // NewScreen creates a screen of size width x height and palette
@@ -36,10 +38,12 @@ func NewScreen(width, height int, palette []int32) *Screen {
 	screen.width = width
 	screen.height = height
 	screen.data = make([]int32, (width * height))
-	screen.display = Rect{0, 0, width, height}
+	screen.SetDisplay(0, 0, width, height)
 	screen.palette = palette
 	screen.dirty = false
 	screen.initRegions(regionFactor)
+	screen.wscale = 1
+	screen.hscale = 1
 	return screen
 }
 
@@ -54,29 +58,36 @@ func (screen *Screen) Clear(index int) {
 }
 
 // Data is the pixel data buffer
-func (screen *Screen) Data() []int32 {
-	return screen.data
-}
-
-// Display is the display rect
-func (screen *Screen) Display() Rect {
-	return screen.display
-}
-
-// Height gets screen Height
-func (screen *Screen) Height() int {
-	return screen.height
-}
+func (screen *Screen) Data() []int32 { return screen.data }
 
 // Width gets screen Width
-func (screen *Screen) Width() int {
-	return screen.width
+func (screen *Screen) Width() int { return screen.width }
+
+// Height gets screen Height
+func (screen *Screen) Height() int { return screen.height }
+
+// WScale gets screen width scale
+func (screen *Screen) WScale() float32 { return screen.wscale }
+
+// SetWScale sets screen width scale
+func (screen *Screen) SetWScale(scale float32) { screen.wscale = scale }
+
+// HScale gets screen height scale
+func (screen *Screen) HScale() float32 { return screen.hscale }
+
+// SetHScale sets screen height scale
+func (screen *Screen) SetHScale(scale float32) { screen.hscale = scale }
+
+// Display is the display rect
+func (screen *Screen) Display() Rect { return screen.display }
+
+// SetDisplay sets screen display
+func (screen *Screen) SetDisplay(X, Y, W, H int) {
+	screen.display = Rect{X: X, Y: Y, W: W, H: H}
 }
 
 // IsDirty true if screen is dirty
-func (screen *Screen) IsDirty() bool {
-	return screen.dirty
-}
+func (screen *Screen) IsDirty() bool { return screen.dirty }
 
 // SetDirty sets if screen is dirty
 func (screen *Screen) SetDirty(dirty bool) {
@@ -84,11 +95,6 @@ func (screen *Screen) SetDirty(dirty bool) {
 	for i := range screen.refresh {
 		screen.refresh[i] = dirty
 	}
-}
-
-// SetDisplay sets if screen is dirty
-func (screen *Screen) SetDisplay(X, Y, W, H int) {
-	screen.display = Rect{X: X, Y: Y, W: W, H: H}
 }
 
 // GetPixel gets colour from pixel coordinates
