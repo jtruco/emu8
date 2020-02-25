@@ -110,12 +110,14 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 		captured = true
 		switch e.Keysym.Sym {
 		// Emulator
-		case sdl.K_F4:
-			app.emulator.Start()
 		case sdl.K_F5:
 			app.emulator.Reset()
 		case sdl.K_F6:
-			app.emulator.Stop()
+			if app.emulator.IsRunning() {
+				app.emulator.Stop()
+			} else {
+				app.emulator.Start()
+			}
 		case sdl.K_F10:
 			app.running = false // Exit app
 		// Tape Drive
