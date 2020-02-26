@@ -65,7 +65,6 @@ type TVVideo struct {
 	spectrum *Spectrum     // The Spectrum machine
 	srcdata  []byte        // The screen data
 	tstate   int           // Current videoframe tstate
-	palette  []int32       // The video palette
 	border   byte          // The border current colour index
 	flash    bool          // Flash state
 	frames   int           // Frame count
@@ -75,8 +74,7 @@ type TVVideo struct {
 // NewTVVideo creates the video device
 func NewTVVideo(spectrum *Spectrum) *TVVideo {
 	tv := &TVVideo{}
-	tv.palette = zxPalette
-	tv.screen = video.NewScreen(tvTotalWidth, tvTotalHeight, tv.palette)
+	tv.screen = video.NewScreen(tvTotalWidth, tvTotalHeight, zxPalette)
 	tv.screen.SetDisplay(tvDisplayLeft, tvDisplayTop, tvDisplayWidth, tvDisplayHeight)
 	tv.spectrum = spectrum
 	tv.srcdata = spectrum.VideoMemory().Data()
@@ -171,7 +169,7 @@ func (tv *TVVideo) paintScreen() {
 // paintBorder is a simple border emulation
 func (tv *TVVideo) paintBorder() {
 	// Border Top, Bottom and Paper
-	border := tv.palette[tv.border]
+	border := tv.screen.GetColour(int(tv.border))
 	display := tv.screen.Display()
 	for y := display.Y; y < tvBorderTop; y++ {
 		tv.scanlineBorder(y, 0, tvTotalWidth-1, border)
@@ -220,7 +218,7 @@ func (tv *TVVideo) DoScanlines() {
 	// Horizontal : 128 Ts screen, 24 Ts border right, 48 Ts retrace, 24 TS border left
 	// First screen (0,0) pixel Tstate = 14336 TS = 64 Scanlines * 224 Tstates
 	display := tv.screen.Display()
-	border := tv.palette[tv.border]
+	border := tv.screen.GetColour(int(tv.border))
 	tstate := tv.tstate
 	endtstate := tv.spectrum.Clock().Tstates()
 	limitBottom := display.Y*tvLineTstates - tvHBorderTstates

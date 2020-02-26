@@ -97,6 +97,9 @@ func (screen *Screen) SetDirty(dirty bool) {
 	}
 }
 
+// GetColour gets colour from palette index
+func (screen *Screen) GetColour(index int) int32 { return screen.palette[index] }
+
 // GetPixel gets colour from pixel coordinates
 func (screen *Screen) GetPixel(x, y int) int32 {
 	pos := x + y*screen.width
@@ -118,8 +121,7 @@ func (screen *Screen) SetPixel(x, y int, colour int32) {
 
 // SetPixelIndex sets colour index at pixel coordinates
 func (screen *Screen) SetPixelIndex(x, y int, index int) {
-	colour := screen.palette[index]
-	screen.SetPixel(x, y, colour)
+	screen.SetPixel(x, y, screen.palette[index])
 }
 
 // regions

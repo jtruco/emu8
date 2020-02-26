@@ -172,7 +172,7 @@ func (vdu *VduVideo) paintBorder() {
 		return
 	}
 	vdu.border = border
-	colour := cpcPalette[int(border)]
+	colour := vdu.screen.GetColour(int(border))
 	display := vdu.screen.Display()
 	// Border Top, Bottom and Paper
 	for y := display.Y; y < videoVBorder; y++ {
