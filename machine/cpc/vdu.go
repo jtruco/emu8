@@ -192,32 +192,3 @@ func (vdu *VduVideo) paintLine(y, x1, x2 int, colour int32) {
 		vdu.screen.SetPixel(x, y, colour)
 	}
 }
-
-// mode 2 - colour helper
-
-func rgbBlend(idx1, idx2 byte) int32 {
-	const fintpl = 2
-	c1 := cpcPalette[idx1]
-	if idx1 == idx2 {
-		return c1
-	}
-	c2 := cpcPalette[idx2]
-	r1, g1, b1 := rgb(c1)
-	r2, g2, b2 := rgb(c2)
-	r3 := (r2-r1)>>fintpl + r1
-	g3 := (g2-g1)>>fintpl + r1
-	b3 := (b2-b1)>>fintpl + r1
-	c3 := torgb(r3, g3, b3)
-	return c3
-}
-
-func rgb(col int32) (byte, byte, byte) {
-	r := byte(col & 0xff0000 >> 16)
-	g := byte(col & 0x00ff00 >> 8)
-	b := byte(col & 0x0000ff)
-	return r, g, b
-}
-
-func torgb(r, g, b byte) int32 {
-	return int32(r)<<16 | int32(g)<<8 | int32(b)
-}
