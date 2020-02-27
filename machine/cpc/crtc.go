@@ -4,9 +4,6 @@ package cpc
 // Amstrad CPC - CRTC 6845 - Cathode Ray Tube Controller
 // -----------------------------------------------------------------------------
 
-// REFS :
-// https://github.com/floooh/chips/blob/master/chips/mc6845.h
-
 // CRTC flag constans
 const (
 	CrtcVS    = 1   // VSync
@@ -72,7 +69,7 @@ func (crtc *Crtc) Read(port byte) byte {
 	var data byte = 0xff
 	if port == 0x03 {
 		if (crtc.selected > 11) && (crtc.selected < 18) {
-			data = crtc.ReadRegister()
+			data &= crtc.ReadRegister()
 		} else {
 			data = 0 // write only
 		}
@@ -83,11 +80,11 @@ func (crtc *Crtc) Read(port byte) byte {
 // Write writes data
 func (crtc *Crtc) Write(port byte, data byte) {
 	switch port {
-	case 0:
+	case 0x00:
 		if data < 18 {
 			crtc.selected = data
 		}
-	case 1:
+	case 0x01:
 		if crtc.selected < 16 {
 			crtc.WriteRegister(data)
 		}
