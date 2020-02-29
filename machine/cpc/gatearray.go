@@ -11,8 +11,8 @@ type GateArray struct {
 	palette []byte
 	mode    byte
 	slCount int
+	slTotal int
 	ts      int
-	vsync   int
 }
 
 // NewGateArray creates a GA
@@ -36,6 +36,7 @@ func (ga *GateArray) Reset() {
 	}
 	ga.mode = 1
 	ga.slCount = 0
+	ga.slTotal = 0
 	ga.ts = 0
 }
 
@@ -67,27 +68,24 @@ func (ga *GateArray) SetInk(ink byte) {
 }
 
 // Emulate gate array
-func (ga *GateArray) Emulate() {
+func (ga *GateArray) Emulate(tstates int) {
 	// FIXME : Simple interrupt emulation
-	// every 52 scanlines / 1sl ~ 256 Ts
-	ts := ga.cpc.Clock().Tstates()
-	tsCount := ts - ga.ts
-	if tsCount < 0 {
-		tsCount += cpcFrameTStates
-		ga.vsync = 4                 // 4 sl
-		ga.cpc.crtc.AddFlags(CrtcVS) // vsync
-	}
-	if tsCount >= 256 {
+	// 52 scanlines / 1sl ~ 256 Ts
+	// 312 sl -> vsync
+	ga.ts += tstates
+	if ga.ts >= 256 { // 1sl
+		ga.ts &= 0xff
 		ga.slCount++
-		ga.ts = ts
+		ga.slTotal++
 		if ga.slCount == 52 {
 			ga.slCount = 0
-			ga.cpc.cpu.Interrupt() // Z80 interrupt
+			ga.cpc.cpu.Interrupt()
 		}
-		if ga.vsync > 0 {
-			ga.vsync--
-		} else if ga.vsync == 0 {
-			ga.cpc.crtc.RemoveFlags(CrtcVS) // vsync
+		if ga.slTotal == 4 { // end vsync
+			ga.cpc.crtc.RemoveFlags(CrtcVS)
+		} else if ga.slTotal == 312 { // Frame
+			ga.slTotal = 0
+			ga.cpc.crtc.AddFlags(CrtcVS)
 		}
 	}
 }

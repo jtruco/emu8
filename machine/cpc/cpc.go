@@ -16,8 +16,8 @@ import (
 
 // Default Amstrad CPC
 const (
-	cpcFPS          = 50    // 50 Hz
-	cpcFrameTStates = 80000 // TStates per frame (4 Mhz)
+	cpcFPS          = 50    // 50 Hz ( 50.08 Hz )
+	cpcFrameTStates = 79872 // TStates per frame ( 312 sl * 256 Ts ) ~ 4 Mhz
 	cpcRomName      = "cpc464.rom"
 	cpcJumpers      = 0x1e
 )
@@ -147,8 +147,21 @@ func (cpc *AmstradCPC) BeginFrame() {
 
 // Emulate one machine step
 func (cpc *AmstradCPC) Emulate() {
+	// z80 cpu emulation
+	ts := cpc.clock.Tstates()
 	cpc.cpu.Execute()
-	cpc.gatearray.Emulate()
+	ts = cpc.cpu.Clock().Tstates() - ts
+
+	// CPC 4T instruction halt
+	fix := ts & 0x03
+	if fix != 0 {
+		fix = 0x04 - fix
+		cpc.clock.Add(fix)
+		ts += fix
+	}
+
+	// amstrad bus emulation
+	cpc.gatearray.Emulate(ts)
 }
 
 // EndFrame end emulation frame tasks
