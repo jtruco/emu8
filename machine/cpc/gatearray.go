@@ -4,12 +4,17 @@ package cpc
 // Amstrad CPC - Gate Array
 // -----------------------------------------------------------------------------
 
+const (
+	gaTotalPens = 0x11
+	gaBorderPen = 0x10
+)
+
 // GateArray for the CPC
 type GateArray struct {
 	cpc     *AmstradCPC
-	pen     byte
 	palette []byte
 	mode    byte
+	pen     byte
 	slCount int
 	slTotal int
 	ts      int
@@ -19,7 +24,7 @@ type GateArray struct {
 func NewGateArray(cpc *AmstradCPC) *GateArray {
 	ga := &GateArray{}
 	ga.cpc = cpc
-	ga.palette = make([]byte, 17)
+	ga.palette = make([]byte, gaTotalPens)
 	return ga
 }
 
@@ -30,11 +35,12 @@ func (ga *GateArray) Init() {
 
 // Reset the GA
 func (ga *GateArray) Reset() {
+	ga.mode = 1
 	ga.pen = 0
-	for i := 1; i < 17; i++ {
+	for i := 0; i < gaTotalPens; i++ {
 		ga.palette[i] = 0
 	}
-	ga.mode = 1
+	// vdu scanline control
 	ga.slCount = 0
 	ga.slTotal = 0
 	ga.ts = 0
@@ -53,18 +59,14 @@ func (ga *GateArray) Pen() byte { return ga.pen }
 func (ga *GateArray) SetPen(pen byte) { ga.pen = pen }
 
 // Border returns the border color
-func (ga *GateArray) Border() byte { return ga.palette[0x10] }
+func (ga *GateArray) Border() byte { return ga.palette[16] }
 
 // Palette returns the active pen colors
 func (ga *GateArray) Palette() []byte { return ga.palette }
 
 // SetInk set ink colour & palette
 func (ga *GateArray) SetInk(ink byte) {
-	if ga.pen == 0x10 {
-		ga.palette[ga.pen] = ink
-	} else {
-		ga.palette[ga.pen] = ink
-	}
+	ga.palette[ga.pen] = ink
 }
 
 // Emulate gate array
@@ -102,7 +104,7 @@ func (ga *GateArray) Write(data byte) {
 		if (data & 0x10) == 0x00 {
 			ga.SetPen(data & 0x0f)
 		} else {
-			ga.SetPen(0x10) // border
+			ga.SetPen(gaBorderPen) // border
 		}
 	case 1: // set colur
 		ga.SetInk(data & 0x1f)

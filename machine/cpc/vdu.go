@@ -35,18 +35,18 @@ var cpcPalette = []int32{
 
 // VduVideo device
 type VduVideo struct {
-	cpc     *AmstradCPC
-	screen  *video.Screen
-	srcdata []byte
-	border  byte
+	screen    *video.Screen
+	gatearray *GateArray
+	srcdata   []byte
+	border    byte
 }
 
 // NewVduVideo creates a new vdu
 func NewVduVideo(cpc *AmstradCPC) *VduVideo {
 	vdu := &VduVideo{}
-	vdu.cpc = cpc
 	vdu.screen = video.NewScreen(videoTotalWidth, videoTotalHeight, cpcPalette)
 	vdu.screen.SetWScale(videoWidthScale)
+	vdu.gatearray = cpc.gatearray
 	vdu.srcdata = cpc.memory.Map(5).Bank().Data()
 	return vdu
 }
@@ -70,8 +70,8 @@ func (vdu *VduVideo) EndFrame() {
 
 // paintScreen paints screen
 func (vdu *VduVideo) paintScreen() {
-	mode := vdu.cpc.gatearray.mode
-	palette := vdu.cpc.gatearray.palette
+	mode := vdu.gatearray.mode
+	palette := vdu.gatearray.palette
 	x, y := videoHBorder, videoVBorder
 	row, col := 0, 0
 	for addr := 0; addr < videoTotalBytes; addr++ {
@@ -167,7 +167,7 @@ func (vdu *VduVideo) paintScreen() {
 
 // paintBorder paints border
 func (vdu *VduVideo) paintBorder() {
-	border := vdu.cpc.gatearray.Border()
+	border := vdu.gatearray.Border()
 	if border == vdu.border {
 		return
 	}

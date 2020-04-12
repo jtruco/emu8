@@ -32,12 +32,12 @@ type AmstradCPC struct {
 	memory     *memory.Memory        // The machine memory
 	lowerRom   *memory.BankMap       // The lower rom
 	upperRom   *memory.BankMap       // The upper rom
+	gatearray  *GateArray            // The Gate-Array
+	crtc       *Crtc                 // The Cathode Ray Tube Controller
+	psg        *Psg                  // The Programmable Sound Generator
+	ppi        *Ppi                  // The Parallel Peripheral Interface
 	video      *VduVideo             // The VDU video
 	keyboard   *Keyboard             // The matrix keyboard
-	gatearray  *GateArray            // The Gate-Array
-	ppi        *Ppi                  // The Parallel Peripheral Interface
-	psg        *Psg                  // The Programmable Sound Generator
-	crtc       *Crtc                 // The Cathode Ray Tube Controller
 }
 
 // NewAmstradCPC returns a new Amstrad CPC
@@ -59,10 +59,10 @@ func NewAmstradCPC(model int) *AmstradCPC {
 	// devices
 	cpc.clock = cpu.NewClock()
 	cpc.cpu = z80.New(cpc.clock, cpc.memory, cpc)
-	cpc.video = NewVduVideo(cpc)
-	cpc.keyboard = NewKeyboard()
 	cpc.gatearray = NewGateArray(cpc)
 	cpc.crtc = NewCrtc(cpc)
+	cpc.video = NewVduVideo(cpc)
+	cpc.keyboard = NewKeyboard()
 	cpc.psg = NewPsg(cpc)
 	cpc.ppi = NewPpi(cpc)
 	// register all components
@@ -70,10 +70,10 @@ func NewAmstradCPC(model int) *AmstradCPC {
 	cpc.components.Add(cpc.clock)
 	cpc.components.Add(cpc.cpu)
 	cpc.components.Add(cpc.memory)
-	cpc.components.Add(cpc.video)
-	cpc.components.Add(cpc.keyboard)
 	cpc.components.Add(cpc.gatearray)
 	cpc.components.Add(cpc.crtc)
+	cpc.components.Add(cpc.video)
+	cpc.components.Add(cpc.keyboard)
 	cpc.components.Add(cpc.psg)
 	cpc.components.Add(cpc.ppi)
 	return cpc
@@ -141,27 +141,25 @@ func (cpc *AmstradCPC) SetController(cntrlr controller.Controller) {
 // -----------------------------------------------------------------------------
 
 // BeginFrame begin emulation frame tasks
-func (cpc *AmstradCPC) BeginFrame() {
-	cpc.cpu.Interrupt()
-}
+func (cpc *AmstradCPC) BeginFrame() {}
 
 // Emulate one machine step
 func (cpc *AmstradCPC) Emulate() {
 	// z80 cpu emulation
 	ts := cpc.clock.Tstates()
 	cpc.cpu.Execute()
-	ts = cpc.cpu.Clock().Tstates() - ts
+	lapse := cpc.cpu.Clock().Tstates() - ts
 
 	// CPC 4T instruction halt
-	fix := ts & 0x03
+	fix := lapse & 0x03
 	if fix != 0 {
-		fix = 0x04 - fix
+		fix = 0x04 - lapse
 		cpc.clock.Add(fix)
-		ts += fix
+		lapse += fix
 	}
 
 	// amstrad bus emulation
-	cpc.gatearray.Emulate(ts)
+	cpc.gatearray.Emulate(lapse)
 }
 
 // EndFrame end emulation frame tasks
