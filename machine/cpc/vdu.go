@@ -16,7 +16,7 @@ const (
 	videoVCols        = videoVLines >> 3
 	videoScreenWidth  = videoHMode2
 	videoScreenHeight = videoVLines
-	videoHBorder      = 32
+	videoHBorder      = 64
 	videoVBorder      = 32
 	videoVSpare       = 48
 	videoTotalWidth   = videoHMode2 + videoHBorder*2
