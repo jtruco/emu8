@@ -1,7 +1,5 @@
 package device
 
-import "github.com/jtruco/emu8/device/cpu"
-
 // -----------------------------------------------------------------------------
 // Bus device
 // -----------------------------------------------------------------------------
@@ -12,10 +10,18 @@ const (
 	EventBusWrite = 12 // Write is a bus write event
 )
 
+// DataBus is a 8 bit data bus of 16 bit address
+type DataBus interface {
+	// Read reads one byte from address
+	Read(address uint16) byte
+	// Write writes a byte at address
+	Write(address uint16, data byte)
+}
+
 // Bus is the device databus interface
 type Bus interface {
-	Device      // Is a Device
-	cpu.DataBus // Is a DataBus
+	Device  // Is a Device
+	DataBus // Is a DataBus
 }
 
 // BusEvent is a bus event

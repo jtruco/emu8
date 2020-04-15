@@ -3,7 +3,7 @@ package tape
 import (
 	"log"
 
-	"github.com/jtruco/emu8/device/cpu"
+	"github.com/jtruco/emu8/device"
 )
 
 // -----------------------------------------------------------------------------
@@ -12,13 +12,13 @@ import (
 
 // Drive tape device
 type Drive struct {
-	control Control   // Tape control data
-	clock   cpu.Clock // Clock
-	tape    Tape      // Loaded tape
+	control Control      // Tape control data
+	clock   device.Clock // Clock
+	tape    Tape         // Loaded tape
 }
 
-// New creates a Tape Drive
-func New(clock cpu.Clock) *Drive {
+// New creates a Tarive
+func New(clock device.Clock) *Drive {
 	drive := &Drive{}
 	drive.clock = clock
 	drive.Reset()

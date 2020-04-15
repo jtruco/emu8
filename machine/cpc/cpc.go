@@ -27,7 +27,7 @@ type AmstradCPC struct {
 	config     machine.Config        // Machine information
 	controller controller.Controller // The emulator controller
 	components *device.Components    // Machine device components
-	clock      *cpu.ClockDevice      // The system clock
+	clock      *device.ClockDevice   // The system clock
 	cpu        *z80.Z80              // The Zilog Z80A CPU
 	memory     *memory.Memory        // The machine memory
 	lowerRom   *memory.BankMap       // The lower rom
@@ -57,7 +57,7 @@ func NewAmstradCPC(model int) *AmstradCPC {
 	cpc.lowerRom = cpc.memory.Map(0)
 	cpc.upperRom = cpc.memory.Map(4)
 	// devices
-	cpc.clock = cpu.NewClock()
+	cpc.clock = device.NewClock()
 	cpc.cpu = z80.New(cpc.clock, cpc.memory, cpc)
 	cpc.gatearray = NewGateArray(cpc)
 	cpc.crtc = NewCrtc(cpc)
@@ -111,7 +111,7 @@ func (cpc *AmstradCPC) initAmstrad() {
 // -----------------------------------------------------------------------------
 
 // Clock gets the machine clock
-func (cpc *AmstradCPC) Clock() cpu.Clock {
+func (cpc *AmstradCPC) Clock() device.Clock {
 	return cpc.clock
 }
 

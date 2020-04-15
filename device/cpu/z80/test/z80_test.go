@@ -6,7 +6,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/jtruco/emu8/device/cpu"
+	"github.com/jtruco/emu8/device"
 	"github.com/jtruco/emu8/device/cpu/z80"
 )
 
@@ -35,7 +35,7 @@ func testFile(testfile string) {
 
 	// initialize cpu
 	mem, io := &Memory{}, &Memory{}
-	cpu := z80.New(cpu.NewClock(), mem, io)
+	cpu := z80.New(device.NewClock(), mem, io)
 
 	// load testfile
 	data, err := ioutil.ReadFile(testfile)

@@ -1,7 +1,7 @@
 // Package z80 a Zyxel Z80 CPU emulator
 package z80
 
-import "github.com/jtruco/emu8/device/cpu"
+import "github.com/jtruco/emu8/device"
 
 // -----------------------------------------------------------------------------
 // Z80 - Zyxel Z80 CPU
@@ -10,13 +10,15 @@ import "github.com/jtruco/emu8/device/cpu"
 // Z80 the Zyxel Z80 CPU
 type Z80 struct {
 	State
-	clock cpu.Clock
-	mem   cpu.DataBus
-	io    cpu.DataBus
+	clock device.Clock
+	mem   device.DataBus
+	io    device.DataBus
+	// control
+	irq, nmi bool
 }
 
 // New creates a new Z80
-func New(clock cpu.Clock, mem, io cpu.DataBus) *Z80 {
+func New(clock device.Clock, mem, io device.DataBus) *Z80 {
 	z80 := Z80{}
 	z80.clock = clock
 	z80.mem = mem
@@ -26,7 +28,7 @@ func New(clock cpu.Clock, mem, io cpu.DataBus) *Z80 {
 }
 
 // Clock gets the Cpu Clock
-func (z80 *Z80) Clock() cpu.Clock {
+func (z80 *Z80) Clock() device.Clock {
 	return z80.clock
 }
 

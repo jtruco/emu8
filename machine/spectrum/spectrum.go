@@ -45,7 +45,7 @@ type Spectrum struct {
 	config     machine.Config        // Machine information
 	controller controller.Controller // The emulator controller
 	components *device.Components    // Machine device components
-	clock      *cpu.ClockDevice      // The system clock
+	clock      *device.ClockDevice   // The system clock
 	cpu        *z80.Z80              // The Zilog Z80A CPU
 	memory     *memory.Memory        // The machine memory
 	ula        *ULA                  // The spectrum ULA
@@ -77,7 +77,7 @@ func NewSpectrum(model int) *Spectrum {
 	mapper := &memory.MaskMapper{Shift: 14, Mask: 0x3fff}
 	spectrum.memory.SetMapper(mapper)
 	// build device components
-	spectrum.clock = cpu.NewClock()
+	spectrum.clock = device.NewClock()
 	spectrum.ula = NewULA(spectrum)
 	spectrum.cpu = z80.New(spectrum.clock, spectrum.memory, spectrum.ula)
 	spectrum.tv = NewTVVideo(spectrum)
@@ -133,7 +133,7 @@ func (spectrum *Spectrum) initSpectrum() {
 // Machine properties
 
 // Clock gets the machine clock
-func (spectrum *Spectrum) Clock() cpu.Clock {
+func (spectrum *Spectrum) Clock() device.Clock {
 	return spectrum.clock
 }
 
