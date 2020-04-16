@@ -10,18 +10,18 @@ const (
 	EventBusWrite = 12 // Write is a bus write event
 )
 
-// DataBus is a 8 bit data bus of 16 bit address
-type DataBus interface {
+// Bus is a 8 bit data bus of 16 bit address
+type Bus interface {
 	// Read reads one byte from address
 	Read(address uint16) byte
 	// Write writes a byte at address
 	Write(address uint16, data byte)
 }
 
-// Bus is the device databus interface
-type Bus interface {
-	Device  // Is a Device
-	DataBus // Is a DataBus
+// BusDevice is the device databus interface
+type BusDevice interface {
+	Device // Is a Device
+	Bus    // Is a DataBus
 }
 
 // BusEvent is a bus event

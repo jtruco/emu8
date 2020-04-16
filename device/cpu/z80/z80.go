@@ -11,14 +11,14 @@ import "github.com/jtruco/emu8/device"
 type Z80 struct {
 	State
 	clock device.Clock
-	mem   device.DataBus
-	io    device.DataBus
+	mem   device.Bus
+	io    device.Bus
 	// control
 	irq, nmi bool
 }
 
 // New creates a new Z80
-func New(clock device.Clock, mem, io device.DataBus) *Z80 {
+func New(clock device.Clock, mem, io device.Bus) *Z80 {
 	z80 := Z80{}
 	z80.clock = clock
 	z80.mem = mem

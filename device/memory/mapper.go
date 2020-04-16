@@ -8,7 +8,7 @@ import "github.com/jtruco/emu8/device"
 
 // BankMap contains a bank bus and mapping information
 type BankMap struct {
-	bus        device.Bus
+	bus        device.BusDevice
 	bank       *Bank
 	address    uint16
 	endaddress uint16
@@ -51,7 +51,7 @@ func NewRAM(address uint16, size int) *BankMap {
 }
 
 // NewBusMap creates a bank map from a device bus
-func NewBusMap(bus device.Bus, address uint16, size int, readonly bool, active bool) *BankMap {
+func NewBusMap(bus device.BusDevice, address uint16, size int, readonly bool, active bool) *BankMap {
 	bmap := BankMap{}
 	bmap.bus = bus
 	bmap.address = address
@@ -84,7 +84,7 @@ func (bmap *BankMap) Bank() *Bank {
 }
 
 // Bus gets the device bus of the bank
-func (bmap *BankMap) Bus() device.Bus {
+func (bmap *BankMap) Bus() device.BusDevice {
 	return bmap.bus
 }
 
