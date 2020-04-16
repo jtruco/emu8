@@ -13,8 +13,6 @@ type Z80 struct {
 	clock device.Clock
 	mem   device.Bus
 	io    device.Bus
-	// control
-	irq, nmi bool
 }
 
 // New creates a new Z80
