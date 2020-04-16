@@ -18,7 +18,7 @@ type Beeper struct {
 
 // NewBeeper a new Beeper device
 func NewBeeper(frequency, fps, tstates int) *Beeper {
-	beeper := &Beeper{}
+	beeper := new(Beeper)
 	beeper.buffer = NewBuffer(frequency, fps)
 	beeper.levelMap = beeperDefaultMap
 	beeper.frameTstates = tstates

@@ -14,7 +14,7 @@ type Psg struct {
 
 // NewPsg creates new PSG
 func NewPsg(cpc *AmstradCPC) *Psg {
-	psg := &Psg{}
+	psg := new(Psg)
 	psg.cpc = cpc
 	psg.registers = make([]byte, 16)
 	return psg

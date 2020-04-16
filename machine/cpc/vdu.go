@@ -43,7 +43,7 @@ type VduVideo struct {
 
 // NewVduVideo creates a new vdu
 func NewVduVideo(cpc *AmstradCPC) *VduVideo {
-	vdu := &VduVideo{}
+	vdu := new(VduVideo)
 	vdu.screen = video.NewScreen(videoTotalWidth, videoTotalHeight, cpcPalette)
 	vdu.screen.SetWScale(videoWidthScale)
 	vdu.gatearray = cpc.gatearray

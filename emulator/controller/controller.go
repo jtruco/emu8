@@ -36,7 +36,7 @@ type EmulatorController struct {
 
 // New returns a new emulator controller.
 func New() *EmulatorController {
-	controller := &EmulatorController{}
+	controller := new(EmulatorController)
 	controller.file = DefaultFileManager()
 	controller.video = NewVideoController()
 	controller.audio = NewAudioController()

@@ -54,7 +54,7 @@ type Tap struct {
 
 // NewTap creates a new tape
 func NewTap() tape.Tape {
-	tap := &Tap{}
+	tap := new(Tap)
 	tap.blocks = make([]tape.Block, 0, 2)
 	return tap
 }
@@ -78,7 +78,7 @@ func (tap *Tap) Load(data []byte) bool {
 	}
 	index := 0
 	for offset := 0; offset < tapeLength; {
-		block := &TapBlock{}
+		block := new(TapBlock)
 		length := int(readWord(data, offset))
 		offset += 2
 		block.Type = data[offset]

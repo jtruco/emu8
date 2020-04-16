@@ -34,7 +34,7 @@ func TestZ80(t *testing.T) {
 func testFile(testfile string) {
 
 	// initialize cpu
-	mem, io := &Memory{}, &Memory{}
+	mem, io := new(Memory), new(Memory)
 	cpu := z80.New(device.NewClock(), mem, io)
 
 	// load testfile

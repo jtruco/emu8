@@ -31,7 +31,7 @@ type Joystick struct {
 
 // NewJoystick creates the spectrum joystick
 func NewJoystick() *Joystick {
-	joy := &Joystick{}
+	joy := new(Joystick)
 	joy.model = JoystickKempston
 	return joy
 }

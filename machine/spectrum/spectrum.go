@@ -58,7 +58,7 @@ type Spectrum struct {
 
 // NewSpectrum returns a new ZX Spectrum
 func NewSpectrum(model int) *Spectrum {
-	spectrum := &Spectrum{}
+	spectrum := new(Spectrum)
 	spectrum.config.Model = model
 	spectrum.config.FrameTStates = frameTStates
 	spectrum.config.SetFPS(fps)
@@ -188,7 +188,9 @@ func (spectrum *Spectrum) Emulate() {
 }
 
 // EndFrame end emulation frame tasks
-func (spectrum *Spectrum) EndFrame() {}
+func (spectrum *Spectrum) EndFrame() {
+	// nothing to do
+}
 
 // Snapshots : load & save state
 

@@ -16,7 +16,7 @@ type Bank struct {
 
 // NewBank creates a new memory bank
 func NewBank(size int, readonly bool) *Bank {
-	bank := &Bank{}
+	bank := new(Bank)
 	bank.size = size
 	bank.readonly = readonly
 	bank.data = make([]byte, size)

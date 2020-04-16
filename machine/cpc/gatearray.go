@@ -22,7 +22,7 @@ type GateArray struct {
 
 // NewGateArray creates a GA
 func NewGateArray(cpc *AmstradCPC) *GateArray {
-	ga := &GateArray{}
+	ga := new(GateArray)
 	ga.cpc = cpc
 	ga.palette = make([]byte, gaTotalPens)
 	return ga

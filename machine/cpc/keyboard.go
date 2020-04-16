@@ -16,7 +16,7 @@ type Keyboard struct {
 
 // NewKeyboard creates a new keyboard
 func NewKeyboard() *Keyboard {
-	return &Keyboard{}
+	return new(Keyboard)
 }
 
 // State gets current row state

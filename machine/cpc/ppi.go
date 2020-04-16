@@ -16,7 +16,7 @@ type Ppi struct {
 
 // NewPpi creates new PPI
 func NewPpi(cpc *AmstradCPC) *Ppi {
-	ppi := &Ppi{}
+	ppi := new(Ppi)
 	ppi.cpc = cpc
 	return ppi
 }

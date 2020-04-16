@@ -42,7 +42,7 @@ func DefaultFileManager() *FileManager {
 
 // NewFileManager returns a new file manager
 func NewFileManager(path string) *FileManager {
-	manager := &FileManager{}
+	manager := new(FileManager)
 	manager.formats = make(map[string]int)
 	manager.SetPath(path)
 	return manager

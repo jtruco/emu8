@@ -19,7 +19,7 @@ type Drive struct {
 
 // New creates a Tarive
 func New(clock device.Clock) *Drive {
-	drive := &Drive{}
+	drive := new(Drive)
 	drive.clock = clock
 	drive.Reset()
 	return drive

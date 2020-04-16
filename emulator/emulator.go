@@ -24,7 +24,7 @@ type Emulator struct {
 
 // New creates a machine emulator
 func New(machine machine.Machine) *Emulator {
-	emulator := &Emulator{}
+	emulator := new(Emulator)
 	emulator.machine = machine
 	emulator.controller = controller.New()
 	emulator.machine.SetController(emulator.controller)

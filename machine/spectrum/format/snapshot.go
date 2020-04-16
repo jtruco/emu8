@@ -16,7 +16,7 @@ type Snapshot struct {
 
 // NewSnapshot returns a new ZX Spectrum snap
 func NewSnapshot() *Snapshot {
-	snap := &Snapshot{}
+	snap := new(Snapshot)
 	snap.State.Init()
 	return snap
 }

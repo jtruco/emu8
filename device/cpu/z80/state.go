@@ -39,9 +39,9 @@ type State struct {
 
 // NewState creates a new Z80 state
 func NewState() *State {
-	state := State{}
+	state := new(State)
 	state.Init()
-	return &state
+	return state
 }
 
 // Init initializes state

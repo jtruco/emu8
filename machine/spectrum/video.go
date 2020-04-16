@@ -73,7 +73,7 @@ type TVVideo struct {
 
 // NewTVVideo creates the video device
 func NewTVVideo(spectrum *Spectrum) *TVVideo {
-	tv := &TVVideo{}
+	tv := new(TVVideo)
 	tv.screen = video.NewScreen(tvTotalWidth, tvTotalHeight, zxPalette)
 	tv.screen.SetDisplay(tvDisplayLeft, tvDisplayTop, tvDisplayWidth, tvDisplayHeight)
 	tv.spectrum = spectrum

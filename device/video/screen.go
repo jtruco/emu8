@@ -34,7 +34,7 @@ type Screen struct {
 
 // NewScreen creates a screen of size width x height and palette
 func NewScreen(width, height int, palette []int32) *Screen {
-	screen := &Screen{}
+	screen := new(Screen)
 	screen.width = width
 	screen.height = height
 	screen.data = make([]int32, (width * height))

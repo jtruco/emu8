@@ -61,7 +61,7 @@ func parseArgs() {
 
 // init initializes configuration
 func init() {
-	config = &Config{}
+	config = new(Config)
 	config.AppTitle = DefaultAppTitle
 	config.AppUI = DefaultAppUI
 	config.MachineModel = DefaultMachineModel

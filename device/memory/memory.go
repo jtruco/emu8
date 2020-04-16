@@ -33,10 +33,10 @@ type Memory struct {
 
 // New creates a new memory device with a size and a number banks
 func New(size int, banks int) *Memory {
-	memory := &Memory{}
+	memory := new(Memory)
 	memory.size = size
 	memory.banks = make([]*BankMap, banks)
-	memory.SetMapper(&DefaultMapper{})
+	memory.SetMapper(new(DefaultMapper))
 	return memory
 }
 

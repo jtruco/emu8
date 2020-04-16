@@ -68,7 +68,7 @@ type Tzx struct {
 
 // NewTzx creates a new tape
 func NewTzx() tape.Tape {
-	tzx := &Tzx{}
+	tzx := new(Tzx)
 	tzx.blocks = make([]tape.Block, 0, 2)
 	return tzx
 }
@@ -96,7 +96,7 @@ func (tzx *Tzx) Load(data []byte) bool {
 	}
 	index := 0
 	for offset := 0; offset < tapeLength; {
-		block := &TapBlock{}
+		block := new(TapBlock)
 		block.Type = data[offset]
 		block.Index = index
 		block.Offset = offset

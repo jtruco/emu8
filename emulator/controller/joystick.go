@@ -20,10 +20,10 @@ type JoystickController struct {
 
 // NewJoystickController creates a new controller
 func NewJoystickController() *JoystickController {
-	controller := JoystickController{}
+	controller := new(JoystickController)
 	controller.receivers = make(map[byte]joystick.Joystick)
 	controller.eventQueue = make([]*joystick.JoyEvent, 0, 5)
-	return &controller
+	return controller
 }
 
 // Receivers

@@ -26,10 +26,10 @@ type keyEvent struct {
 
 // NewKeyboardController creates a new controller with an empty keymap
 func NewKeyboardController() *KeyboardController {
-	controller := KeyboardController{}
+	controller := new(KeyboardController)
 	controller.receivers = make(map[keyboard.Receiver]keyboard.KeyMap)
 	controller.eventQueue = make([]keyEvent, 0, 5)
-	return &controller
+	return controller
 }
 
 // Receivers

@@ -16,7 +16,7 @@ type Audio struct {
 
 // NewAudio the SDL audio
 func NewAudio(app *App) *Audio {
-	audio := &Audio{}
+	audio := new(Audio)
 	audio.app = app
 	audio.mute = app.config.MuteAudio
 	return audio

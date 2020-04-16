@@ -22,7 +22,7 @@ type Clock interface {
 
 // NewClock returns a Clock device
 func NewClock() *ClockDevice {
-	return &ClockDevice{}
+	return new(ClockDevice)
 }
 
 // -----------------------------------------------------------------------------

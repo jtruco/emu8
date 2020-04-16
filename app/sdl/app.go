@@ -23,7 +23,7 @@ type App struct {
 
 // NewApp creates a new application
 func NewApp() *App {
-	app := &App{}
+	app := new(App)
 	app.config = config.Get()
 	app.video = NewVideo(app)
 	app.audio = NewAudio(app)

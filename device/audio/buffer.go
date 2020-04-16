@@ -15,7 +15,7 @@ type Buffer struct {
 
 // NewBuffer creates a new buffer of Freq and FPS
 func NewBuffer(frequency, fps int) *Buffer {
-	buffer := &Buffer{}
+	buffer := new(Buffer)
 	buffer.frequency = frequency
 	buffer.fps = fps
 	buffer.size = frequency / fps

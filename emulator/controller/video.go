@@ -14,7 +14,7 @@ type VideoController struct {
 
 // NewVideoController creates a new video controller
 func NewVideoController() *VideoController {
-	controller := &VideoController{}
+	controller := new(VideoController)
 	return controller
 }
 

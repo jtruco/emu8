@@ -17,12 +17,12 @@ type Z80 struct {
 
 // New creates a new Z80
 func New(clock device.Clock, mem, io device.Bus) *Z80 {
-	z80 := Z80{}
+	z80 := new(Z80)
 	z80.clock = clock
 	z80.mem = mem
 	z80.io = io
 	z80.State.Init()
-	return &z80
+	return z80
 }
 
 // Clock gets the Cpu Clock

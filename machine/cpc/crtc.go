@@ -30,7 +30,7 @@ type Crtc struct {
 
 // NewCrtc creates new CRTC
 func NewCrtc(cpc *AmstradCPC) *Crtc {
-	crtc := &Crtc{}
+	crtc := new(Crtc)
 	crtc.cpc = cpc
 	crtc.registers = make([]byte, 18)
 	return crtc

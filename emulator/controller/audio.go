@@ -14,7 +14,7 @@ type AudioController struct {
 
 // NewAudioController creates a new video controller
 func NewAudioController() *AudioController {
-	controller := &AudioController{}
+	controller := new(AudioController)
 	return controller
 }
 

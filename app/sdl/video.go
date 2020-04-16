@@ -26,7 +26,7 @@ type Video struct {
 
 // NewVideo creates a new video UI
 func NewVideo(app *App) *Video {
-	video := &Video{}
+	video := new(Video)
 	video.app = app
 	return video
 }

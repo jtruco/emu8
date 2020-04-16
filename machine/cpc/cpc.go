@@ -42,7 +42,7 @@ type AmstradCPC struct {
 
 // NewAmstradCPC returns a new Amstrad CPC
 func NewAmstradCPC(model int) *AmstradCPC {
-	cpc := &AmstradCPC{}
+	cpc := new(AmstradCPC)
 	cpc.config.Model = model
 	cpc.config.FrameTStates = cpcFrameTStates
 	cpc.config.SetFPS(cpcFPS)
@@ -141,7 +141,9 @@ func (cpc *AmstradCPC) SetController(cntrlr controller.Controller) {
 // -----------------------------------------------------------------------------
 
 // BeginFrame begin emulation frame tasks
-func (cpc *AmstradCPC) BeginFrame() {}
+func (cpc *AmstradCPC) BeginFrame() {
+	// nothing todo
+}
 
 // Emulate one machine step
 func (cpc *AmstradCPC) Emulate() {

@@ -65,7 +65,7 @@ type ULA struct {
 
 // NewULA creates
 func NewULA(spectrum *Spectrum) *ULA {
-	ula := &ULA{}
+	ula := new(ULA)
 	ula.spectrum = spectrum
 	spectrum.VideoMemory().AddBusListener(ula)
 	return ula
@@ -86,7 +86,9 @@ func (ula *ULA) Init() {
 }
 
 // Reset resets ULA
-func (ula *ULA) Reset() {}
+func (ula *ULA) Reset() {
+	// nothing to to
+}
 
 // DataBus
 

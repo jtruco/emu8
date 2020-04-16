@@ -29,7 +29,7 @@ type Mapper interface {
 
 // NewBankMap creates a memory bank map
 func NewBankMap(address uint16, size int, readonly bool, active bool) *BankMap {
-	bmap := BankMap{}
+	bmap := new(BankMap)
 	bmap.bank = NewBank(size, readonly)
 	bmap.bus = bmap.bank
 	bmap.address = address
@@ -37,7 +37,7 @@ func NewBankMap(address uint16, size int, readonly bool, active bool) *BankMap {
 	bmap.active = active
 	bmap.init = active
 	bmap.write = !readonly
-	return &bmap
+	return bmap
 }
 
 // NewROM creates a ROM bank map
@@ -52,13 +52,13 @@ func NewRAM(address uint16, size int) *BankMap {
 
 // NewBusMap creates a bank map from a device bus
 func NewBusMap(bus device.BusDevice, address uint16, size int, readonly bool, active bool) *BankMap {
-	bmap := BankMap{}
+	bmap := new(BankMap)
 	bmap.bus = bus
 	bmap.address = address
 	bmap.endaddress = address + uint16(size) - 1
 	bmap.active = active
 	bmap.init = active
-	return &bmap
+	return bmap
 }
 
 // Init inits bank

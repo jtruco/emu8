@@ -13,7 +13,7 @@ type Components struct {
 
 // NewComponents creates a collection
 func NewComponents(size int) *Components {
-	collection := &Components{}
+	collection := new(Components)
 	collection.devices = make([]Device, size)
 	collection.size = size
 	return collection

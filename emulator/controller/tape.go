@@ -15,7 +15,7 @@ type TapeController struct {
 
 // NewTapeController creates a new video controller
 func NewTapeController() *TapeController {
-	controller := &TapeController{}
+	controller := new(TapeController)
 	return controller
 }
 
