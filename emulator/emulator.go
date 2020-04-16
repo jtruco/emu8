@@ -81,20 +81,15 @@ func (emulator *Emulator) runEmulation() {
 	defer emulator.wg.Done()
 
 	// emulation speed
-	frame := emulator.machine.Config().FrameTime
-	ticker := time.NewTicker(time.Duration(frame))
+	ftime := emulator.machine.Config().FrameTime
+	ticker := time.NewTicker(time.Duration(ftime))
 	defer ticker.Stop()
 
 	// emulation loop
 	for emulator.running {
 		select {
 		case <-ticker.C:
-			{
-				// do frame
-				emulator.controller.Flush()
-				emulator.emulateFrame()
-				emulator.controller.Refresh()
-			}
+			emulator.emulateFrame()
 		}
 	}
 }
@@ -105,11 +100,17 @@ func (emulator *Emulator) emulateFrame() {
 	clock := machine.CPU().Clock()
 	config := machine.Config()
 
+	// pre-frame actions
+	emulator.controller.Flush()
+
 	// frame emulation loop
-	clock.Restart(config.FrameTStates)
 	machine.BeginFrame()
 	for clock.Tstates() < config.FrameTStates {
 		machine.Emulate()
 	}
 	machine.EndFrame()
+
+	// post-frame actions
+	emulator.controller.Refresh()
+	clock.Restart(config.FrameTStates)
 }
