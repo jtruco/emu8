@@ -6,6 +6,7 @@ import (
 
 	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/emulator"
+	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -13,11 +14,11 @@ const loopSleep = 20 * time.Millisecond // 50 Hz
 
 // App is the SDL application
 type App struct {
-	title    string
 	config   *config.Config
 	video    *Video
 	audio    *Audio
 	emulator *emulator.Emulator
+	control  controller.Controller
 	running  bool
 }
 
@@ -31,7 +32,7 @@ func NewApp() *App {
 }
 
 // Init the SDL App
-func (app *App) Init(e *emulator.Emulator) bool {
+func (app *App) Init(emu *emulator.Emulator) bool {
 	// init sdl
 	if err := sdl.Init(sdl.INIT_VIDEO | sdl.INIT_AUDIO | sdl.INIT_JOYSTICK); err != nil {
 		log.Println("Error initializing SDL : " + err.Error())
@@ -45,9 +46,11 @@ func (app *App) Init(e *emulator.Emulator) bool {
 		}
 	}
 	// init emulator
-	app.emulator = e
-	app.emulator.Controller().Video().SetRenderer(app.video)
-	app.emulator.Controller().Audio().SetPlayer(app.audio)
+	app.emulator = emu
+	control := emu.Controller()
+	control.Video().SetRenderer(app.video)
+	control.Audio().SetPlayer(app.audio)
+	app.control = control
 	// init SDL video output
 	if !app.video.Init() {
 		return false
@@ -81,11 +84,9 @@ func (app *App) Run() {
 			case *sdl.KeyboardEvent:
 				app.processKeyboard(e)
 			case *sdl.JoyAxisEvent:
-				app.emulator.Controller().Joystick().AxisEvent(
-					byte(e.Which), e.Axis, byte(e.Value>>8))
+				app.processJoyAxis(e)
 			case *sdl.JoyButtonEvent:
-				app.emulator.Controller().Joystick().ButtonEvent(
-					byte(e.Which), e.Button, e.State)
+				app.processJoyButton(e)
 			}
 		}
 		if count == 0 {
@@ -122,11 +123,11 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 			app.running = false // Exit app
 		// Tape Drive
 		case sdl.K_F7:
-			app.emulator.Controller().Tape().Drive().Play()
+			app.control.Tape().Drive().Play()
 		case sdl.K_F8:
-			app.emulator.Controller().Tape().Drive().Stop()
+			app.control.Tape().Drive().Stop()
 		case sdl.K_F9:
-			app.emulator.Controller().Tape().Drive().Rewind()
+			app.control.Tape().Drive().Rewind()
 		// UI
 		case sdl.K_F11:
 			app.video.ToggleFullscreen()
@@ -137,9 +138,19 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 	if !captured {
 		// send key event to emulator
 		if e.Type == sdl.KEYDOWN {
-			app.emulator.Controller().Keyboard().KeyDown(int(e.Keysym.Scancode))
+			app.control.Keyboard().KeyDown(int(e.Keysym.Scancode))
 		} else {
-			app.emulator.Controller().Keyboard().KeyUp(int(e.Keysym.Scancode))
+			app.control.Keyboard().KeyUp(int(e.Keysym.Scancode))
 		}
 	}
+}
+
+func (app *App) processJoyAxis(e *sdl.JoyAxisEvent) {
+	app.control.Joystick().AxisEvent(
+		byte(e.Which), e.Axis, byte(e.Value>>8))
+}
+
+func (app *App) processJoyButton(e *sdl.JoyButtonEvent) {
+	app.control.Joystick().ButtonEvent(
+		byte(e.Which), e.Button, e.State)
 }
