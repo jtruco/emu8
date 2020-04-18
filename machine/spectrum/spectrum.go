@@ -173,8 +173,8 @@ func (spectrum *Spectrum) VideoMemory() *memory.Bank {
 
 // BeginFrame begin emulation frame tasks
 func (spectrum *Spectrum) BeginFrame() {
-	// Emit cpu maskable interrupt
-	spectrum.cpu.Interrupt()
+	// Request cpu maskable interrupt
+	spectrum.cpu.InterruptRequest()
 }
 
 // Emulate one machine step
