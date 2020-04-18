@@ -131,10 +131,10 @@ func (cpc *AmstradCPC) Components() *device.Components {
 }
 
 // SetController connect UI controllers & device components
-func (cpc *AmstradCPC) SetController(cntrlr controller.Controller) {
-	cpc.controller = cntrlr
-	cpc.controller.Video().SetVideo(cpc.video)
-	cpc.controller.Keyboard().AddReceiver(cpc.keyboard, cpcKeyboardMap)
+func (cpc *AmstradCPC) SetController(control controller.Controller) {
+	control.Video().SetVideo(cpc.video)
+	control.Keyboard().AddReceiver(cpc.keyboard, cpcKeyboardMap)
+	cpc.controller = control
 }
 
 // Emulation control

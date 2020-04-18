@@ -153,15 +153,15 @@ func (spectrum *Spectrum) Components() *device.Components {
 }
 
 // SetController connect controllers & components
-func (spectrum *Spectrum) SetController(cntrlr controller.Controller) {
-	spectrum.controller = cntrlr
-	spectrum.controller.Video().SetVideo(spectrum.tv)
-	spectrum.controller.Audio().SetAudio(spectrum.beeper)
-	spectrum.controller.Keyboard().AddReceiver(spectrum.keyboard, zxKeyboardMap)
-	spectrum.controller.File().RegisterFormat(controller.FormatSnap, snapFormats)
-	spectrum.controller.File().RegisterFormat(controller.FormatTape, tapeFormats)
-	spectrum.controller.Tape().SetDrive(spectrum.tape)
-	spectrum.controller.Joystick().AddReceiver(spectrum.joystick, 0)
+func (spectrum *Spectrum) SetController(control controller.Controller) {
+	control.Video().SetVideo(spectrum.tv)
+	control.Audio().SetAudio(spectrum.beeper)
+	control.Keyboard().AddReceiver(spectrum.keyboard, zxKeyboardMap)
+	control.File().RegisterFormat(controller.FormatSnap, snapFormats)
+	control.File().RegisterFormat(controller.FormatTape, tapeFormats)
+	control.Tape().SetDrive(spectrum.tape)
+	control.Joystick().AddReceiver(spectrum.joystick, 0)
+	spectrum.controller = control
 }
 
 // VideoMemory gets the video memory bank
