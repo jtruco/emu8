@@ -26,11 +26,17 @@ type Device interface {
 	Reset()
 }
 
+// Callback device function
+type Callback func() bool
+
 // Event is a device event
 type Event struct {
 	Type  int // Operation type
 	Order int // Operation order
 }
+
+// EventCallback function
+type EventCallback func(*Event) bool
 
 // Listener is a device event listener
 type Listener interface {

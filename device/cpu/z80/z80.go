@@ -10,9 +10,10 @@ import "github.com/jtruco/emu8/device"
 // Z80 the Zyxel Z80 CPU
 type Z80 struct {
 	State
-	clock device.Clock
-	mem   device.Bus
-	io    device.Bus
+	clock    device.Clock
+	mem      device.Bus
+	io       device.Bus
+	cbIntAck device.Callback
 }
 
 // New creates a new Z80
@@ -30,6 +31,21 @@ func (z80 *Z80) Clock() device.Clock {
 	return z80.clock
 }
 
+// Memory gets the Cpu Memory bus
+func (z80 *Z80) Memory() device.Bus {
+	return z80.mem
+}
+
+// IO gets the Cpu IO bus
+func (z80 *Z80) IO() device.Bus {
+	return z80.io
+}
+
+// SetIntAckCallback sets INT/NMI ACK callback
+func (z80 *Z80) SetIntAckCallback(callback device.Callback) {
+	z80.cbIntAck = callback
+}
+
 // Init initializes Cpu (power-on)
 func (z80 *Z80) Init() {
 	z80.State.HardReset()
@@ -41,10 +57,25 @@ func (z80 *Z80) Reset() {
 }
 
 // Execute executes one instruction
-func (z80 *Z80) Execute() {
-	z80.ActiveEI = false
-	z80.ReadIFF2 = false
-	z80.fetchAndExecute(z80.execute)
+func (z80 *Z80) Execute() int {
+	tstate := z80.clock.Tstates()
+	if z80.NmiRq {
+		z80.NmiRq = false
+		z80.NMInterrupt()
+	} else if z80.IntRq {
+		z80.IntRq = false
+		z80.Interrupt()
+	} else {
+		z80.ActiveEI = false
+		z80.ReadIFF2 = false
+		z80.fetchAndExecute(z80.execute)
+	}
+	return z80.clock.Tstates() - tstate
+}
+
+// InterruptRequest request a maskable interrupt
+func (z80 *Z80) InterruptRequest() {
+	z80.IntRq = true
 }
 
 // Interrupt a maskable interrupt
@@ -62,12 +93,9 @@ func (z80 *Z80) Interrupt() {
 		z80.F &= ^FlagP
 		z80.ReadIFF2 = false
 	}
-	// Check halted state
-	if z80.Halted {
-		z80.incPC()
-		z80.Halted = false
-	}
 	// Accept interrupt
+	z80.acceptInterrupt()
+	// Process interrupt
 	z80.IFF1, z80.IFF2 = false, false
 	z80.incR()
 	z80.clock.Add(7) // 7 tstate
@@ -88,13 +116,15 @@ func (z80 *Z80) Interrupt() {
 	z80.Memptr.Set(z80.PC)
 }
 
+// NMInterruptRequest request a maskable interrupt
+func (z80 *Z80) NMInterruptRequest() {
+	z80.NmiRq = true
+}
+
 // NMInterrupt a not maskable interrupt
 func (z80 *Z80) NMInterrupt() {
-	// Check halted state
-	if z80.Halted {
-		z80.incPC()
-		z80.Halted = false
-	}
+	// Accept interrupt
+	z80.acceptInterrupt()
 	// Process interrupt
 	z80.IFF1 = false
 	z80.incR()
@@ -112,4 +142,17 @@ func (z80 *Z80) fetchAndExecute(execute func(byte)) {
 	z80.incPC()
 	z80.incR()
 	execute(opcode)
+}
+
+// fetchAndExecute fetchs and executes an opcode
+func (z80 *Z80) acceptInterrupt() {
+	// Check halted state
+	if z80.Halted {
+		z80.incPC()
+		z80.Halted = false
+	}
+	// Ack interrupt
+	if z80.cbIntAck != nil {
+		z80.cbIntAck()
+	}
 }

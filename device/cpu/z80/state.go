@@ -35,6 +35,8 @@ type State struct {
 	IFF1, IFF2 bool
 	ActiveEI   bool
 	ReadIFF2   bool
+	IntRq      bool
+	NmiRq      bool
 }
 
 // NewState creates a new Z80 state
@@ -93,6 +95,8 @@ func (state *State) initControl() {
 	state.IFF2 = false
 	state.ActiveEI = false
 	state.ReadIFF2 = false
+	state.IntRq = false
+	state.NmiRq = false
 }
 
 // Copy copies state values
