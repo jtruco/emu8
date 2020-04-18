@@ -69,28 +69,8 @@ func (ga *GateArray) SetInk(ink byte) {
 	ga.palette[ga.pen] = ink
 }
 
-// Emulate gate array
-func (ga *GateArray) Emulate(tstates int) {
-	// FIXME : Simple interrupt emulation
-	// 52 scanlines / 1sl ~ 256 Ts
-	// 312 sl -> vsync
-	ga.ts += tstates
-	if ga.ts >= 256 { // 1sl
-		ga.ts &= 0xff
-		ga.slCount++
-		ga.slTotal++
-		if ga.slCount == 52 {
-			ga.slCount = 0
-			ga.cpc.cpu.Interrupt()
-		}
-		if ga.slTotal == 4 { // end vsync
-			ga.cpc.crtc.RemoveFlags(CrtcVS)
-		} else if ga.slTotal == 312 { // Frame
-			ga.slTotal = 0
-			ga.cpc.crtc.AddFlags(CrtcVS)
-		}
-	}
-}
+// Bus Input / Output
+// -----------------------------------------------------------------------------
 
 // Read read from gatearray
 func (ga *GateArray) Read() byte {
@@ -126,4 +106,35 @@ func (ga *GateArray) Write(data byte) {
 	case 3:
 		// RAM memory management (not implemented)
 	}
+}
+
+// Emulation
+// -----------------------------------------------------------------------------
+
+// Emulate gate array
+func (ga *GateArray) Emulate(tstates int) {
+	// FIXME : Simple interrupt emulation
+	// 52 scanlines / 1sl ~ 256 Ts
+	// 312 sl -> vsync
+	ga.ts += tstates
+	if ga.ts >= 256 { // 1sl
+		ga.ts &= 0xff
+		ga.slCount++
+		ga.slTotal++
+		if ga.slCount == 52 {
+			ga.slCount = 0
+			ga.cpc.InterruptRequest()
+		}
+		if ga.slTotal == 4 { // end vsync
+			ga.cpc.crtc.RemoveFlags(CrtcVS)
+		} else if ga.slTotal == 312 { // Frame
+			ga.slTotal = 0
+			ga.cpc.crtc.AddFlags(CrtcVS)
+		}
+	}
+}
+
+// InterruptAcknowledge interrupt ack
+func (ga *GateArray) InterruptAcknowledge() {
+	ga.slCount &= 0x01F // Unset bit 5
 }

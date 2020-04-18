@@ -59,6 +59,7 @@ func NewAmstradCPC(model int) *AmstradCPC {
 	// devices
 	cpc.clock = device.NewClock()
 	cpc.cpu = z80.New(cpc.clock, cpc.memory, cpc)
+	cpc.cpu.SetIntAckCallback(cpc.InterruptAcknowledge)
 	cpc.gatearray = NewGateArray(cpc)
 	cpc.crtc = NewCrtc(cpc)
 	cpc.video = NewVduVideo(cpc)
@@ -148,11 +149,9 @@ func (cpc *AmstradCPC) BeginFrame() {
 // Emulate one machine step
 func (cpc *AmstradCPC) Emulate() {
 	// z80 cpu emulation
-	ts := cpc.clock.Tstates()
-	cpc.cpu.Execute()
-	lapse := cpc.cpu.Clock().Tstates() - ts
+	lapse := cpc.cpu.Execute()
 
-	// CPC 4T instruction halt
+	// CPC 4T instruction round
 	fix := lapse & 0x03
 	if fix != 0 {
 		fix = 0x04 - lapse
@@ -160,7 +159,7 @@ func (cpc *AmstradCPC) Emulate() {
 		lapse += fix
 	}
 
-	// amstrad bus emulation
+	// CPC bus emulation
 	cpc.gatearray.Emulate(lapse)
 }
 
@@ -169,7 +168,19 @@ func (cpc *AmstradCPC) EndFrame() {
 	cpc.video.EndFrame()
 }
 
+// InterruptRequest process cpu interrupt request
+func (cpc *AmstradCPC) InterruptRequest() {
+	cpc.cpu.InterruptRequest()
+}
+
+// InterruptAcknowledge process cpu interrupt ack
+func (cpc *AmstradCPC) InterruptAcknowledge() bool {
+	cpc.gatearray.InterruptAcknowledge()
+	return true
+}
+
 // Files : load & save state / tape
+// -----------------------------------------------------------------------------
 
 // LoadFile loads a file into machine
 func (cpc *AmstradCPC) LoadFile(filename string) {
