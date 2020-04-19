@@ -41,8 +41,8 @@ func (z80 *Z80) IO() device.Bus {
 	return z80.io
 }
 
-// SetIntAckCallback sets INT/NMI ACK callback
-func (z80 *Z80) SetIntAckCallback(callback device.Callback) {
+// SetInterruptAck sets INT/NMI ACK callback function
+func (z80 *Z80) SetInterruptAck(callback device.Callback) {
 	z80.cbIntAck = callback
 }
 
@@ -61,11 +61,9 @@ func (z80 *Z80) Execute() int {
 	tstate := z80.clock.Tstates()
 	if z80.NmiRq {
 		z80.NMInterrupt()
-	} else if z80.IFF1 && z80.IntRq {
+	} else if z80.IntRq && z80.IFF1 {
 		z80.Interrupt()
 	} else {
-		z80.ActiveEI = false
-		z80.ReadIFF2 = false
 		z80.fetchAndExecute(z80.execute)
 	}
 	return z80.clock.Tstates() - tstate
@@ -84,16 +82,14 @@ func (z80 *Z80) Interrupt() {
 	}
 	// Check EI activate
 	for z80.ActiveEI {
-		z80.ActiveEI = false
 		z80.fetchAndExecute(z80.execute)
 	}
 	// Check NMOS IFF2 parity bug
 	if z80.ReadIFF2 {
-		z80.ReadIFF2 = false
 		z80.F &= ^FlagP
 	}
 	// Accept interrupt
-	z80.acceptInterrupt()
+	z80.IntRq = z80.acceptInterrupt()
 	// Process interrupt
 	z80.IFF1, z80.IFF2 = false, false
 	z80.incR()
@@ -123,7 +119,7 @@ func (z80 *Z80) NMInterruptRequest(request bool) {
 // NMInterrupt a not maskable interrupt
 func (z80 *Z80) NMInterrupt() {
 	// Accept interrupt
-	z80.acceptInterrupt()
+	z80.NmiRq = z80.acceptInterrupt()
 	// Process interrupt
 	z80.IFF1 = false
 	z80.incR()
@@ -140,11 +136,13 @@ func (z80 *Z80) fetchAndExecute(execute func(byte)) {
 	z80.clock.Inc() // +1 tstate opcode execution
 	z80.incPC()
 	z80.incR()
+	z80.ActiveEI = false
+	z80.ReadIFF2 = false
 	execute(opcode)
 }
 
 // fetchAndExecute fetchs and executes an opcode
-func (z80 *Z80) acceptInterrupt() {
+func (z80 *Z80) acceptInterrupt() bool {
 	// Check halted state
 	if z80.Halted {
 		z80.incPC()
@@ -152,6 +150,7 @@ func (z80 *Z80) acceptInterrupt() {
 	}
 	// Ack interrupt
 	if z80.cbIntAck != nil {
-		z80.cbIntAck()
+		return z80.cbIntAck()
 	}
+	return false // interrupt ack
 }

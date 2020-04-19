@@ -81,6 +81,7 @@ func NewSpectrum(model int) *Spectrum {
 	spectrum.clock = device.NewClock()
 	spectrum.ula = NewULA(spectrum)
 	spectrum.cpu = z80.New(spectrum.clock, spectrum.memory, spectrum.ula)
+	spectrum.cpu.SetInterruptAck(spectrum.onInterruptAck)
 	spectrum.tv = NewTVVideo(spectrum)
 	spectrum.beeper = audio.NewBeeper(config.AudioFrecuency, fps, frameTStates)
 	spectrum.beeper.SetMap(beeperMap)
@@ -195,6 +196,11 @@ func (spectrum *Spectrum) Emulate() {
 // EndFrame end emulation frame tasks
 func (spectrum *Spectrum) EndFrame() {
 	// nothing to do
+}
+
+// onInterruptAck
+func (spectrum *Spectrum) onInterruptAck() bool {
+	return true
 }
 
 // Snapshots : load & save state
