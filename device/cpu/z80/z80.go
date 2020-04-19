@@ -84,12 +84,13 @@ func (z80 *Z80) Interrupt() {
 	}
 	// Check EI activate
 	for z80.ActiveEI {
-		z80.Execute()
+		z80.ActiveEI = false
+		z80.fetchAndExecute(z80.execute)
 	}
 	// Check NMOS IFF2 parity bug
 	if z80.ReadIFF2 {
-		z80.F &= ^FlagP
 		z80.ReadIFF2 = false
+		z80.F &= ^FlagP
 	}
 	// Accept interrupt
 	z80.acceptInterrupt()
