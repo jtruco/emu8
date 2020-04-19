@@ -60,10 +60,8 @@ func (z80 *Z80) Reset() {
 func (z80 *Z80) Execute() int {
 	tstate := z80.clock.Tstates()
 	if z80.NmiRq {
-		z80.NmiRq = false
 		z80.NMInterrupt()
-	} else if z80.IntRq {
-		z80.IntRq = false
+	} else if z80.IFF1 && z80.IntRq {
 		z80.Interrupt()
 	} else {
 		z80.ActiveEI = false
@@ -74,8 +72,8 @@ func (z80 *Z80) Execute() int {
 }
 
 // InterruptRequest request a maskable interrupt
-func (z80 *Z80) InterruptRequest() {
-	z80.IntRq = true
+func (z80 *Z80) InterruptRequest(request bool) {
+	z80.IntRq = request
 }
 
 // Interrupt a maskable interrupt
@@ -117,8 +115,8 @@ func (z80 *Z80) Interrupt() {
 }
 
 // NMInterruptRequest request a maskable interrupt
-func (z80 *Z80) NMInterruptRequest() {
-	z80.NmiRq = true
+func (z80 *Z80) NMInterruptRequest(request bool) {
+	z80.NmiRq = request
 }
 
 // NMInterrupt a not maskable interrupt

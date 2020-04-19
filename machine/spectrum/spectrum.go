@@ -24,6 +24,7 @@ import (
 const (
 	fps          = 50    // 50 Hz (50.08 Hz)
 	frameTStates = 69888 // TStates per frame
+	intTStates   = 32    // ZX Spectrum 16k & 48k
 	romName      = "zxspectrum.rom"
 )
 
@@ -174,7 +175,7 @@ func (spectrum *Spectrum) VideoMemory() *memory.Bank {
 // BeginFrame begin emulation frame tasks
 func (spectrum *Spectrum) BeginFrame() {
 	// Request cpu maskable interrupt
-	spectrum.cpu.InterruptRequest()
+	spectrum.cpu.InterruptRequest(true)
 }
 
 // Emulate one machine step
@@ -185,6 +186,10 @@ func (spectrum *Spectrum) Emulate() {
 	}
 	// Exetues a CPU instruction
 	spectrum.cpu.Execute()
+	// Maskable interrupt request lenght
+	if spectrum.cpu.IntRq && spectrum.clock.Tstates() >= intTStates {
+		spectrum.cpu.InterruptRequest(false)
+	}
 }
 
 // EndFrame end emulation frame tasks
