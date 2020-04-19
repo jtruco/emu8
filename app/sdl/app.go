@@ -123,10 +123,12 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 			app.running = false // Exit app
 		// Tape Drive
 		case sdl.K_F7:
-			app.control.Tape().Drive().Play()
+			if app.control.Tape().Drive().IsPlaying() {
+				app.control.Tape().Drive().Stop()
+			} else {
+				app.control.Tape().Drive().Play()
+			}
 		case sdl.K_F8:
-			app.control.Tape().Drive().Stop()
-		case sdl.K_F9:
 			app.control.Tape().Drive().Rewind()
 		// UI
 		case sdl.K_F11:
