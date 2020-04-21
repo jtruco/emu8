@@ -46,7 +46,9 @@ func (ppi *Ppi) Read(port byte) byte {
 	case 1: // port B
 		if (ppi.control & 0x02) != 0 { // input
 			data = ppi.jumpers
-			data |= (ppi.cpc.crtc.Flags() & CrtcVS) // vsync
+			if ppi.cpc.crtc.InVSync() {
+				data |= 0x01
+			}
 			// TODO : tape,...
 		} else {
 			data = ppi.portB

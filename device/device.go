@@ -26,8 +26,7 @@ type Device interface {
 	Reset()
 }
 
-// Callback device function
-type Callback func() bool
+// Events
 
 // Event is a device event
 type Event struct {
@@ -35,10 +34,15 @@ type Event struct {
 	Order int // Operation order
 }
 
-// EventCallback function
-type EventCallback func(*Event) bool
-
 // Listener is a device event listener
 type Listener interface {
 	ProcessDeviceEvent(event *Event)
 }
+
+// Callbacks
+
+// Callback is a device callback
+type Callback func()
+
+// AckCallback device callback with ack control
+type AckCallback func() bool

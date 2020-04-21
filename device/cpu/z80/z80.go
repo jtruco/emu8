@@ -9,11 +9,11 @@ import "github.com/jtruco/emu8/device"
 
 // Z80 the Zyxel Z80 CPU
 type Z80 struct {
-	State
-	clock    device.Clock
-	mem      device.Bus
-	io       device.Bus
-	cbIntAck device.Callback
+	State                       // Z80 State
+	clock    device.Clock       // Clock device
+	mem      device.Bus         // Memory data bus
+	io       device.Bus         // I/O data bus
+	OnIntAck device.AckCallback // INT / NMI ack callback
 }
 
 // New creates a new Z80
@@ -39,11 +39,6 @@ func (z80 *Z80) Memory() device.Bus {
 // IO gets the Cpu IO bus
 func (z80 *Z80) IO() device.Bus {
 	return z80.io
-}
-
-// SetInterruptAck sets INT/NMI ACK callback function
-func (z80 *Z80) SetInterruptAck(callback device.Callback) {
-	z80.cbIntAck = callback
 }
 
 // Init initializes Cpu (power-on)
@@ -149,8 +144,8 @@ func (z80 *Z80) acceptInterrupt() bool {
 		z80.Halted = false
 	}
 	// Ack interrupt
-	if z80.cbIntAck != nil {
-		return z80.cbIntAck()
+	if z80.OnIntAck != nil {
+		return z80.OnIntAck()
 	}
-	return false // interrupt ack
+	return false // don't ack interrupt
 }

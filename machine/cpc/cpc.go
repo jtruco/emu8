@@ -6,6 +6,7 @@ import (
 	"github.com/jtruco/emu8/device/cpu"
 	"github.com/jtruco/emu8/device/cpu/z80"
 	"github.com/jtruco/emu8/device/memory"
+	"github.com/jtruco/emu8/device/video"
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/machine"
 )
@@ -33,7 +34,7 @@ type AmstradCPC struct {
 	lowerRom   *memory.BankMap       // The lower rom
 	upperRom   *memory.BankMap       // The upper rom
 	gatearray  *GateArray            // The Gate-Array
-	crtc       *Crtc                 // The Cathode Ray Tube Controller
+	crtc       *video.MC6845         // The Cathode Ray Tube Controller
 	psg        *Psg                  // The Programmable Sound Generator
 	ppi        *Ppi                  // The Parallel Peripheral Interface
 	video      *VduVideo             // The VDU video
@@ -59,9 +60,8 @@ func NewAmstradCPC(model int) *AmstradCPC {
 	// devices
 	cpc.clock = device.NewClock()
 	cpc.cpu = z80.New(cpc.clock, cpc.memory, cpc)
-	cpc.cpu.SetIntAckCallback(cpc.InterruptAcknowledge)
+	cpc.crtc = video.NewMC6845()
 	cpc.gatearray = NewGateArray(cpc)
-	cpc.crtc = NewCrtc(cpc)
 	cpc.video = NewVduVideo(cpc)
 	cpc.keyboard = NewKeyboard()
 	cpc.psg = NewPsg(cpc)
@@ -150,9 +150,7 @@ func (cpc *AmstradCPC) BeginFrame() {
 func (cpc *AmstradCPC) Emulate() {
 	// z80 cpu emulation
 	lapse := cpc.cpu.Execute()
-
-	// CPC 4T instruction round
-	fix := lapse & 0x03
+	fix := lapse & 0x03 // CPC 4T instruction round
 	if fix != 0 {
 		fix = 0x04 - lapse
 		cpc.clock.Add(fix)
@@ -166,17 +164,6 @@ func (cpc *AmstradCPC) Emulate() {
 // EndFrame end emulation frame tasks
 func (cpc *AmstradCPC) EndFrame() {
 	cpc.video.EndFrame()
-}
-
-// InterruptRequest process cpu interrupt request
-func (cpc *AmstradCPC) InterruptRequest() {
-	cpc.cpu.InterruptRequest()
-}
-
-// InterruptAcknowledge process cpu interrupt ack
-func (cpc *AmstradCPC) InterruptAcknowledge() bool {
-	cpc.gatearray.InterruptAcknowledge()
-	return true
 }
 
 // Files : load & save state / tape
@@ -194,7 +181,7 @@ func (cpc *AmstradCPC) LoadFile(filename string) {
 func (cpc *AmstradCPC) Read(address uint16) byte {
 	var result byte = 0xff
 	if address&0x4000 == 0 { // CRTC
-		port := byte(address>>8) & 0x3
+		port := byte(address>>8) & 0x03
 		result &= cpc.crtc.Read(port)
 	}
 	if address&0xC000 == 0x4000 { // Gate-Array

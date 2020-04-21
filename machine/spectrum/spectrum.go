@@ -81,7 +81,7 @@ func NewSpectrum(model int) *Spectrum {
 	spectrum.clock = device.NewClock()
 	spectrum.ula = NewULA(spectrum)
 	spectrum.cpu = z80.New(spectrum.clock, spectrum.memory, spectrum.ula)
-	spectrum.cpu.SetInterruptAck(spectrum.onInterruptAck)
+	spectrum.cpu.OnIntAck = spectrum.onInterruptAck
 	spectrum.tv = NewTVVideo(spectrum)
 	spectrum.beeper = audio.NewBeeper(config.AudioFrecuency, fps, frameTStates)
 	spectrum.beeper.SetMap(beeperMap)
