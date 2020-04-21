@@ -160,12 +160,14 @@ func (mc *MC6845) OnClock() {
 				mc.OnVSync()
 			}
 		}
-	} else if !mc.inHSync && mc.currentCol == mc.rHorizontalSyncPosition {
+	} else {
 		// hsync control
-		mc.inHSync = true
-		mc.hSyncCount = mc.hSyncWidth
-		if mc.OnHSync != nil {
-			mc.OnHSync()
+		if !mc.inHSync && mc.currentCol == mc.rHorizontalSyncPosition {
+			mc.inHSync = true
+			mc.hSyncCount = mc.hSyncWidth
+			if mc.OnHSync != nil {
+				mc.OnHSync()
+			}
 		}
 	}
 }
