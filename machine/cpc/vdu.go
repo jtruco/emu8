@@ -1,6 +1,8 @@
 package cpc
 
-import "github.com/jtruco/emu8/device/video"
+import (
+	"github.com/jtruco/emu8/device/video"
+)
 
 // -----------------------------------------------------------------------------
 // Amstrad CPC - VDU Video
@@ -37,6 +39,7 @@ var cpcPalette = []int32{
 type VduVideo struct {
 	screen    *video.Screen
 	gatearray *GateArray
+	crtc      *video.MC6845
 	srcdata   []byte
 	border    byte
 }
@@ -47,6 +50,7 @@ func NewVduVideo(cpc *AmstradCPC) *VduVideo {
 	vdu.screen = video.NewScreen(videoTotalWidth, videoTotalHeight, cpcPalette)
 	vdu.screen.SetWScale(videoWidthScale)
 	vdu.gatearray = cpc.gatearray
+	vdu.crtc = cpc.crtc
 	vdu.srcdata = cpc.memory.Map(5).Bank().Data()
 	return vdu
 }
@@ -74,7 +78,12 @@ func (vdu *VduVideo) paintScreen() {
 	palette := vdu.gatearray.palette
 	x, y := videoHBorder, videoVBorder
 	row, col := 0, 0
-	for addr := 0; addr < videoTotalBytes; addr++ {
+	// fixme : bank switch
+	// crtc bank offset
+	r12 := uint(vdu.crtc.ReadRegister(video.MC6845StartAddressHigh))
+	r13 := uint(vdu.crtc.ReadRegister(video.MC6845StartAddressLow))
+	offset := (((r12 & 0x03) << 8) + r13) << 1
+	for addr := offset; addr < videoTotalBytes; addr++ {
 		data := vdu.srcdata[addr]
 		// paintbyte
 		switch mode {
