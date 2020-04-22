@@ -8,24 +8,42 @@ import "github.com/jtruco/emu8/device"
 
 // MC6845 constants
 const (
-	mc6845Nreg = 18 // 18 registers
+	MC6845Nreg = 0X12 // 18 registers
+	MC6845HorizontalTotal
+	MC6845HorizontalDisplayed
+	MC6845HorizontalSyncPosition
+	MC6845SyncWidths
+	MC6845VerticalTotal
+	MC6845VerticalTotalAdjust
+	MC6845VerticalDisplayed
+	MC6845VerticalSyncPosition
+	MC6845InterlaceAndSkew
+	MC6845MaxScanlineAddress
+	MC6845CursorStart
+	MC6845CursorEnd
+	MC6845StartAddressHigh
+	MC6845StartAddressLow
+	MC6845CursorHigh
+	MC6845CursorLow
+	MC6845LightPenHigh
+	MC6845LightPenLow
 )
 
 // MC6845 register data
 var (
-	mc6845Defaults = [mc6845Nreg]byte{ // Amstrad CPC 464 default values
+	MC6845Defaults = [MC6845Nreg]byte{ // Amstrad CPC 464 default values
 		0x3f, 0x28, 0x34, 0x34, 0x14, 0x08, 0x10, 0x13, 0x00,
 		0x0b, 0x49, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-	mc6845Masks = [mc6845Nreg]byte{
+	mc6845Masks = [MC6845Nreg]byte{
 		0xff, 0xff, 0xff, 0xff, 0x7f, 0x1f, 0x7f, 0x7f, 0x03,
 		0x1f, 0x1f, 0x1f, 0x3f, 0xff, 0x3f, 0xff, 0x3f, 0xff}
 )
 
 // MC6845 Crtc Device
 type MC6845 struct {
-	registers   [mc6845Nreg]*byte
-	regdefaults [mc6845Nreg]byte
-	selected    byte
+	registers [MC6845Nreg]*byte
+	defaults  [MC6845Nreg]byte
+	selected  byte
 	// registers
 	rHorizontalTotal        byte
 	rHorizontalDisplayed    byte
@@ -63,8 +81,8 @@ type MC6845 struct {
 // NewMC6845 creates new CRTC
 func NewMC6845() *MC6845 {
 	mc := new(MC6845)
-	mc.regdefaults = mc6845Defaults
-	mc.registers = [mc6845Nreg]*byte{
+	mc.defaults = MC6845Defaults
+	mc.registers = [MC6845Nreg]*byte{
 		&mc.rHorizontalTotal,
 		&mc.rHorizontalDisplayed,
 		&mc.rHorizontalSyncPosition,
@@ -95,6 +113,11 @@ func (mc *MC6845) InHSync() bool { return mc.inHSync }
 // InVSync in VSync
 func (mc *MC6845) InVSync() bool { return mc.inVSync }
 
+// SetDefaults sets default register values
+func (mc *MC6845) SetDefaults(defaults [MC6845Nreg]byte) {
+	mc.defaults = defaults
+}
+
 // Device interface
 
 // Init the CRTC
@@ -103,8 +126,8 @@ func (mc *MC6845) Init() { mc.Reset() }
 // Reset the CRTC
 func (mc *MC6845) Reset() {
 	mc.selected = 0
-	for i := byte(0); i < mc6845Nreg; i++ {
-		mc.writeRegister(i, mc.regdefaults[i])
+	for i := byte(0); i < MC6845Nreg; i++ {
+		mc.WriteRegister(i, mc.defaults[i])
 	}
 	mc.currentCol = 0
 	mc.currentLine = 0
@@ -202,12 +225,12 @@ func (mc *MC6845) selectRegister(selected byte) {
 
 // readSelected returns current register value
 func (mc *MC6845) readSelected() byte {
-	return mc.readRegister(mc.selected)
+	return mc.ReadRegister(mc.selected)
 }
 
-// readRegister returns register value
-func (mc *MC6845) readRegister(register byte) byte {
-	if (register > 11) && (register < mc6845Nreg) {
+// ReadRegister returns register value
+func (mc *MC6845) ReadRegister(register byte) byte {
+	if (register > 11) && (register < MC6845Nreg) {
 		return *mc.registers[register]
 	}
 	return 0 // write only
@@ -215,11 +238,11 @@ func (mc *MC6845) readRegister(register byte) byte {
 
 // writeSelected writes value to selected register
 func (mc *MC6845) writeSelected(data byte) {
-	mc.writeRegister(mc.selected, data)
+	mc.WriteRegister(mc.selected, data)
 }
 
-// writeRegister writes value to register
-func (mc *MC6845) writeRegister(register, data byte) {
+// WriteRegister writes value to register
+func (mc *MC6845) WriteRegister(register, data byte) {
 	*mc.registers[register] = data & mc6845Masks[register]
 
 	// HSync & VSync widths
