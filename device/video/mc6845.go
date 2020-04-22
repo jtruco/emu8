@@ -9,7 +9,11 @@ import "github.com/jtruco/emu8/device"
 // MC6845 constants
 const (
 	MC6845Nreg = 0X12 // 18 registers
-	MC6845HorizontalTotal
+)
+
+// MC6845 register constants
+const (
+	MC6845HorizontalTotal = iota
 	MC6845HorizontalDisplayed
 	MC6845HorizontalSyncPosition
 	MC6845SyncWidths
