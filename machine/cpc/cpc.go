@@ -184,9 +184,6 @@ func (cpc *AmstradCPC) Read(address uint16) byte {
 		port := byte(address>>8) & 0x03
 		result &= cpc.crtc.Read(port)
 	}
-	if address&0xC000 == 0x4000 { // Gate-Array
-		result &= cpc.gatearray.Read()
-	}
 	if address&0x0800 == 0 { // PPI select
 		port := byte(address>>8) & 0x3
 		result &= cpc.ppi.Read(port)
@@ -202,9 +199,6 @@ func (cpc *AmstradCPC) Write(address uint16, data byte) {
 	}
 	if address&0xC000 == 0x4000 { // Gate-Array
 		cpc.gatearray.Write(data)
-	}
-	if address&0x2000 == 0 { // ROM select
-		// TODO
 	}
 	if address&0x0800 == 0 { // PPI select
 		port := byte(address>>8) & 0x3
