@@ -40,7 +40,7 @@ type VduVideo struct {
 	screen    *video.Screen
 	gatearray *GateArray
 	crtc      *video.MC6845
-	srcdata   []byte
+	banks     [][]byte
 	border    byte
 }
 
@@ -51,7 +51,11 @@ func NewVduVideo(cpc *AmstradCPC) *VduVideo {
 	vdu.screen.SetWScale(videoWidthScale)
 	vdu.gatearray = cpc.gatearray
 	vdu.crtc = cpc.crtc
-	vdu.srcdata = cpc.memory.Map(5).Bank().Data()
+	vdu.banks = make([][]byte, 4)
+	vdu.banks[0] = cpc.memory.Map(1).Bank().Data()
+	vdu.banks[1] = cpc.memory.Map(2).Bank().Data()
+	vdu.banks[2] = cpc.memory.Map(3).Bank().Data()
+	vdu.banks[3] = cpc.memory.Map(5).Bank().Data()
 	return vdu
 }
 
@@ -72,93 +76,33 @@ func (vdu *VduVideo) EndFrame() {
 	vdu.paintScreen()
 }
 
+// updateModeOptions paints screen
+func (vdu *VduVideo) updateModeOptions(mode byte) {
+}
+
 // paintScreen paints screen
 func (vdu *VduVideo) paintScreen() {
-	mode := vdu.gatearray.mode
-	palette := vdu.gatearray.palette
+	// select paint byte function
+	var paintByte func(int, int, byte) (int, int)
+	switch vdu.gatearray.mode {
+	case 0, 3: // 4 bpp
+		paintByte = vdu.paintByte0
+	case 1: // 2 bpp
+		paintByte = vdu.paintByte1
+	case 2: // 1 bpp
+		paintByte = vdu.paintByte2
+	}
+	// select crtc bank & offset
+	r12 := vdu.crtc.ReadRegister(video.MC6845StartAddressHigh)
+	r13 := vdu.crtc.ReadRegister(video.MC6845StartAddressLow)
+	// fixme : crtc bank switch
+	bank := (r12 >> 4) & 0x03
+	offset := (((uint16(r12) & 0x03) << 8) + uint16(r13)) << 1
+	// paint screen data
 	x, y := videoHBorder, videoVBorder
 	row, col := 0, 0
-	// fixme : bank switch
-	// crtc bank offset
-	r12 := uint(vdu.crtc.ReadRegister(video.MC6845StartAddressHigh))
-	r13 := uint(vdu.crtc.ReadRegister(video.MC6845StartAddressLow))
-	offset := (((r12 & 0x03) << 8) + r13) << 1
 	for addr := offset; addr < videoTotalBytes; addr++ {
-		data := vdu.srcdata[addr]
-		// paintbyte
-		switch mode {
-		case 0, 3: // 4 bpp
-			idx := ((data & 0x80) >> 7) | ((data & 0x20) >> 3) | ((data & 0x08) >> 2) | ((data & 0x02) << 2)
-			colour := int(palette[idx])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			idx = ((data & 0x40) >> 6) | ((data & 0x10) >> 2) | ((data & 0x04) >> 1) | ((data & 0x01) << 3)
-			colour = int(palette[idx])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-		case 1: // 2 bpp
-			idx := ((data & 0x80) >> 6) | ((data & 0x08) >> 3)
-			colour := int(palette[idx])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			idx = ((data & 0x40) >> 5) | ((data & 0x04) >> 2)
-			colour = int(palette[idx])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			idx = ((data & 0x20) >> 4) | ((data & 0x02) >> 1)
-			colour = int(palette[idx])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			idx = ((data & 0x10) >> 3) | (data & 0x01)
-			colour = int(palette[idx])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-		case 2: // 1 bpp
-			colour := int(palette[(data&0x80)>>7])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			colour = int(palette[(data&0x40)>>6])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			colour = int(palette[(data&0x20)>>5])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			colour = int(palette[(data&0x10)>>4])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			colour = int(palette[(data&0x08)>>3])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			colour = int(palette[(data&0x04)>>2])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			colour = int(palette[(data&0x02)>>1])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-			colour = int(palette[(data & 0x01)])
-			vdu.screen.SetPixelIndex(x, y, colour)
-			x++
-		}
+		x, y = paintByte(x, y, vdu.banks[bank][addr])
 		// next byte
 		row++
 		if row == videoHRows {
@@ -172,6 +116,98 @@ func (vdu *VduVideo) paintScreen() {
 			}
 		}
 	}
+}
+
+// paintByte0 paints mode 0 screen byte
+func (vdu *VduVideo) paintByte0(x, y int, data byte) (int, int) {
+	palette := vdu.gatearray.palette
+
+	idx := ((data & 0x80) >> 7) | ((data & 0x20) >> 3) | ((data & 0x08) >> 2) | ((data & 0x02) << 2)
+	colour := int(palette[idx])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	idx = ((data & 0x40) >> 6) | ((data & 0x10) >> 2) | ((data & 0x04) >> 1) | ((data & 0x01) << 3)
+	colour = int(palette[idx])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+
+	return x, y
+}
+
+// paintByte1 paints mode 1 screen byte
+func (vdu *VduVideo) paintByte1(x, y int, data byte) (int, int) {
+	palette := vdu.gatearray.palette
+
+	idx := ((data & 0x80) >> 6) | ((data & 0x08) >> 3)
+	colour := int(palette[idx])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	idx = ((data & 0x40) >> 5) | ((data & 0x04) >> 2)
+	colour = int(palette[idx])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	idx = ((data & 0x20) >> 4) | ((data & 0x02) >> 1)
+	colour = int(palette[idx])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	idx = ((data & 0x10) >> 3) | (data & 0x01)
+	colour = int(palette[idx])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+
+	return x, y
+}
+
+// paintByte2 paints mode 2 screen byte
+func (vdu *VduVideo) paintByte2(x, y int, data byte) (int, int) {
+	palette := vdu.gatearray.palette
+
+	colour := int(palette[(data&0x80)>>7])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	colour = int(palette[(data&0x40)>>6])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	colour = int(palette[(data&0x20)>>5])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	colour = int(palette[(data&0x10)>>4])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	colour = int(palette[(data&0x08)>>3])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	colour = int(palette[(data&0x04)>>2])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	colour = int(palette[(data&0x02)>>1])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+	colour = int(palette[(data & 0x01)])
+	vdu.screen.SetPixelIndex(x, y, colour)
+	x++
+
+	return x, y
 }
 
 // paintBorder paints border
