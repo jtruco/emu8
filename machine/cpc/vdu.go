@@ -10,18 +10,15 @@ import (
 
 // CPC Video constants
 const (
-	videoHMode0       = 160
-	videoHMode1       = 320
-	videoHMode2       = 640
-	videoHRows        = videoHMode2 >> 3 // bytes * row
-	videoVLines       = 200
+	videoScreenWidth  = 640
+	videoScreenHeight = 200
+	videoHRows        = videoScreenWidth >> 3 // bytes * row
+	videoVLines       = videoScreenHeight
 	videoVCols        = videoVLines >> 3
-	videoScreenWidth  = videoHMode2
-	videoScreenHeight = videoVLines
 	videoHBorder      = 64
 	videoVBorder      = 32
 	videoVSpare       = 48
-	videoTotalWidth   = videoHMode2 + videoHBorder*2
+	videoTotalWidth   = videoScreenWidth + videoHBorder*2
 	videoTotalHeight  = videoScreenHeight + videoVBorder*2
 	videoWidthScale   = 0.5
 	videoTotalBytes   = videoHRows*videoVLines + videoVSpare*8
