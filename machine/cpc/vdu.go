@@ -42,6 +42,7 @@ type VduVideo struct {
 	crtc      *video.MC6845
 	banks     [][]byte
 	border    byte
+	paintByte func(int, int, byte) (int, int)
 }
 
 // NewVduVideo creates a new vdu
@@ -72,37 +73,37 @@ func (vdu *VduVideo) Reset() {
 
 // EndFrame updates screen video frame
 func (vdu *VduVideo) EndFrame() {
-	vdu.paintBorder()
+	vdu.updateOptions()
 	vdu.paintScreen()
+	vdu.paintBorder()
 }
 
-// updateModeOptions paints screen
-func (vdu *VduVideo) updateModeOptions(mode byte) {
+// updateOptions update screen options
+func (vdu *VduVideo) updateOptions() {
+	// select paint byte function
+	switch vdu.gatearray.mode {
+	case 0, 3: // 4 bpp
+		vdu.paintByte = vdu.paintByte0
+	case 1: // 2 bpp
+		vdu.paintByte = vdu.paintByte1
+	case 2: // 1 bpp
+		vdu.paintByte = vdu.paintByte2
+	}
 }
 
 // paintScreen paints screen
 func (vdu *VduVideo) paintScreen() {
-	// select paint byte function
-	var paintByte func(int, int, byte) (int, int)
-	switch vdu.gatearray.mode {
-	case 0, 3: // 4 bpp
-		paintByte = vdu.paintByte0
-	case 1: // 2 bpp
-		paintByte = vdu.paintByte1
-	case 2: // 1 bpp
-		paintByte = vdu.paintByte2
-	}
 	// select crtc bank & offset
 	r12 := vdu.crtc.ReadRegister(video.MC6845StartAddressHigh)
 	r13 := vdu.crtc.ReadRegister(video.MC6845StartAddressLow)
 	// fixme : crtc bank switch
-	bank := (r12 >> 4) & 0x03
-	offset := (((uint16(r12) & 0x03) << 8) + uint16(r13)) << 1
+	bank := vdu.banks[(r12>>4)&0x03]
+	offset := (((uint16(r12) & 0x03) << 8) | uint16(r13)) << 1
 	// paint screen data
 	x, y := videoHBorder, videoVBorder
 	row, col := 0, 0
 	for addr := offset; addr < videoTotalBytes; addr++ {
-		x, y = paintByte(x, y, vdu.banks[bank][addr])
+		x, y = vdu.paintByte(x, y, bank[addr])
 		// next byte
 		row++
 		if row == videoHRows {
