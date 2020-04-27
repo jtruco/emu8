@@ -86,7 +86,7 @@ func NewTVVideo(spectrum *Spectrum) *TVVideo {
 // ProcessBusEvent processes the bus event
 func (tv *TVVideo) ProcessBusEvent(event *device.BusEvent) {
 	if tv.accurate && event.Address < tvVideoSize {
-		if event.Type == device.EventBusWrite && event.Order == device.OrderBefore {
+		if event.Type == device.EventBusWrite {
 			tv.DoScanlines()
 		}
 	}

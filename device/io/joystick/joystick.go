@@ -8,8 +8,8 @@ import "github.com/jtruco/emu8/device"
 
 // Joystick event types
 const (
-	EventJoyAxis   = 25 // Joystick axis event
-	EventJoyBotton = 26 // Joystick button event
+	EventJoyAxis   = iota // Joystick axis event
+	EventJoyBotton        // Joystick button event
 )
 
 // JoyEvent is a joystick event

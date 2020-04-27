@@ -85,7 +85,7 @@ func (controller *KeyboardController) emitEvent(keyEvent keyEvent) {
 			// For each key emit event to receiver
 			for _, key := range keys {
 				keyevent := keyboard.KeyEvent{
-					Event:   device.Event{Type: keyEvent.EventType, Order: device.OrderAfter},
+					Event:   device.Event{Type: keyEvent.EventType},
 					Key:     key,
 					Pressed: keyEvent.EventType == keyboard.KeyDown}
 				receiver.ProcessKeyEvent(&keyevent)

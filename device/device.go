@@ -5,19 +5,6 @@ package device
 // Device
 // -----------------------------------------------------------------------------
 
-// Device event order
-const (
-	OrderBefore = iota // Before occurs before event is executed
-	OrderAfter         // After occurs after event is executed
-)
-
-// Device event types
-const (
-	EventUndefined = 0 // Undefined event
-	EventInit      = 1 // Init is a device init event
-	EventReset     = 2 // Reset is a device reset event
-)
-
 // Device is the base device component
 type Device interface {
 	// Init initializes the device
@@ -26,23 +13,31 @@ type Device interface {
 	Reset()
 }
 
+// -----------------------------------------------------------------------------
 // Events
+// -----------------------------------------------------------------------------
+
+// Device event types
+const (
+	EventUndefined = iota // Undefined event
+	EventInit             // Init is a device init event
+	EventReset            // Reset is a device reset event
+)
 
 // Event is a device event
 type Event struct {
-	Type  int // Operation type
-	Order int // Operation order
+	Type int // Event type
 }
 
-// Listener is a device event listener
-type Listener interface {
-	ProcessDeviceEvent(event *Event)
-}
-
+// -----------------------------------------------------------------------------
 // Callbacks
+// -----------------------------------------------------------------------------
 
 // Callback is a device callback
 type Callback func()
 
 // AckCallback device callback with ack control
 type AckCallback func() bool
+
+// EventCallback is a device callback
+type EventCallback func(Event) bool

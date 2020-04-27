@@ -58,11 +58,11 @@ func (bank *Bank) Reset() {
 // Read reads a byte from the bank address
 func (bank *Bank) Read(address uint16) byte {
 	if len(bank.listeners) > 0 {
-		bank.notifyListeners(address, device.EventBusRead, device.OrderBefore)
+		bank.notifyListeners(address, device.EventBusRead)
 	}
 	data := bank.data[address]
 	if len(bank.listeners) > 0 {
-		bank.notifyListeners(address, device.EventBusRead, device.OrderAfter)
+		bank.notifyListeners(address, device.EventBusAfterRead)
 	}
 	return data
 }
@@ -70,13 +70,13 @@ func (bank *Bank) Read(address uint16) byte {
 // Write writes a byte to the bank address
 func (bank *Bank) Write(address uint16, data byte) {
 	if len(bank.listeners) > 0 {
-		bank.notifyListeners(address, device.EventBusWrite, device.OrderBefore)
+		bank.notifyListeners(address, device.EventBusWrite)
 	}
 	if !bank.readonly {
 		bank.data[address] = data
 	}
 	if len(bank.listeners) > 0 {
-		bank.notifyListeners(address, device.EventBusWrite, device.OrderAfter)
+		bank.notifyListeners(address, device.EventBusAfterWrite)
 	}
 }
 
@@ -88,9 +88,9 @@ func (bank *Bank) AddBusListener(listener device.BusListener) {
 }
 
 // notifyListeners emits event and notify listeners
-func (bank *Bank) notifyListeners(address uint16, event, order int) {
+func (bank *Bank) notifyListeners(address uint16, event int) {
 	busevent := device.BusEvent{
-		Event:   device.Event{Type: event, Order: order},
+		Event:   device.Event{Type: event},
 		Address: address}
 	for _, l := range bank.listeners {
 		l.ProcessBusEvent(&busevent)

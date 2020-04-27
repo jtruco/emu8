@@ -47,7 +47,7 @@ func (controller *JoystickController) RemoveReceiver(receiver joystick.Joystick)
 // AxisEvent emits a joystick axis event
 func (controller *JoystickController) AxisEvent(id byte, axis byte, value byte) {
 	joyevent := joystick.JoyEvent{
-		Event:     device.Event{Type: joystick.EventJoyAxis, Order: device.OrderAfter},
+		Event:     device.Event{Type: joystick.EventJoyAxis},
 		ID:        id,
 		Axis:      axis,
 		AxisValue: value}
@@ -57,7 +57,7 @@ func (controller *JoystickController) AxisEvent(id byte, axis byte, value byte) 
 // ButtonEvent emits a joystick button event
 func (controller *JoystickController) ButtonEvent(id byte, button byte, state byte) {
 	joyevent := joystick.JoyEvent{
-		Event:       device.Event{Type: joystick.EventJoyBotton, Order: device.OrderAfter},
+		Event:       device.Event{Type: joystick.EventJoyBotton},
 		ID:          id,
 		Button:      button,
 		ButtonState: state}

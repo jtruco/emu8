@@ -8,8 +8,8 @@ import "github.com/jtruco/emu8/device"
 
 // Keyboard event types
 const (
-	EventKeyDown = 21 // KeyDown is a key down event
-	EventKeyUp   = 22 // KeyDown is a key up event
+	EventKeyDown = iota // KeyDown is a key down event
+	EventKeyUp          // KeyDown is a key up event
 )
 
 // KeyEvent is a keyboard event

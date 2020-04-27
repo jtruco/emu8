@@ -6,8 +6,10 @@ package device
 
 // Bus event types
 const (
-	EventBusRead  = 11 // Read is a bus read event
-	EventBusWrite = 12 // Write is a bus write event
+	EventBusRead       = iota // Read is a bus read event
+	EventBusWrite             // Write is a bus write event
+	EventBusAfterRead         // Read is a bus read event
+	EventBusAfterWrite        // Write is a bus write event
 )
 
 // Bus is a 8 bit data bus of 16 bit address
