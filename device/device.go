@@ -29,6 +29,12 @@ type IEvent interface {
 	Code() int // Event code
 }
 
+// EventListener is a event listener
+type EventListener interface {
+	// ProcessEvent processes the bus event
+	ProcessEvent(event IEvent)
+}
+
 // Event is the base device event
 type Event struct {
 	code int // Event code
@@ -37,8 +43,8 @@ type Event struct {
 // CreateEvent creates new event
 func CreateEvent(code int) Event { return Event{code} }
 
-// GetCode the event code
-func (e *Event) GetCode() int { return e.code }
+// Code the event code
+func (e *Event) Code() int { return e.code }
 
 // -----------------------------------------------------------------------------
 // Callbacks
