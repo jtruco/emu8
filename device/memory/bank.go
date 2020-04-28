@@ -12,8 +12,6 @@ type Bank struct {
 	readonly  bool
 	data      []byte
 	listeners []device.BusListener
-	OnBus     device.EventBus // On bus access events
-	OnPostBus device.EventBus // Post bus access events
 }
 
 // NewBank creates a new memory bank
@@ -62,7 +60,6 @@ func (bank *Bank) Read(address uint16) byte {
 	if len(bank.listeners) > 0 {
 		bank.notifyListeners(device.EventBusRead, address)
 	}
-	bank.OnBus.EmitEvent(device.NewBusEvent(device.EventBusRead, address))
 	data := bank.data[address]
 	if len(bank.listeners) > 0 {
 		bank.notifyListeners(device.EventBusAfterRead, address)

@@ -77,7 +77,7 @@ func (controller *JoystickController) Flush() {
 // processEvent process a joystick event
 func (controller *JoystickController) emitEvent(joyEvent *joystick.JoyEvent) {
 	if joy, ok := controller.receivers[joyEvent.ID]; ok {
-		switch joyEvent.GetCode() {
+		switch joyEvent.Code() {
 		case joystick.EventJoyAxis:
 			joy.SetAxis(joyEvent.Axis, joyEvent.AxisValue)
 		case joystick.EventJoyBotton:
