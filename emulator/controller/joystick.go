@@ -3,7 +3,6 @@ package controller
 import (
 	"sync"
 
-	"github.com/jtruco/emu8/device"
 	"github.com/jtruco/emu8/device/io/joystick"
 )
 
@@ -45,23 +44,15 @@ func (controller *JoystickController) RemoveReceiver(receiver joystick.Joystick)
 // Events
 
 // AxisEvent emits a joystick axis event
-func (controller *JoystickController) AxisEvent(id byte, axis byte, value byte) {
-	joyevent := joystick.JoyEvent{
-		Event:     device.Event{Type: joystick.EventJoyAxis},
-		ID:        id,
-		Axis:      axis,
-		AxisValue: value}
-	controller.appendEvent(&joyevent)
+func (controller *JoystickController) AxisEvent(id, axis, value byte) {
+	joyevent := joystick.NewJoyAxisEvent(id, axis, value)
+	controller.appendEvent(joyevent)
 }
 
 // ButtonEvent emits a joystick button event
-func (controller *JoystickController) ButtonEvent(id byte, button byte, state byte) {
-	joyevent := joystick.JoyEvent{
-		Event:       device.Event{Type: joystick.EventJoyBotton},
-		ID:          id,
-		Button:      button,
-		ButtonState: state}
-	controller.appendEvent(&joyevent)
+func (controller *JoystickController) ButtonEvent(id, button, state byte) {
+	joyevent := joystick.NewJoyButtonEvent(id, button, state)
+	controller.appendEvent(joyevent)
 }
 
 // appendEvent adds event to queue
@@ -86,7 +77,7 @@ func (controller *JoystickController) Flush() {
 // processEvent process a joystick event
 func (controller *JoystickController) emitEvent(joyEvent *joystick.JoyEvent) {
 	if joy, ok := controller.receivers[joyEvent.ID]; ok {
-		switch joyEvent.Event.Type {
+		switch joyEvent.GetCode() {
 		case joystick.EventJoyAxis:
 			joy.SetAxis(joyEvent.Axis, joyEvent.AxisValue)
 		case joystick.EventJoyBotton:

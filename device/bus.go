@@ -32,6 +32,13 @@ type BusEvent struct {
 	Address uint16 // Address on bus
 }
 
+// NewBusEvent creates a bus event
+func NewBusEvent(code int, address uint16) *BusEvent {
+	return &BusEvent{
+		Event:   CreateEvent(code),
+		Address: address}
+}
+
 // BusListener is a bus event listener
 type BusListener interface {
 	// ProcessBusEvent processes the bus event

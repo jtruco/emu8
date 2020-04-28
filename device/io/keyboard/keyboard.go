@@ -19,6 +19,14 @@ type KeyEvent struct {
 	Pressed      bool // True if key is pressed down, False if is up
 }
 
+// NewKeyEvent creates a joystick axis event
+func NewKeyEvent(code int, key Key) *KeyEvent {
+	return &KeyEvent{
+		Event:   device.CreateEvent(code),
+		Key:     key,
+		Pressed: code == KeyDown}
+}
+
 // Receiver is a component that process keyboard events
 type Receiver interface {
 	ProcessKeyEvent(event *KeyEvent)

@@ -73,7 +73,7 @@ func NewULA(spectrum *Spectrum) *ULA {
 
 // ProcessBusEvent processes the bus event
 func (ula *ULA) ProcessBusEvent(event *device.BusEvent) {
-	if event.Type == device.EventBusRead || event.Type == device.EventBusWrite {
+	if event.GetCode() == device.EventBusRead || event.GetCode() == device.EventBusWrite {
 		ula.doContention(0)
 	}
 }

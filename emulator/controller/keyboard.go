@@ -3,7 +3,6 @@ package controller
 import (
 	"sync"
 
-	"github.com/jtruco/emu8/device"
 	"github.com/jtruco/emu8/device/io/keyboard"
 )
 
@@ -84,11 +83,8 @@ func (controller *KeyboardController) emitEvent(keyEvent keyEvent) {
 		if ok {
 			// For each key emit event to receiver
 			for _, key := range keys {
-				keyevent := keyboard.KeyEvent{
-					Event:   device.Event{Type: keyEvent.EventType},
-					Key:     key,
-					Pressed: keyEvent.EventType == keyboard.KeyDown}
-				receiver.ProcessKeyEvent(&keyevent)
+				keyevent := keyboard.NewKeyEvent(keyEvent.EventType, key)
+				receiver.ProcessKeyEvent(keyevent)
 			}
 		}
 	}

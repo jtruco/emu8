@@ -22,6 +22,24 @@ type JoyEvent struct {
 	ButtonState  byte // Button state
 }
 
+// NewJoyAxisEvent creates a joystick axis event
+func NewJoyAxisEvent(id, axis, value byte) *JoyEvent {
+	return &JoyEvent{
+		Event:     device.CreateEvent(EventJoyAxis),
+		ID:        id,
+		Axis:      axis,
+		AxisValue: value}
+}
+
+// NewJoyButtonEvent creates a joystick axis event
+func NewJoyButtonEvent(id, button, state byte) *JoyEvent {
+	return &JoyEvent{
+		Event:       device.CreateEvent(EventJoyAxis),
+		ID:          id,
+		Button:      button,
+		ButtonState: state}
+}
+
 // -----------------------------------------------------------------------------
 // Joystick component
 // -----------------------------------------------------------------------------

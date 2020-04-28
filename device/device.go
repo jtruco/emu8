@@ -17,17 +17,28 @@ type Device interface {
 // Events
 // -----------------------------------------------------------------------------
 
-// Device event types
+// Device event codes
 const (
 	EventUndefined = iota // Undefined event
 	EventInit             // Init is a device init event
 	EventReset            // Reset is a device reset event
 )
 
-// Event is a device event
-type Event struct {
-	Type int // Event type
+// IEvent is the Event interface
+type IEvent interface {
+	Code() int // Event code
 }
+
+// Event is the base device event
+type Event struct {
+	code int // Event code
+}
+
+// CreateEvent creates new event
+func CreateEvent(code int) Event { return Event{code} }
+
+// GetCode the event code
+func (e *Event) GetCode() int { return e.code }
 
 // -----------------------------------------------------------------------------
 // Callbacks
@@ -39,5 +50,5 @@ type Callback func()
 // AckCallback device callback with ack control
 type AckCallback func() bool
 
-// EventCallback is a device callback
-type EventCallback func(Event) bool
+// EventCallback is a device event callback
+type EventCallback func(IEvent)
