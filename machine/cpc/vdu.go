@@ -32,13 +32,19 @@ var cpcPalette = []int32{
 	0x800080, 0x80ff80, 0x80ff00, 0x80ffff, 0x800000, 0x8000ff, 0x808000, 0x8080ff,
 }
 
+// CPC mode palette index tables
+var (
+	cpcMode0 [256][2]int
+	cpcMode1 [256][4]int
+)
+
 // VduVideo device
 type VduVideo struct {
 	screen    *video.Screen
 	gatearray *GateArray
 	crtc      *video.MC6845
 	banks     [][]byte
-	border    byte
+	border    int
 	paintByte func(int, int, byte) (int, int)
 }
 
@@ -120,8 +126,7 @@ func (vdu *VduVideo) paintScreen() {
 func (vdu *VduVideo) paintByte0(x, y int, data byte) (int, int) {
 	palette := vdu.gatearray.palette
 
-	idx := ((data & 0x80) >> 7) | ((data & 0x20) >> 3) | ((data & 0x08) >> 2) | ((data & 0x02) << 2)
-	colour := int(palette[idx])
+	colour := palette[cpcMode0[data][0]]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
 	vdu.screen.SetPixelIndex(x, y, colour)
@@ -130,8 +135,7 @@ func (vdu *VduVideo) paintByte0(x, y int, data byte) (int, int) {
 	x++
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	idx = ((data & 0x40) >> 6) | ((data & 0x10) >> 2) | ((data & 0x04) >> 1) | ((data & 0x01) << 3)
-	colour = int(palette[idx])
+	colour = palette[cpcMode0[data][1]]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
 	vdu.screen.SetPixelIndex(x, y, colour)
@@ -148,26 +152,22 @@ func (vdu *VduVideo) paintByte0(x, y int, data byte) (int, int) {
 func (vdu *VduVideo) paintByte1(x, y int, data byte) (int, int) {
 	palette := vdu.gatearray.palette
 
-	idx := ((data & 0x80) >> 7) | ((data & 0x08) >> 2)
-	colour := int(palette[idx])
+	colour := palette[cpcMode1[data][0]]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	idx = ((data & 0x40) >> 6) | ((data & 0x04) >> 1)
-	colour = int(palette[idx])
+	colour = palette[cpcMode1[data][1]]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	idx = ((data & 0x20) >> 5) | (data & 0x02)
-	colour = int(palette[idx])
+	colour = palette[cpcMode1[data][2]]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	idx = ((data & 0x10) >> 4) | ((data & 0x01) << 1)
-	colour = int(palette[idx])
+	colour = palette[cpcMode1[data][3]]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
 	vdu.screen.SetPixelIndex(x, y, colour)
@@ -180,28 +180,28 @@ func (vdu *VduVideo) paintByte1(x, y int, data byte) (int, int) {
 func (vdu *VduVideo) paintByte2(x, y int, data byte) (int, int) {
 	palette := vdu.gatearray.palette
 
-	colour := int(palette[(data&0x80)>>7])
+	colour := palette[(data&0x80)>>7]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	colour = int(palette[(data&0x40)>>6])
+	colour = palette[(data&0x40)>>6]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	colour = int(palette[(data&0x20)>>5])
+	colour = palette[(data&0x20)>>5]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	colour = int(palette[(data&0x10)>>4])
+	colour = palette[(data&0x10)>>4]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	colour = int(palette[(data&0x08)>>3])
+	colour = palette[(data&0x08)>>3]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	colour = int(palette[(data&0x04)>>2])
+	colour = palette[(data&0x04)>>2]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	colour = int(palette[(data&0x02)>>1])
+	colour = palette[(data&0x02)>>1]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	colour = int(palette[(data & 0x01)])
+	colour = palette[(data & 0x01)]
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
 
@@ -233,5 +233,20 @@ func (vdu *VduVideo) paintBorder() {
 func (vdu *VduVideo) paintLine(y, x1, x2 int, colour int32) {
 	for x := x1; x <= x2; x++ {
 		vdu.screen.SetPixel(x, y, colour)
+	}
+}
+
+func init() {
+	// mode0 palette index table
+	for i := 0; i < 256; i++ {
+		cpcMode0[i][0] = ((i & 0x80) >> 7) | ((i & 0x20) >> 3) | ((i & 0x08) >> 2) | ((i & 0x02) << 2)
+		cpcMode0[i][1] = ((i & 0x40) >> 6) | ((i & 0x10) >> 2) | ((i & 0x04) >> 1) | ((i & 0x01) << 3)
+	}
+	// mode1 palette index table
+	for data := 0; data < 256; data++ {
+		cpcMode1[data][0] = ((data & 0x80) >> 7) | ((data & 0x08) >> 2)
+		cpcMode1[data][1] = ((data & 0x40) >> 6) | ((data & 0x04) >> 1)
+		cpcMode1[data][2] = ((data & 0x20) >> 5) | (data & 0x02)
+		cpcMode1[data][3] = ((data & 0x10) >> 4) | ((data & 0x01) << 1)
 	}
 }

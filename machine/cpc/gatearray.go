@@ -16,7 +16,7 @@ const (
 // GateArray for the CPC
 type GateArray struct {
 	cpc          *AmstradCPC
-	palette      []byte
+	palette      []int
 	mode         byte
 	pen          byte
 	countSlInt   int
@@ -27,7 +27,7 @@ type GateArray struct {
 func NewGateArray(cpc *AmstradCPC) *GateArray {
 	ga := new(GateArray)
 	ga.cpc = cpc
-	ga.palette = make([]byte, gaTotalPens)
+	ga.palette = make([]int, gaTotalPens)
 	ga.cpc.cpu.OnIntAck = ga.onInterruptAck
 	ga.cpc.crtc.OnHSync = ga.onHSync
 	ga.cpc.crtc.OnVSync = ga.onVSync
@@ -64,14 +64,14 @@ func (ga *GateArray) Pen() byte { return ga.pen }
 func (ga *GateArray) SetPen(pen byte) { ga.pen = pen }
 
 // Border returns the border color
-func (ga *GateArray) Border() byte { return ga.palette[gaBorderPen] }
+func (ga *GateArray) Border() int { return ga.palette[gaBorderPen] }
 
 // Palette returns the active pen colors
-func (ga *GateArray) Palette() []byte { return ga.palette }
+func (ga *GateArray) Palette() []int { return ga.palette }
 
 // SetInk set ink colour & palette
 func (ga *GateArray) SetInk(ink byte) {
-	ga.palette[ga.pen] = ink
+	ga.palette[ga.pen] = int(ink)
 }
 
 // Bus Input / Output
