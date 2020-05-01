@@ -148,25 +148,25 @@ func (vdu *VduVideo) paintByte0(x, y int, data byte) (int, int) {
 func (vdu *VduVideo) paintByte1(x, y int, data byte) (int, int) {
 	palette := vdu.gatearray.palette
 
-	idx := ((data & 0x80) >> 6) | ((data & 0x08) >> 3)
+	idx := ((data & 0x80) >> 7) | ((data & 0x08) >> 2)
 	colour := int(palette[idx])
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	idx = ((data & 0x40) >> 5) | ((data & 0x04) >> 2)
+	idx = ((data & 0x40) >> 6) | ((data & 0x04) >> 1)
 	colour = int(palette[idx])
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	idx = ((data & 0x20) >> 4) | ((data & 0x02) >> 1)
+	idx = ((data & 0x20) >> 5) | (data & 0x02)
 	colour = int(palette[idx])
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
-	idx = ((data & 0x10) >> 3) | (data & 0x01)
+	idx = ((data & 0x10) >> 4) | ((data & 0x01) << 1)
 	colour = int(palette[idx])
 	vdu.screen.SetPixelIndex(x, y, colour)
 	x++
