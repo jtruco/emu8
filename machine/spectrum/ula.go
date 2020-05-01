@@ -67,12 +67,12 @@ type ULA struct {
 func NewULA(spectrum *Spectrum) *ULA {
 	ula := new(ULA)
 	ula.spectrum = spectrum
-	spectrum.VideoMemory().AddBusListener(ula)
+	spectrum.VideoMemory().OnAccess.Bind(ula.onVideoAccess)
 	return ula
 }
 
-// ProcessBusEvent processes the bus event
-func (ula *ULA) ProcessBusEvent(event *device.BusEvent) {
+// onVideoAccess processes the bus event
+func (ula *ULA) onVideoAccess(event device.IEvent) {
 	if event.Code() == device.EventBusRead || event.Code() == device.EventBusWrite {
 		ula.doContention(0)
 	}

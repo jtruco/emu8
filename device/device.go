@@ -29,12 +29,6 @@ type IEvent interface {
 	Code() int // Event code
 }
 
-// EventListener is a event listener
-type EventListener interface {
-	// ProcessEvent processes the bus event
-	ProcessEvent(event IEvent)
-}
-
 // Event is the base device event
 type Event struct {
 	code int // Event code
@@ -58,3 +52,31 @@ type AckCallback func() bool
 
 // EventCallback is a device event callback
 type EventCallback func(IEvent)
+
+// -----------------------------------------------------------------------------
+// Event Bus
+// -----------------------------------------------------------------------------
+
+// EventBus callback functions
+type EventBus struct {
+	callbacks []EventCallback
+}
+
+// NewEventBus a new device event bus
+func NewEventBus() *EventBus {
+	bus := new(EventBus)
+	bus.callbacks = make([]EventCallback, 0)
+	return bus
+}
+
+// Bind a new callback
+func (bus *EventBus) Bind(c EventCallback) {
+	bus.callbacks = append(bus.callbacks, c)
+}
+
+// Emit an event
+func (bus *EventBus) Emit(e IEvent) {
+	for _, s := range bus.callbacks {
+		s(e)
+	}
+}

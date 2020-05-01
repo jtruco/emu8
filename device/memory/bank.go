@@ -8,10 +8,11 @@ import "github.com/jtruco/emu8/device"
 
 // Bank is a memory bank of bytes
 type Bank struct {
-	size      int
-	readonly  bool
-	data      []byte
-	listeners []device.BusListener
+	size         int
+	readonly     bool
+	data         []byte
+	OnAccess     device.EventBus
+	OnPostAccess device.EventBus
 }
 
 // NewBank creates a new memory bank
@@ -20,7 +21,6 @@ func NewBank(size int, readonly bool) *Bank {
 	bank.size = size
 	bank.readonly = readonly
 	bank.data = make([]byte, size)
-	bank.listeners = make([]device.BusListener, 0)
 	return bank
 }
 
@@ -57,40 +57,17 @@ func (bank *Bank) Reset() {
 
 // Read reads a byte from the bank address
 func (bank *Bank) Read(address uint16) byte {
-	if len(bank.listeners) > 0 {
-		bank.notifyListeners(device.EventBusRead, address)
-	}
+	bank.OnAccess.Emit(device.NewBusEvent(device.EventBusRead, address))
 	data := bank.data[address]
-	if len(bank.listeners) > 0 {
-		bank.notifyListeners(device.EventBusAfterRead, address)
-	}
+	bank.OnPostAccess.Emit(device.NewBusEvent(device.EventBusAfterRead, address))
 	return data
 }
 
 // Write writes a byte to the bank address
 func (bank *Bank) Write(address uint16, data byte) {
-	if len(bank.listeners) > 0 {
-		bank.notifyListeners(device.EventBusWrite, address)
-	}
+	bank.OnAccess.Emit(device.NewBusEvent(device.EventBusWrite, address))
 	if !bank.readonly {
 		bank.data[address] = data
 	}
-	if len(bank.listeners) > 0 {
-		bank.notifyListeners(device.EventBusAfterWrite, address)
-	}
-}
-
-// Events
-
-// AddBusListener adds a listener tu memory bank events
-func (bank *Bank) AddBusListener(listener device.BusListener) {
-	bank.listeners = append(bank.listeners, listener)
-}
-
-// notifyListeners emits event and notify listeners
-func (bank *Bank) notifyListeners(code int, address uint16) {
-	busevent := device.NewBusEvent(code, address)
-	for _, l := range bank.listeners {
-		l.ProcessBusEvent(busevent)
-	}
+	bank.OnPostAccess.Emit(device.NewBusEvent(device.EventBusAfterWrite, address))
 }

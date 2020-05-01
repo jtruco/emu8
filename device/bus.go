@@ -38,9 +38,3 @@ func NewBusEvent(code int, address uint16) *BusEvent {
 		Event:   CreateEvent(code),
 		Address: address}
 }
-
-// BusListener is a bus event listener
-type BusListener interface {
-	// ProcessBusEvent processes the bus event
-	ProcessBusEvent(event *BusEvent)
-}
