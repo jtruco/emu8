@@ -259,5 +259,5 @@ func (spectrum *Spectrum) LoadState(snap *format.Snapshot) {
 	// Border
 	spectrum.tv.SetBorder(snap.Border)
 	// Memory
-	spectrum.memory.Load(0x4000, snap.Memory[0:0xc000])
+	spectrum.memory.LoadRAM(0x4000, snap.Memory[0:0xc000])
 }

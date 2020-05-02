@@ -71,13 +71,13 @@ func (memory *Memory) SetMapper(mapper Mapper) {
 	memory.mapper = mapper
 }
 
-// Load data to memory
-func (memory *Memory) Load(address uint16, data []byte) {
+// LoadRAM data to memory
+func (memory *Memory) LoadRAM(address uint16, data []byte) {
 	length := uint16(len(data))
 	offset := uint16(0)
 	last := uint16(0)
 	for offset < length {
-		info, rel := memory.mapper.SelectBank(address + offset)
+		info, rel := memory.mapper.SelectBankWrite(address + offset)
 		last = offset + uint16(info.bank.size)
 		info.bank.Load(rel, data[offset:last])
 		offset = last
