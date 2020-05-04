@@ -45,11 +45,15 @@ func (ppi *Ppi) Read(port byte) byte {
 		}
 	case 1: // port B
 		if (ppi.control & 0x02) != 0 { // input
-			data = ppi.jumpers
+			data = ppi.jumpers & 0x7f
+			// CRTC VSync
 			if ppi.cpc.crtc.InVSync() {
 				data |= 0x01
 			}
-			// TODO : tape,...
+			// TAPE EarON : 0x80
+			if ppi.cpc.tape.IsPlaying() {
+				data |= (ppi.cpc.tape.Ear() & 0x40) << 1
+			}
 		} else {
 			data = ppi.portB
 		}

@@ -13,6 +13,7 @@ import (
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/machine"
 	"github.com/jtruco/emu8/machine/cpc/format"
+	zxformat "github.com/jtruco/emu8/machine/spectrum/format"
 )
 
 // -----------------------------------------------------------------------------
@@ -54,6 +55,7 @@ type AmstradCPC struct {
 	ppi        *Ppi                  // The Parallel Peripheral Interface
 	video      *VduVideo             // The VDU video
 	keyboard   *Keyboard             // The matrix keyboard
+	tape       *tape.Drive           // The spectrum Tape drive
 }
 
 // NewAmstradCPC returns a new Amstrad CPC
@@ -81,8 +83,9 @@ func NewAmstradCPC(model int) *AmstradCPC {
 	cpc.keyboard = NewKeyboard()
 	cpc.psg = NewPsg(cpc)
 	cpc.ppi = NewPpi(cpc)
+	cpc.tape = tape.New(cpc.clock)
 	// register all components
-	cpc.components = device.NewComponents(9)
+	cpc.components = device.NewComponents(10)
 	cpc.components.Add(cpc.clock)
 	cpc.components.Add(cpc.cpu)
 	cpc.components.Add(cpc.memory)
@@ -91,6 +94,7 @@ func NewAmstradCPC(model int) *AmstradCPC {
 	cpc.components.Add(cpc.video)
 	cpc.components.Add(cpc.keyboard)
 	cpc.components.Add(cpc.psg)
+	cpc.components.Add(cpc.tape)
 	cpc.components.Add(cpc.ppi)
 	return cpc
 }
@@ -152,6 +156,7 @@ func (cpc *AmstradCPC) SetController(control controller.Controller) {
 	control.Keyboard().AddReceiver(cpc.keyboard, cpcKeyboardMap)
 	control.File().RegisterFormat(controller.FormatSnap, cpcSnapFormats)
 	control.File().RegisterFormat(controller.FormatTape, cpcTapeFormats)
+	control.Tape().SetDrive(cpc.tape)
 	cpc.controller = control
 }
 
@@ -165,6 +170,11 @@ func (cpc *AmstradCPC) BeginFrame() {
 
 // Emulate one machine step
 func (cpc *AmstradCPC) Emulate() {
+	// Tape emulation
+	if cpc.tape.IsPlaying() {
+		cpc.tape.Playback()
+	}
+
 	// z80 cpu emulation
 	lapse := cpc.cpu.Execute()
 	fix := lapse & 0x03 // CPC 4T instruction round
@@ -247,15 +257,15 @@ func (cpc *AmstradCPC) LoadFile(filename string) {
 		var tape tape.Tape
 		loaded := false
 		switch ext {
-		case cpcFormatCDT: // FIXME : implement CDT format
-			// tape = format.NewCdt()
+		case cpcFormatCDT:
+			tape = zxformat.NewTzx()
 			loaded = tape.Load(data)
 		default:
 			log.Println("CPC : Not implemented format:", ext)
 		}
 		if loaded {
 			tape.Info().Name = name
-			// cpc.tape.Insert(tape)
+			cpc.tape.Insert(tape)
 		}
 	}
 }
