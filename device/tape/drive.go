@@ -43,6 +43,12 @@ func (drive *Drive) IsPlaying() bool { return drive.control.Playing }
 // Ear tape value
 func (drive *Drive) Ear() byte { return drive.control.Ear }
 
+// EarHigh tape state is high
+func (drive *Drive) EarHigh() bool { return (drive.control.Ear & LevelMask) != 0 }
+
+// EarLow tape state is high
+func (drive *Drive) EarLow() bool { return (drive.control.Ear & LevelMask) == 0 }
+
 // Insert loads the tape into the drive
 func (drive *Drive) Insert(tape Tape) {
 	drive.tape = tape

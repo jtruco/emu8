@@ -50,9 +50,9 @@ func (ppi *Ppi) Read(port byte) byte {
 			if ppi.cpc.crtc.InVSync() {
 				data |= 0x01
 			}
-			// TAPE EarON : 0x80
-			if ppi.cpc.tape.IsPlaying() {
-				data |= (ppi.cpc.tape.Ear() & 0x40) << 1
+			// TAPE Ear High : 0x80
+			if ppi.cpc.tape.IsPlaying() && ppi.cpc.tape.EarHigh() {
+				data |= 0x80
 			}
 		} else {
 			data = ppi.portB

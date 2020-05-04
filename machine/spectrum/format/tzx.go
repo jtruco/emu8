@@ -13,7 +13,7 @@ import (
 // TZX constants
 const (
 	tzxHeaderSignature = "ZXTape!"
-	tzxStartEar        = TapeEarOff
+	tzxStartEar        = tape.LevelLow
 )
 
 // TZX states
@@ -184,7 +184,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		}
 
 	case tapeStatePilot:
-		control.Ear ^= TapeEarMask
+		control.Ear ^= tape.LevelMask
 		control.State = tapeStatePilotNc
 
 	case tapeStatePilotNc:
@@ -198,12 +198,12 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		}
 
 	case tapeStateSync:
-		control.Ear ^= TapeEarMask
+		control.Ear ^= tape.LevelMask
 		control.Timeout = tzx.sync2timing
 		control.State = tapeStateByte
 
 	case tapeStateByteNc:
-		control.Ear ^= TapeEarMask
+		control.Ear ^= tape.LevelMask
 		control.State = tapeStateByte
 
 	case tapeStateByte:
@@ -215,7 +215,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		control.State = tapeStateBit1
 
 	case tapeStateBit1:
-		control.Ear ^= TapeEarMask
+		control.Ear ^= tape.LevelMask
 		if (control.DataAtPos() & tzx.bitMask) == 0 {
 			tzx.bitTime = tzx.zeroTiming
 		} else {
@@ -225,7 +225,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		control.State = tapeStateBit2
 
 	case tapeStateBit2:
-		control.Ear ^= TapeEarMask
+		control.Ear ^= tape.LevelMask
 		control.Timeout = tzx.bitTime
 		tzx.bitMask >>= 1
 		if tzx.bitMask == tzx.lastBit {
@@ -241,7 +241,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		}
 
 	case tapeStateLastPulse:
-		control.Ear ^= TapeEarMask
+		control.Ear ^= tape.LevelMask
 		if tzx.endBlockPause > 0 {
 			control.Timeout = tapeTimingEoB
 			control.State = tapeStatePause
@@ -250,7 +250,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		}
 
 	case tapeStatePureTone:
-		control.Ear ^= TapeEarMask
+		control.Ear ^= tape.LevelMask
 		control.State = tapeStatePureToneNc
 
 	case tapeStatePureToneNc:
@@ -263,7 +263,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		}
 
 	case tapeStatePulseSeq:
-		control.Ear ^= TapeEarMask
+		control.Ear ^= tape.LevelMask
 		control.State = tapeStatePulseSeqNc
 
 	case tapeStatePulseSeqNc:
@@ -400,9 +400,9 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 
 	case 0x2B: // Set Signal Level
 		if data[control.BlockPos+5] == 0 {
-			control.Ear = TapeEarOff
+			control.Ear = tape.LevelLow
 		} else {
-			control.Ear = TapeEarOn
+			control.Ear = tape.LevelHigh
 		}
 		control.BlockIndex++
 

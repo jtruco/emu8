@@ -4,13 +4,6 @@ package format
 // ZX Spectrum tape common constants
 // -----------------------------------------------------------------------------
 
-// Tape EAR constants
-const (
-	TapeEarOn   = 0xff
-	TapeEarOff  = 0xbf
-	TapeEarMask = 0x40
-)
-
 // Tape file types
 const (
 	TapeFileProgram        = 0

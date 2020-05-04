@@ -4,10 +4,17 @@ package tape
 // Tape Control
 // -----------------------------------------------------------------------------
 
+// EAR level constans
+const (
+	LevelLow  = 0
+	LevelHigh = 0x80
+	LevelMask = 0x80
+)
+
 // Control struct for tape playback
 type Control struct {
 	Playing    bool  // Tape drive is playing
-	Ear        byte  // Tape EAR
+	Ear        byte  // Tape EAR level
 	State      int   // Playback state
 	Tstate     int64 // Last clock Tstate
 	Timeout    int   // Timeout of current state
@@ -34,7 +41,7 @@ func (control *Control) EndOfTape() bool {
 
 func (control *Control) reset() {
 	control.Playing = false
-	control.Ear = 0
+	control.Ear = LevelLow
 	control.State = 0
 	control.Tstate = 0
 	control.Timeout = 0

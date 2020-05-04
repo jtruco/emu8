@@ -2,7 +2,6 @@ package spectrum
 
 import (
 	"github.com/jtruco/emu8/device"
-	"github.com/jtruco/emu8/machine/spectrum/format"
 )
 
 // -----------------------------------------------------------------------------
@@ -14,7 +13,7 @@ import (
  * (Now scaled up for 16-bit.)
  */
 const (
-	amplRate   = 3
+	amplRate   = 2
 	amplBeeper = (50 * 256) >> amplRate
 	amplTape   = (2 * 256) >> amplRate
 	amplAyTone = (24 * 256) >> amplRate
@@ -99,7 +98,6 @@ func (ula *ULA) Read(address uint16) byte {
 	ula.postIO(address)
 	if (address & 0x0001) == 0x00 { // ULA selected
 		result = ula.currentRead
-
 		// Read keyboard state
 		scan := byte(address>>8) ^ 0xff
 		mask := byte(1)
@@ -109,10 +107,9 @@ func (ula *ULA) Read(address uint16) byte {
 			}
 			mask <<= 1
 		}
-
 		// Read tape state
-		if ula.spectrum.tape.IsPlaying() {
-			result &= ula.spectrum.tape.Ear()
+		if ula.spectrum.tape.IsPlaying() && ula.spectrum.tape.EarHigh() {
+			result &^= 0x40
 		}
 	}
 	if (address & 0x00e0) == 0 { // Kempston
@@ -127,20 +124,17 @@ func (ula *ULA) Write(address uint16, data byte) {
 	if (address & 0x0001) == 0 { // ULA selected
 		// border
 		ula.spectrum.tv.SetBorder(data & 0x07)
-
-		// beeper & tape output
-		// EAR(bit 4) and MIC(bit 3) output
+		// beeper & tape output : EAR(bit 4) and MIC(bit 3) output
 		tstate := ula.spectrum.clock.Tstates()
 		beeper := int(data&0x18) >> 3
 		if ula.spectrum.tape.IsPlaying() {
-			if ula.spectrum.tape.Ear() == format.TapeEarOn {
+			if ula.spectrum.tape.EarHigh() {
 				beeper |= 2
 			} else {
 				beeper &^= 2
 			}
 		}
 		ula.spectrum.beeper.SetLevel(tstate, beeper)
-
 		// default read
 		ula.currentRead = ulaInDefault
 		if (data & 0x18) == 0 { // ISSUE 2
