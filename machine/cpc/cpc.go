@@ -2,13 +2,17 @@
 package cpc
 
 import (
+	"log"
+
 	"github.com/jtruco/emu8/device"
 	"github.com/jtruco/emu8/device/cpu"
 	"github.com/jtruco/emu8/device/cpu/z80"
 	"github.com/jtruco/emu8/device/memory"
+	"github.com/jtruco/emu8/device/tape"
 	"github.com/jtruco/emu8/device/video"
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/machine"
+	"github.com/jtruco/emu8/machine/cpc/format"
 )
 
 // -----------------------------------------------------------------------------
@@ -21,6 +25,17 @@ const (
 	cpcFrameTStates = 79872 // TStates per frame ( 312 sl * 256 Ts ) ~ 4 Mhz
 	cpcRomName      = "cpc464.rom"
 	cpcJumpers      = 0x1e
+)
+
+// Amstrad CPC formats
+const (
+	cpcFormatSNA = "sna"
+	cpcFormatCDT = "cdt"
+)
+
+var (
+	cpcSnapFormats = []string{cpcFormatSNA}
+	cpcTapeFormats = []string{cpcFormatCDT}
 )
 
 // AmstradCPC the Amstrad CPC 464
@@ -135,6 +150,8 @@ func (cpc *AmstradCPC) Components() *device.Components {
 func (cpc *AmstradCPC) SetController(control controller.Controller) {
 	control.Video().SetVideo(cpc.video)
 	control.Keyboard().AddReceiver(cpc.keyboard, cpcKeyboardMap)
+	control.File().RegisterFormat(controller.FormatSnap, cpcSnapFormats)
+	control.File().RegisterFormat(controller.FormatTape, cpcTapeFormats)
 	cpc.controller = control
 }
 
@@ -166,14 +183,6 @@ func (cpc *AmstradCPC) EndFrame() {
 	cpc.video.EndFrame()
 }
 
-// Files : load & save state / tape
-// -----------------------------------------------------------------------------
-
-// LoadFile loads a file into machine
-func (cpc *AmstradCPC) LoadFile(filename string) {
-	// TODO
-}
-
 // CPC IO bus
 // -----------------------------------------------------------------------------
 
@@ -203,5 +212,74 @@ func (cpc *AmstradCPC) Write(address uint16, data byte) {
 	if address&0x0800 == 0 { // PPI select
 		port := byte(address>>8) & 0x3
 		cpc.ppi.Write(port, data)
+	}
+}
+
+// Files : load & save state / tape
+// -----------------------------------------------------------------------------
+
+// LoadFile loads a file into machine
+func (cpc *AmstradCPC) LoadFile(filename string) {
+	filefmt, ext := cpc.controller.File().FileFormat(filename)
+	if filefmt == controller.FormatUnknown {
+		log.Println("CPC : Not supported format:", ext)
+		return
+	}
+	name := cpc.controller.File().BaseName(filename)
+	data, err := cpc.controller.File().LoadFileFormat(filename, filefmt)
+	if err != nil {
+		log.Println("CPC : Error loading file:", name)
+		return
+	}
+	// load snapshop formats
+	if filefmt == controller.FormatSnap {
+		var snap *format.Snapshot
+		switch ext {
+		case cpcFormatSNA:
+			snap = format.LoadSNA(data)
+		default:
+			log.Println("Spectrum : Not implemented format:", ext)
+		}
+		if snap != nil {
+			cpc.LoadState(snap)
+		}
+	} else if filefmt == controller.FormatTape {
+		var tape tape.Tape
+		loaded := false
+		switch ext {
+		case cpcFormatCDT: // FIXME : implement CDT format
+			// tape = format.NewCdt()
+			loaded = tape.Load(data)
+		default:
+			log.Println("CPC : Not implemented format:", ext)
+		}
+		if loaded {
+			tape.Info().Name = name
+			// cpc.tape.Insert(tape)
+		}
+	}
+}
+
+// LoadState loads the Amstrad CPC snapshot
+func (cpc *AmstradCPC) LoadState(snap *format.Snapshot) {
+	// CPU
+	cpc.cpu.State.Copy(&snap.State)
+	// Memory
+	cpc.memory.LoadRAM(0x00, snap.Memory[0:])
+	// GateArray
+	cpc.gatearray.SetPen(snap.GaSelectedPen)
+	for i := 0; i < gaTotalPens; i++ {
+		cpc.gatearray.Palette()[i] = int(snap.GaPenColours[i])
+	}
+	cpc.gatearray.Write(snap.GaMultiConfig)
+	// Crtc
+	cpc.crtc.SelectRegister(snap.CrtcSelected)
+	for i := byte(0); i < 18; i++ {
+		cpc.crtc.WriteRegister(i, snap.CrtcRegisters[i])
+	}
+	// Psg
+	cpc.psg.selected = snap.PsgSelected
+	for i := byte(0); i < 16; i++ {
+		cpc.psg.registers[i] = snap.PsgRegisters[i]
 	}
 }
