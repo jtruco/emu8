@@ -19,6 +19,11 @@ func NewTapeController() *TapeController {
 	return controller
 }
 
+// HasDrive if there is a tape drive
+func (controller *TapeController) HasDrive() bool {
+	return controller.drive != nil
+}
+
 // Drive the tape drive
 func (controller *TapeController) Drive() *tape.Drive {
 	return controller.drive
