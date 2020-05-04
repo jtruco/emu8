@@ -190,7 +190,7 @@ func (cpc *AmstradCPC) Emulate() {
 
 // EndFrame end emulation frame tasks
 func (cpc *AmstradCPC) EndFrame() {
-	cpc.video.EndFrame()
+	// nothing todo
 }
 
 // CPC IO bus

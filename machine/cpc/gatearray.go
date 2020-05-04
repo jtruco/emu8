@@ -140,6 +140,7 @@ func (ga *GateArray) onHSync() {
 // onVSync on CRTC vsync callback
 func (ga *GateArray) onVSync() {
 	ga.countSlVsync = gaSlVsyncDelay
+	ga.cpc.video.EndFrame()
 }
 
 // onInterruptAck interrupt ack
