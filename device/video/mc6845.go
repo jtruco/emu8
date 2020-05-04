@@ -214,7 +214,7 @@ func (mc *MC6845) Read(port byte) byte {
 func (mc *MC6845) Write(port byte, data byte) {
 	switch port {
 	case 0x00:
-		mc.selectRegister(data & 0x1f)
+		mc.SelectRegister(data & 0x1f)
 	case 0x01:
 		mc.writeSelected(data)
 	}
@@ -222,8 +222,8 @@ func (mc *MC6845) Write(port byte, data byte) {
 
 // register operations
 
-// readRegister selects current register
-func (mc *MC6845) selectRegister(selected byte) {
+// SelectRegister selects current register
+func (mc *MC6845) SelectRegister(selected byte) {
 	mc.selected = selected
 }
 
