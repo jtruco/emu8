@@ -29,6 +29,13 @@ func (buffer *Buffer) AddSample(index int, sample uint16) {
 	buffer.samples[index] += sample
 }
 
+// AddSamples adds samples at interval
+func (buffer *Buffer) AddSamples(start, end int, sample uint16) {
+	for i := start; i < end; i++ {
+		buffer.samples[i] += sample
+	}
+}
+
 // BuildData builds audio buffer data
 func (buffer *Buffer) BuildData() {
 	for i, j := 0, 0; i < buffer.size; i++ {
