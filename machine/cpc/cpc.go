@@ -13,7 +13,6 @@ import (
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/machine"
 	"github.com/jtruco/emu8/machine/cpc/format"
-	zxformat "github.com/jtruco/emu8/machine/spectrum/format"
 )
 
 // -----------------------------------------------------------------------------
@@ -258,7 +257,7 @@ func (cpc *AmstradCPC) LoadFile(filename string) {
 		loaded := false
 		switch ext {
 		case cpcFormatCDT:
-			tape = zxformat.NewTzx()
+			tape = format.NewCdt()
 			loaded = tape.Load(data)
 		default:
 			log.Println("CPC : Not implemented format:", ext)

@@ -94,10 +94,7 @@ func LoadSNA(data []byte) *Snapshot {
 
 	// Memory dump
 	for i := 0; i < memsize; i++ {
-		value := data[_SNAMemDump+i]
-		if value != 0 {
-			snap.Memory[i] = value
-		}
+		snap.Memory[i] = data[_SNAMemDump+i]
 	}
 
 	return snap
