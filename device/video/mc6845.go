@@ -36,8 +36,8 @@ const (
 // MC6845 register data
 var (
 	MC6845Defaults = [MC6845Nreg]byte{ // Amstrad CPC 464 default values
-		0x3f, 0x28, 0x34, 0x34, 0x14, 0x08, 0x10, 0x13, 0x00,
-		0x0b, 0x49, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+		0x3f, 0x28, 0x2e, 0x8e, 0x26, 0x00, 0x19, 0x1e, 0x00,
+		0x07, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00}
 	mc6845Masks = [MC6845Nreg]byte{
 		0xff, 0xff, 0xff, 0xff, 0x7f, 0x1f, 0x7f, 0x7f, 0x03,
 		0x1f, 0x1f, 0x1f, 0x3f, 0xff, 0x3f, 0xff, 0x3f, 0xff}
@@ -49,24 +49,24 @@ type MC6845 struct {
 	defaults  [MC6845Nreg]byte
 	selected  byte
 	// registers
-	rHorizontalTotal        byte
-	rHorizontalDisplayed    byte
-	rHorizontalSyncPosition byte
-	rSyncWidths             byte
-	rVerticalTotal          byte
-	rVerticalTotalAdjust    byte
-	rVerticalDisplayed      byte
-	rVerticalSyncPosition   byte
-	rInterlaceAndSkew       byte
-	rMaxScanlineAddress     byte
-	rCursorStart            byte
-	rCursorEnd              byte
-	rStartAddressHigh       byte
-	rStartAddressLow        byte
-	rCursorHigh             byte
-	rCursorLow              byte
-	rLightPenHigh           byte
-	rLightPenLow            byte
+	HorizontalTotal        byte
+	HorizontalDisplayed    byte
+	HorizontalSyncPosition byte
+	SyncWidths             byte
+	VerticalTotal          byte
+	VerticalTotalAdjust    byte
+	VerticalDisplayed      byte
+	VerticalSyncPosition   byte
+	InterlaceAndSkew       byte
+	MaxScanlineAddress     byte
+	CursorStart            byte
+	CursorEnd              byte
+	StartAddressHigh       byte
+	StartAddressLow        byte
+	CursorHigh             byte
+	CursorLow              byte
+	LightPenHigh           byte
+	LightPenLow            byte
 	// control
 	currentCol  byte
 	currentRow  byte
@@ -87,29 +87,38 @@ func NewMC6845() *MC6845 {
 	mc := new(MC6845)
 	mc.defaults = MC6845Defaults
 	mc.registers = [MC6845Nreg]*byte{
-		&mc.rHorizontalTotal,
-		&mc.rHorizontalDisplayed,
-		&mc.rHorizontalSyncPosition,
-		&mc.rSyncWidths,
-		&mc.rVerticalTotal,
-		&mc.rVerticalTotalAdjust,
-		&mc.rVerticalDisplayed,
-		&mc.rVerticalSyncPosition,
-		&mc.rInterlaceAndSkew,
-		&mc.rMaxScanlineAddress,
-		&mc.rCursorStart,
-		&mc.rCursorEnd,
-		&mc.rStartAddressHigh,
-		&mc.rStartAddressLow,
-		&mc.rCursorHigh,
-		&mc.rCursorLow,
-		&mc.rLightPenHigh,
-		&mc.rLightPenLow,
+		&mc.HorizontalTotal,
+		&mc.HorizontalDisplayed,
+		&mc.HorizontalSyncPosition,
+		&mc.SyncWidths,
+		&mc.VerticalTotal,
+		&mc.VerticalTotalAdjust,
+		&mc.VerticalDisplayed,
+		&mc.VerticalSyncPosition,
+		&mc.InterlaceAndSkew,
+		&mc.MaxScanlineAddress,
+		&mc.CursorStart,
+		&mc.CursorEnd,
+		&mc.StartAddressHigh,
+		&mc.StartAddressLow,
+		&mc.CursorHigh,
+		&mc.CursorLow,
+		&mc.LightPenHigh,
+		&mc.LightPenLow,
 	}
 	return mc
 }
 
 // Properties
+
+// CurrentCol current row column
+func (mc *MC6845) CurrentCol() byte { return mc.currentCol }
+
+// CurrentRow current row
+func (mc *MC6845) CurrentRow() byte { return mc.currentRow }
+
+// CurrentLine current line in row
+func (mc *MC6845) CurrentLine() byte { return mc.currentLine }
 
 // InHSync in HSync
 func (mc *MC6845) InHSync() bool { return mc.inHSync }
@@ -161,7 +170,7 @@ func (mc *MC6845) OnClock() {
 	// onclock moves one character
 	mc.currentCol++
 	// scanline control
-	if mc.currentCol > mc.rHorizontalTotal {
+	if mc.currentCol > mc.HorizontalTotal {
 		mc.currentCol = 0
 		// vsync duration control
 		if mc.vSyncCount > 0 {
@@ -172,15 +181,15 @@ func (mc *MC6845) OnClock() {
 		}
 		// new line
 		mc.currentLine++
-		if mc.currentLine > mc.rMaxScanlineAddress {
+		if mc.currentLine > mc.MaxScanlineAddress {
 			mc.currentLine = 0
 			mc.currentRow++
-			if mc.currentRow > mc.rVerticalTotal {
+			if mc.currentRow > mc.VerticalTotal {
 				mc.currentRow = 0
 			}
 		}
 		// vsync control
-		if !mc.inVSync && mc.currentRow == mc.rVerticalSyncPosition {
+		if !mc.inVSync && mc.currentRow == mc.VerticalSyncPosition {
 			mc.inVSync = true
 			mc.vSyncCount = mc.vSyncWidth
 			if mc.OnVSync != nil {
@@ -189,7 +198,7 @@ func (mc *MC6845) OnClock() {
 		}
 	} else {
 		// hsync control
-		if !mc.inHSync && mc.currentCol == mc.rHorizontalSyncPosition {
+		if !mc.inHSync && mc.currentCol == mc.HorizontalSyncPosition {
 			mc.inHSync = true
 			mc.hSyncCount = mc.hSyncWidth
 			if mc.OnHSync != nil {
@@ -251,11 +260,11 @@ func (mc *MC6845) WriteRegister(register, data byte) {
 
 	// HSync & VSync widths
 	if register == 0x03 {
-		mc.hSyncWidth = mc.rSyncWidths & 0x0f
+		mc.hSyncWidth = mc.SyncWidths & 0x0f
 		if mc.hSyncWidth == 0 {
 			mc.hSyncWidth = 0x10
 		}
-		mc.vSyncWidth = (mc.rSyncWidths >> 4) & 0x0f
+		mc.vSyncWidth = (mc.SyncWidths >> 4) & 0x0f
 		if mc.vSyncWidth == 0 {
 			mc.vSyncWidth = 0x10
 		}
