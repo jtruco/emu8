@@ -52,7 +52,13 @@ func (emulator *Emulator) IsRunning() bool { return emulator.running }
 func (emulator *Emulator) Init() { emulator.machine.Init() }
 
 // Reset the emulation
-func (emulator *Emulator) Reset() { emulator.machine.Reset() }
+func (emulator *Emulator) Reset() {
+	if emulator.running {
+		emulator.Stop()
+		defer emulator.Start()
+	}
+	emulator.machine.Reset()
+}
 
 // Start the emulation
 func (emulator *Emulator) Start() {
