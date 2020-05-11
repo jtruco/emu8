@@ -147,7 +147,11 @@ func (mapper *MaskMapper) Init(memory *Memory) {
 
 // SelectBank selects read bank mapped at address
 func (mapper *MaskMapper) SelectBank(address uint16) (*BankMap, uint16) {
-	return mapper.memory.banks[address>>mapper.Shift], address & mapper.Mask
+	bank := int(address >> mapper.Shift)
+	if bank < len(mapper.memory.banks) {
+		return mapper.memory.banks[bank], address & mapper.Mask
+	}
+	return nil, 0
 }
 
 // SelectBankWrite selects write bank mapped at address
