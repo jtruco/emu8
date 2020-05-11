@@ -42,11 +42,11 @@ const DefaultModel = ZXSpectrum48k
 
 // Models machine model name mapping
 var Models = map[string]int{
-	"ZXSpectrum16k": ZXSpectrum16k,
-	"ZXSpectrum48k": ZXSpectrum48k,
-	"AmstradCPC464": AmstradCPC464,
-	"CommodoreC64":  CommodoreC64,
-	"MSX1":          MSX1,
+	"ZX16k":  ZXSpectrum16k,
+	"ZX48k":  ZXSpectrum48k,
+	"CPC464": AmstradCPC464,
+	"C64":    CommodoreC64,
+	"MSX1":   MSX1,
 }
 
 // GetMachine gets model from name
