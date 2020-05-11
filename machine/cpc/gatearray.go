@@ -116,7 +116,8 @@ func (ga *GateArray) Emulate(tstates int) {
 	// 4 MHz gatearray emulation
 
 	// 1 MHz clock emulation
-	ga.cpc.crtc.Emulate(tstates / 4)
+	gaTstates := tstates >> 2
+	ga.cpc.crtc.Emulate(gaTstates)
 	// TODO : emulate psg
 }
 
@@ -135,16 +136,18 @@ func (ga *GateArray) onHSync() {
 		}
 		ga.countSlInt = 0
 	}
+	ga.cpc.video.OnHSync()
 }
 
 // onVSync on CRTC vsync callback
 func (ga *GateArray) onVSync() {
 	ga.countSlVsync = gaSlVsyncDelay
-	ga.cpc.video.EndFrame()
+	ga.cpc.video.OnVSync()
 }
 
 // onInterruptAck interrupt ack
 func (ga *GateArray) onInterruptAck() bool {
 	ga.countSlInt &= 0x01F // Unset bit 5
+	ga.cpc.video.OnIntAck()
 	return false
 }
