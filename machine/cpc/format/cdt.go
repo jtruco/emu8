@@ -11,6 +11,6 @@ import (
 
 // NewCdt creates a new CDT tape
 func NewCdt() tape.Tape {
-	// CRT is a TZX format
+	// CDT is the TZX format
 	return format.NewTzx()
 }
