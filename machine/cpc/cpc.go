@@ -54,7 +54,7 @@ type AmstradCPC struct {
 	ppi        *Ppi                  // The Parallel Peripheral Interface
 	video      *VduVideo             // The VDU video
 	keyboard   *Keyboard             // The matrix keyboard
-	tape       *tape.Drive           // The spectrum Tape drive
+	tape       *tape.Drive           // The tape drive
 }
 
 // NewAmstradCPC returns a new Amstrad CPC
