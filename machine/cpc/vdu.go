@@ -48,7 +48,7 @@ type VduVideo struct {
 	maxSLine  uint16
 	minSLine  uint16
 	lineBytes uint16
-	startX    int
+	firstX    int
 	page      byte
 	offset    uint16
 }
@@ -114,9 +114,10 @@ func (vdu *VduVideo) updateCrtc() {
 	vdu.minSLine = firstY
 	vdu.maxSLine = firstY + videoTotalHeight - 1
 	vdu.scanLine = 0
-	// crtc screen params
+	// screen raster
 	vdu.lineBytes = uint16(vdu.crtc.HorizontalDisplayed) << 1
-	vdu.startX = (videoTotalWidth - int(vdu.lineBytes)<<3) >> 1
+	vdu.firstX = (videoTotalWidth - int(vdu.lineBytes)<<3) >> 1
+	// memory offset
 	vdu.page = (vdu.crtc.StartAddressHigh >> 4) & 0x03
 	vdu.offset = (uint16(vdu.crtc.StartAddressHigh&0x03)<<8 | uint16(vdu.crtc.StartAddressLow)) << 1
 }
@@ -153,13 +154,13 @@ func (vdu *VduVideo) OnHSync() {
 	defer vdu.updateMode()
 
 	// border left & right
-	vdu.paintLine(y, 0, vdu.startX, border)
-	vdu.paintLine(y, videoTotalWidth-vdu.startX, vdu.startX, border)
+	vdu.paintLine(y, 0, vdu.firstX, border)
+	vdu.paintLine(y, videoTotalWidth-vdu.firstX, vdu.firstX, border)
 
 	// render screen rasterline
 	rasteraddr := uint16(vdu.crtc.CurrentLine()) << 11
 	offset := vdu.offset + vdu.lineBytes*uint16(vdu.crtc.CurrentRow())
-	x := vdu.startX
+	x := vdu.firstX
 	for i := uint16(0); i < vdu.lineBytes; i++ {
 		offset &= 0x7ff
 		addr := rasteraddr | offset
@@ -258,20 +259,17 @@ func (vdu *VduVideo) paintLine(y, x1, width int, colour int32) {
 // initialization
 
 func init() {
-	// mode0 palette index table
-	for i := 0; i < 256; i++ {
-		cpcMode0[i][0] = ((i & 0x80) >> 7) | ((i & 0x20) >> 3) | ((i & 0x08) >> 2) | ((i & 0x02) << 2)
-		cpcMode0[i][1] = ((i & 0x40) >> 6) | ((i & 0x10) >> 2) | ((i & 0x04) >> 1) | ((i & 0x01) << 3)
-	}
-	// mode1 palette index table
+	// mode color palette tables
 	for data := 0; data < 256; data++ {
+		// mode0 palette index table
+		cpcMode0[data][0] = ((data & 0x80) >> 7) | ((data & 0x20) >> 3) | ((data & 0x08) >> 2) | ((data & 0x02) << 2)
+		cpcMode0[data][1] = ((data & 0x40) >> 6) | ((data & 0x10) >> 2) | ((data & 0x04) >> 1) | ((data & 0x01) << 3)
+		// mode1 palette index table
 		cpcMode1[data][0] = ((data & 0x80) >> 7) | ((data & 0x08) >> 2)
 		cpcMode1[data][1] = ((data & 0x40) >> 6) | ((data & 0x04) >> 1)
 		cpcMode1[data][2] = ((data & 0x20) >> 5) | (data & 0x02)
 		cpcMode1[data][3] = ((data & 0x10) >> 4) | ((data & 0x01) << 1)
-	}
-	// mode2 palette index table
-	for data := 0; data < 256; data++ {
+		// mode2 palette index table
 		cpcMode2[data][0] = (data & 0x80) >> 7
 		cpcMode2[data][1] = (data & 0x40) >> 6
 		cpcMode2[data][2] = (data & 0x20) >> 5
