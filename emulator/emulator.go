@@ -86,19 +86,28 @@ func (emulator *Emulator) runEmulation() {
 	defer emulator.wg.Done()
 
 	// emulation speed
-	ftime := emulator.machine.Config().FrameTime
-	sleep := ftime
+	fps := int(emulator.machine.Config().FPS)
+	frameTime := emulator.machine.Config().FrameTime
+	sleep := frameTime
+	startTime := time.Now()
+	frame := 0
+
+	// emulation loop
 	timer := time.NewTimer(sleep)
 	defer timer.Stop()
-
 	for emulator.running {
-		start := time.Now()
-		select {
-		case <-timer.C:
-			emulator.emulateFrame()
-			sleep += ftime - time.Since(start)
-			timer.Reset(sleep)
+		startFrame := time.Now()
+		emulator.emulateFrame()
+		// timer control
+		<-timer.C
+		sleep += frameTime - time.Since(startFrame)
+		frame++
+		if frame == fps { // FPS bias control
+			frame = 0
+			sleep += time.Second - time.Since(startTime)
+			startTime = time.Now()
 		}
+		timer.Reset(sleep) // sleep until next frame
 	}
 }
 
