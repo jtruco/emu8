@@ -82,20 +82,22 @@ func (emulator *Emulator) Stop() {
 
 // runEmulation the emulation loop goroutine
 func (emulator *Emulator) runEmulation() {
-	// sync
 	emulator.wg.Add(1)
 	defer emulator.wg.Done()
 
 	// emulation speed
 	ftime := emulator.machine.Config().FrameTime
-	ticker := time.NewTicker(time.Duration(ftime))
-	defer ticker.Stop()
+	sleep := ftime
+	timer := time.NewTimer(sleep)
+	defer timer.Stop()
 
-	// emulation loop
 	for emulator.running {
+		start := time.Now()
 		select {
-		case <-ticker.C:
+		case <-timer.C:
 			emulator.emulateFrame()
+			sleep += ftime - time.Since(start)
+			timer.Reset(sleep)
 		}
 	}
 }
