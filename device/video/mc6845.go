@@ -151,63 +151,6 @@ func (mc *MC6845) Reset() {
 	mc.inVSync = false
 }
 
-// Emulate emulates Tstates
-func (mc *MC6845) Emulate(tstates int) {
-	for i := 0; i < tstates; i++ {
-		mc.OnClock()
-	}
-}
-
-// OnClock emulates one clock cycle
-func (mc *MC6845) OnClock() {
-	// hsync duration control
-	if mc.hSyncCount > 0 {
-		mc.hSyncCount--
-		if mc.hSyncCount == 0 {
-			mc.inHSync = false
-		}
-	}
-	// onclock moves one character
-	mc.currentCol++
-	// scanline control
-	if mc.currentCol > mc.HorizontalTotal {
-		mc.currentCol = 0
-		// vsync duration control
-		if mc.vSyncCount > 0 {
-			mc.vSyncCount--
-			if mc.vSyncCount == 0 {
-				mc.inVSync = false
-			}
-		}
-		// new line
-		mc.currentLine++
-		if mc.currentLine > mc.MaxScanlineAddress {
-			mc.currentLine = 0
-			mc.currentRow++
-			if mc.currentRow > mc.VerticalTotal {
-				mc.currentRow = 0
-			}
-		}
-		// vsync control
-		if !mc.inVSync && mc.currentRow == mc.VerticalSyncPosition {
-			mc.inVSync = true
-			mc.vSyncCount = mc.vSyncWidth
-			if mc.OnVSync != nil {
-				mc.OnVSync()
-			}
-		}
-	} else {
-		// hsync control
-		if !mc.inHSync && mc.currentCol == mc.HorizontalSyncPosition {
-			mc.inHSync = true
-			mc.hSyncCount = mc.hSyncWidth
-			if mc.OnHSync != nil {
-				mc.OnHSync()
-			}
-		}
-	}
-}
-
 // IO operations
 
 // Read reads data
@@ -267,6 +210,65 @@ func (mc *MC6845) WriteRegister(register, data byte) {
 		mc.vSyncWidth = (mc.SyncWidths >> 4) & 0x0f
 		if mc.vSyncWidth == 0 {
 			mc.vSyncWidth = 0x10
+		}
+	}
+}
+
+// emulation
+
+// Emulate emulates Tstates
+func (mc *MC6845) Emulate(tstates int) {
+	for i := 0; i < tstates; i++ {
+		mc.OnClock()
+	}
+}
+
+// OnClock emulates one clock cycle
+func (mc *MC6845) OnClock() {
+	// hsync duration control
+	if mc.hSyncCount > 0 {
+		mc.hSyncCount--
+		if mc.hSyncCount == 0 {
+			mc.inHSync = false
+		}
+	}
+	// onclock moves one character
+	mc.currentCol++
+	// scanline control
+	if mc.currentCol > mc.HorizontalTotal {
+		mc.currentCol = 0
+		// vsync duration control
+		if mc.vSyncCount > 0 {
+			mc.vSyncCount--
+			if mc.vSyncCount == 0 {
+				mc.inVSync = false
+			}
+		}
+		// new line
+		mc.currentLine++
+		if mc.currentLine > mc.MaxScanlineAddress {
+			mc.currentLine = 0
+			mc.currentRow++
+			if mc.currentRow > mc.VerticalTotal {
+				mc.currentRow = 0
+			}
+		}
+		// vsync control
+		if !mc.inVSync && mc.currentRow == mc.VerticalSyncPosition {
+			mc.inVSync = true
+			mc.vSyncCount = mc.vSyncWidth
+			if mc.OnVSync != nil {
+				mc.OnVSync()
+			}
+		}
+	} else {
+		// hsync control
+		if !mc.inHSync && mc.currentCol == mc.HorizontalSyncPosition {
+			mc.inHSync = true
+			mc.hSyncCount = mc.hSyncWidth
+			if mc.OnHSync != nil {
+				mc.OnHSync()
+			}
 		}
 	}
 }
