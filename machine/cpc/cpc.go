@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/jtruco/emu8/device"
+	"github.com/jtruco/emu8/device/audio"
 	"github.com/jtruco/emu8/device/cpu"
 	"github.com/jtruco/emu8/device/cpu/z80"
 	"github.com/jtruco/emu8/device/memory"
@@ -50,7 +51,7 @@ type AmstradCPC struct {
 	upperRom   *memory.BankMap       // The upper rom
 	gatearray  *GateArray            // The Gate-Array
 	crtc       *video.MC6845         // The Cathode Ray Tube Controller
-	psg        *Psg                  // The Programmable Sound Generator
+	psg        *audio.AY38910        // The Programmable Sound Generator
 	ppi        *Ppi                  // The Parallel Peripheral Interface
 	video      *VduVideo             // The VDU video
 	keyboard   *Keyboard             // The matrix keyboard
@@ -80,7 +81,8 @@ func NewAmstradCPC(model int) *AmstradCPC {
 	cpc.gatearray = NewGateArray(cpc)
 	cpc.video = NewVduVideo(cpc)
 	cpc.keyboard = NewKeyboard()
-	cpc.psg = NewPsg(cpc)
+	cpc.psg = audio.NewAY38910()
+	cpc.psg.OnReadPortA = cpc.onPsgReadPortA
 	cpc.ppi = NewPpi(cpc)
 	cpc.tape = tape.New(cpc.clock)
 	// register all components
@@ -224,6 +226,12 @@ func (cpc *AmstradCPC) Write(address uint16, data byte) {
 	}
 }
 
+// onPsgReadPortA
+func (cpc *AmstradCPC) onPsgReadPortA() byte {
+	// Keyboard connected to PSG Port A
+	return cpc.keyboard.State()
+}
+
 // Files : load & save state / tape
 // -----------------------------------------------------------------------------
 
@@ -287,8 +295,8 @@ func (cpc *AmstradCPC) LoadState(snap *format.Snapshot) {
 		cpc.crtc.WriteRegister(i, snap.CrtcRegisters[i])
 	}
 	// Psg
-	cpc.psg.selected = snap.PsgSelected
+	cpc.psg.SelectRegister(snap.PsgSelected)
 	for i := byte(0); i < 16; i++ {
-		cpc.psg.registers[i] = snap.PsgRegisters[i]
+		cpc.psg.WriteRegister(i, snap.PsgRegisters[i])
 	}
 }

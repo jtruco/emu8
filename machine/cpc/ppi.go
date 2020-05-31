@@ -91,7 +91,8 @@ func (ppi *Ppi) Write(port byte, data byte) {
 		}
 		if (ppi.control & 0x08) == 0 { // upper nibble
 			// todo : tape
-			ppi.cpc.psg.control = data
+			// psg control
+			ppi.cpc.psg.SetControl(data)
 			ppi.cpc.psg.Write(ppi.portA)
 		}
 	case 3: // PPI control
@@ -113,7 +114,8 @@ func (ppi *Ppi) Write(port byte, data byte) {
 			}
 			if (ppi.control & 0x08) == 0 { // upper nibble
 				// TODO : tape control
-				ppi.cpc.psg.control = ppi.portC
+				// PSG control
+				ppi.cpc.psg.SetControl(ppi.portC)
 				ppi.cpc.psg.Write(ppi.portA)
 			}
 		}
