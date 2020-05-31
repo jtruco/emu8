@@ -13,7 +13,7 @@ const (
 const (
 	DefaultAppTitle     = "emu8"
 	DefaultAppUI        = "sdl"
-	DefaultMachineModel = "ZXSpectrum48k"
+	DefaultMachineModel = "Speccy"
 	DefaultVideoScale   = 2
 	DefaultFullScreen   = false
 	DefaultMuteAudio    = false
@@ -47,7 +47,7 @@ func Init() bool {
 
 // parse command line arguments
 func parseArgs() {
-	flag.StringVar(&config.MachineModel, "m", "ZXSpectrum48k", "Machine model")
+	flag.StringVar(&config.MachineModel, "m", "Speccy", "Machine model")
 	flag.StringVar(&config.RomFile, "r", "", "Load rom file")
 	flag.StringVar(&config.FileName, "f", "", "Load file")
 	flag.IntVar(&config.VideoScale, "vs", DefaultVideoScale, "Video scale (1..4)")
