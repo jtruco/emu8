@@ -47,11 +47,17 @@ func (e *Event) Code() int { return e.code }
 // Callback is a device callback
 type Callback func()
 
+// EventCallback is a device event callback
+type EventCallback func(IEvent)
+
 // AckCallback device callback with ack control
 type AckCallback func() bool
 
-// EventCallback is a device event callback
-type EventCallback func(IEvent)
+// ReadCallback line read byte callback
+type ReadCallback func() byte
+
+// WriteCallback line write byte callback
+type WriteCallback func(byte)
 
 // -----------------------------------------------------------------------------
 // Event Bus
