@@ -38,7 +38,7 @@ var (
 	MC6845Defaults = [MC6845Nreg]byte{ // Amstrad CPC 464 default values
 		0x3f, 0x28, 0x2e, 0x8e, 0x26, 0x00, 0x19, 0x1e, 0x00,
 		0x07, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00}
-	mc6845Masks = [MC6845Nreg]byte{
+	MC6845Masks = [MC6845Nreg]byte{
 		0xff, 0xff, 0xff, 0xff, 0x7f, 0x1f, 0x7f, 0x7f, 0x03,
 		0x1f, 0x1f, 0x1f, 0x3f, 0xff, 0x3f, 0xff, 0x3f, 0xff}
 )
@@ -199,7 +199,7 @@ func (mc *MC6845) writeSelected(data byte) {
 
 // WriteRegister writes value to register
 func (mc *MC6845) WriteRegister(register, data byte) {
-	*mc.registers[register] = data & mc6845Masks[register]
+	*mc.registers[register] = data & MC6845Masks[register]
 
 	// HSync & VSync widths
 	if register == 0x03 {
@@ -223,7 +223,7 @@ func (mc *MC6845) Emulate(tstates int) {
 	}
 }
 
-// OnClock emulates one clock cycle
+// OnClock emulates one clock cycle (1MHz)
 func (mc *MC6845) OnClock() {
 	// hsync duration control
 	if mc.hSyncCount > 0 {

@@ -76,6 +76,3 @@ func (beeper *Beeper) EndFrame() {
 	beeper.buffer.Reset()
 	beeper.tstate = 0
 }
-
-// IsDirty audio buffer is dirty
-func (beeper *Beeper) IsDirty() bool { return true }
