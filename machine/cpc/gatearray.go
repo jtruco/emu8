@@ -118,7 +118,7 @@ func (ga *GateArray) Emulate(tstates int) {
 	// 1 MHz clock emulation
 	gaTstates := tstates >> 2
 	ga.cpc.crtc.Emulate(gaTstates)
-	// TODO : emulate psg
+	ga.cpc.psg.Emulate(gaTstates)
 }
 
 // onHSync on CRTC hsync callback

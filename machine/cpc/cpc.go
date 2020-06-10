@@ -154,6 +154,7 @@ func (cpc *AmstradCPC) Components() *device.Components {
 // SetController connect UI controllers & device components
 func (cpc *AmstradCPC) SetController(control controller.Controller) {
 	control.Video().SetVideo(cpc.video)
+	control.Audio().SetAudio(cpc.psg)
 	control.Keyboard().AddReceiver(cpc.keyboard, cpcKeyboardMap)
 	control.File().RegisterFormat(controller.FormatSnap, cpcSnapFormats)
 	control.File().RegisterFormat(controller.FormatTape, cpcTapeFormats)
