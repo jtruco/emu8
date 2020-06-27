@@ -4,7 +4,6 @@ package spectrum
 import (
 	"log"
 
-	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/device"
 	"github.com/jtruco/emu8/device/audio"
 	"github.com/jtruco/emu8/device/cpu"
@@ -22,10 +21,10 @@ import (
 
 // Default ZX Spectrum constants
 const (
-	fps          = 50    // 50 Hz (50.08 Hz)
-	frameTStates = 69888 // TStates per frame
-	intTStates   = 32    // ZX Spectrum 16k & 48k
-	romName      = "zxspectrum.rom"
+	zxFPS        = 50    // 50 Hz (50.08 Hz)
+	zxTStates    = 69888 // TStates per frame
+	zxIntTstates = 32    // ZX Spectrum 16k & 48k
+	zxRomName    = "zxspectrum.rom"
 )
 
 // ZX Spectrum formats
@@ -61,8 +60,8 @@ type Spectrum struct {
 func NewSpectrum(model int) *Spectrum {
 	spectrum := new(Spectrum)
 	spectrum.config.Model = model
-	spectrum.config.FrameTStates = frameTStates
-	spectrum.config.SetFPS(fps)
+	spectrum.config.FrameTStates = zxTStates
+	spectrum.config.SetFPS(zxFPS)
 	// memory mapping
 	if spectrum.config.Model == machine.ZXSpectrum16k {
 		spectrum.memory = memory.New(memory.Size32K, 2)
@@ -83,7 +82,7 @@ func NewSpectrum(model int) *Spectrum {
 	spectrum.cpu = z80.New(spectrum.clock, spectrum.memory, spectrum.ula)
 	spectrum.cpu.OnIntAck = spectrum.onInterruptAck
 	spectrum.tv = NewTVVideo(spectrum)
-	spectrum.beeper = audio.NewBeeper(config.AudioFrecuency, fps, frameTStates)
+	spectrum.beeper = audio.NewBeeper(audio.NewConfig(zxFPS, zxTStates))
 	spectrum.beeper.SetMap(beeperMap)
 	spectrum.keyboard = NewKeyboard()
 	spectrum.tape = tape.New(spectrum.clock)
@@ -124,7 +123,7 @@ func (spectrum *Spectrum) Reset() {
 // initSpectrum commont init tasks
 func (spectrum *Spectrum) initSpectrum() {
 	// load ROM at bank 0
-	data, err := spectrum.controller.File().LoadROM(romName)
+	data, err := spectrum.controller.File().LoadROM(zxRomName)
 	if err != nil {
 		return
 	}
@@ -188,7 +187,7 @@ func (spectrum *Spectrum) Emulate() {
 	// Exetues a CPU instruction
 	spectrum.cpu.Execute()
 	// Maskable interrupt request lenght
-	if spectrum.cpu.IntRq && spectrum.clock.Tstates() >= intTStates {
+	if spectrum.cpu.IntRq && spectrum.clock.Tstates() >= zxIntTstates {
 		spectrum.cpu.InterruptRequest(false)
 	}
 }

@@ -35,22 +35,22 @@ const (
 
 // AY38910 register constants
 const (
-	AY38910ChannelAToneFreqLow8Bit = iota
-	AY38910ChannelAToneFreqHigh4Bit
-	AY38910ChannelBToneFreqLow8Bit
-	AY38910ChannelBToneFreqHigh4Bit
-	AY38910ChannelCToneFreqLow8Bit
-	AY38910ChannelCToneFreqHigh4Bit
+	AY38910ToneAFrequencyLow = iota
+	AY38910ToneAFrequencyHigh
+	AY38910ToneBFrequencyLow
+	AY38910ToneBFrequencyHigh
+	AY38910ToneCFrequencyLow
+	AY38910ToneCFrequencyHigh
 	AY38910NoiseFrequency
 	AY38910MixerControl
 	AY38910ChannelAVolume
 	AY38910ChannelBVolume
 	AY38910ChannelCVolume
-	AY38910VolumeEnvFreqLow
-	AY38910VolumeEnvFreqHigh
-	AY38910VolumeEnvShape
-	AY38910ExternalDataPortA
-	AY38910ExternalDataPortB
+	AY38910EnvelopeFrequencyLow
+	AY38910EnvelopeFrequencyHigh
+	AY38910EnvelopeShape
+	AY38910DataPortA
+	AY38910DataPortB
 )
 
 // AY38910 register data
@@ -66,32 +66,32 @@ var (
 
 // AY38910 Crtc Device
 type AY38910 struct {
-	registers [AY38910Nreg]*byte
+	config    *Config
 	buffer    *Buffer
+	registers [AY38910Nreg]*byte
 	selected  byte
 	control   byte
 	inPortA   bool
 	inPortB   bool
 	counter   int
-	sample    int
-	factor    float32
+	nsample   int
 	// registers
-	ChannelAToneFreqLow8Bit  byte
-	ChannelAToneFreqHigh4Bit byte
-	ChannelBToneFreqLow8Bit  byte
-	ChannelBToneFreqHigh4Bit byte
-	ChannelCToneFreqLow8Bit  byte
-	ChannelCToneFreqHigh4Bit byte
-	NoiseFrequency           byte
-	MixerControl             byte
-	ChannelAVolume           byte
-	ChannelBVolume           byte
-	ChannelCVolume           byte
-	VolumeEnvFreqLow         byte
-	VolumeEnvFreqHigh        byte
-	VolumeEnvShape           byte
-	ExternalDataPortA        byte
-	ExternalDataPortB        byte
+	ToneAFrequencyLow     byte
+	ToneAFrequencyHigh    byte
+	ToneBFrequencyLow     byte
+	ToneBFrequencyHigh    byte
+	ToneCFrequencyLow     byte
+	ToneCFrequencyHigh    byte
+	NoiseFrequency        byte
+	MixerControl          byte
+	ChannelAVolume        byte
+	ChannelBVolume        byte
+	ChannelCVolume        byte
+	EnvelopeFrequencyLow  byte
+	EnvelopeFrequencyHigh byte
+	EnvelopeShape         byte
+	DataPortA             byte
+	DataPortB             byte
 	// audio
 	channelA AY38910Channel
 	channelB AY38910Channel
@@ -106,40 +106,41 @@ type AY38910 struct {
 }
 
 // NewAY38910 creates new PSG
-func NewAY38910() *AY38910 {
+func NewAY38910(config *Config) *AY38910 {
 	ay := new(AY38910)
+	ay.config = config
+	ay.buffer = NewBuffer(config.Samples)
 	ay.registers = [AY38910Nreg]*byte{
-		&ay.ChannelAToneFreqLow8Bit,
-		&ay.ChannelAToneFreqHigh4Bit,
-		&ay.ChannelBToneFreqLow8Bit,
-		&ay.ChannelBToneFreqHigh4Bit,
-		&ay.ChannelCToneFreqLow8Bit,
-		&ay.ChannelCToneFreqHigh4Bit,
+		&ay.ToneAFrequencyLow,
+		&ay.ToneAFrequencyHigh,
+		&ay.ToneBFrequencyLow,
+		&ay.ToneBFrequencyHigh,
+		&ay.ToneCFrequencyLow,
+		&ay.ToneCFrequencyHigh,
 		&ay.NoiseFrequency,
 		&ay.MixerControl,
 		&ay.ChannelAVolume,
 		&ay.ChannelBVolume,
 		&ay.ChannelCVolume,
-		&ay.VolumeEnvFreqLow,
-		&ay.VolumeEnvFreqHigh,
-		&ay.VolumeEnvShape,
-		&ay.ExternalDataPortA,
-		&ay.ExternalDataPortB}
-	// TODO : FIX SIZES / FACTOR + NEW BUFFER
-	ay.buffer = NewBuffer(44800, 50)
-	ay.factor = 44800.0 / 125000.0
-	// TODO : FIX SIZES
+		&ay.EnvelopeFrequencyLow,
+		&ay.EnvelopeFrequencyHigh,
+		&ay.EnvelopeShape,
+		&ay.DataPortA,
+		&ay.DataPortB}
 	ay.channelA.envelope = &ay.envelope
 	ay.channelA.noise = &ay.noise
-	ay.channelA.initLevels(float64(ay.factor) * 2 / 3)
+	ay.channelA.initLevels(float64(config.Rate) * 2 / 3)
 	ay.channelB.envelope = &ay.envelope
 	ay.channelB.noise = &ay.noise
-	ay.channelB.initLevels(float64(ay.factor) * 1 / 3)
+	ay.channelB.initLevels(float64(config.Rate) * 1 / 3)
 	ay.channelC.envelope = &ay.envelope
 	ay.channelC.noise = &ay.noise
-	ay.channelC.initLevels(float64(ay.factor) * 2 / 3)
+	ay.channelC.initLevels(float64(config.Rate) * 2 / 3)
 	return ay
 }
+
+// Config returns the audio configuration
+func (ay *AY38910) Config() *Config { return ay.config }
 
 // properties
 
@@ -163,7 +164,7 @@ func (ay *AY38910) Reset() {
 	ay.selected = 0
 	ay.control = 0
 	ay.counter = 0
-	ay.sample = 0
+	ay.nsample = 0
 	ay.channelA.reset()
 	ay.channelB.reset()
 	ay.channelC.reset()
@@ -182,7 +183,7 @@ func (ay *AY38910) Buffer() *Buffer {
 func (ay *AY38910) EndFrame() {
 	ay.buffer.BuildData()
 	ay.buffer.Reset()
-	ay.sample = 0
+	ay.nsample = 0
 }
 
 // io operations
@@ -191,14 +192,14 @@ func (ay *AY38910) EndFrame() {
 func (ay *AY38910) Read() byte {
 	var data byte = 0xff
 	switch ay.selected {
-	case AY38910ExternalDataPortA: // port A
+	case AY38910DataPortA: // port A
 		if ay.OnReadPortA != nil {
 			data &= ay.OnReadPortA()
 		}
 		if !ay.inPortA {
 			data &= ay.readSelected()
 		}
-	case AY38910ExternalDataPortB: // port B
+	case AY38910DataPortB: // port B
 		if ay.OnReadPortB != nil {
 			data &= ay.OnReadPortB()
 		}
@@ -251,12 +252,12 @@ func (ay *AY38910) WriteRegister(register, data byte) {
 	*ay.registers[register] = data & ay38910Masks[register]
 
 	switch register {
-	case AY38910ChannelAToneFreqLow8Bit, AY38910ChannelAToneFreqHigh4Bit:
-		ay.channelA.setPeriod(ay.ChannelAToneFreqHigh4Bit, ay.ChannelAToneFreqLow8Bit)
-	case AY38910ChannelBToneFreqLow8Bit, AY38910ChannelBToneFreqHigh4Bit:
-		ay.channelB.setPeriod(ay.ChannelBToneFreqHigh4Bit, ay.ChannelBToneFreqLow8Bit)
-	case AY38910ChannelCToneFreqLow8Bit, AY38910ChannelCToneFreqHigh4Bit:
-		ay.channelC.setPeriod(ay.ChannelCToneFreqHigh4Bit, ay.ChannelCToneFreqLow8Bit)
+	case AY38910ToneAFrequencyLow, AY38910ToneAFrequencyHigh:
+		ay.channelA.setPeriod(ay.ToneAFrequencyHigh, ay.ToneAFrequencyLow)
+	case AY38910ToneBFrequencyLow, AY38910ToneBFrequencyHigh:
+		ay.channelB.setPeriod(ay.ToneBFrequencyHigh, ay.ToneBFrequencyLow)
+	case AY38910ToneCFrequencyLow, AY38910ToneCFrequencyHigh:
+		ay.channelC.setPeriod(ay.ToneCFrequencyHigh, ay.ToneCFrequencyLow)
 	case AY38910NoiseFrequency:
 		ay.noise.period = data
 	case AY38910MixerControl:
@@ -277,17 +278,17 @@ func (ay *AY38910) WriteRegister(register, data byte) {
 	case AY38910ChannelCVolume:
 		ay.channelC.volume = (data & 0x0f)
 		ay.channelC.useEnvelope = ((data & 0x10) != 0)
-	case AY38910VolumeEnvFreqLow, AY38910VolumeEnvFreqHigh:
-		ay.envelope.setPeriod(ay.VolumeEnvFreqHigh, ay.VolumeEnvFreqLow)
-	case AY38910VolumeEnvShape:
+	case AY38910EnvelopeFrequencyLow, AY38910EnvelopeFrequencyHigh:
+		ay.envelope.setPeriod(ay.EnvelopeFrequencyHigh, ay.EnvelopeFrequencyLow)
+	case AY38910EnvelopeShape:
 		ay.envelope.setShape(data)
-	case AY38910ExternalDataPortA:
+	case AY38910DataPortA:
 		if !ay.inPortA && ay.OnWritePortA != nil {
-			ay.OnWritePortA(ay.ExternalDataPortA)
+			ay.OnWritePortA(ay.DataPortA)
 		}
-	case AY38910ExternalDataPortB:
+	case AY38910DataPortB:
 		if !ay.inPortB && ay.OnWritePortB != nil {
-			ay.OnWritePortB(ay.ExternalDataPortB)
+			ay.OnWritePortB(ay.DataPortB)
 		}
 	default:
 	}
@@ -308,8 +309,8 @@ func (ay *AY38910) OnClock() {
 	if ay.counter&0x07 != 0 {
 		return
 	}
+	// update envelope every 16 clocks
 	if ay.counter&0xff == 0 {
-		// update envelope every 16 clocks
 		ay.envelope.onClock()
 	}
 	// update tone every 8 clocks (125 Khz)
@@ -318,10 +319,12 @@ func (ay *AY38910) OnClock() {
 	ay.channelB.onClock()
 	ay.channelC.onClock()
 	// create audio sample
-	mix := ay.channelA.mix + ay.channelB.mix + ay.channelC.mix
-	index := int(float32(ay.sample) * ay.factor)
-	ay.buffer.AddSample(index, mix)
-	ay.sample++
+	left := ay.channelC.level + ay.channelB.level
+	right := ay.channelA.level + ay.channelB.level
+	sample := left + right // mono output
+	index := int(float32(ay.nsample) * ay.config.Rate)
+	ay.buffer.AddSample(index, sample)
+	ay.nsample++
 }
 
 // -----------------------------------------------------------------------------
@@ -334,10 +337,10 @@ type AY38910Channel struct {
 	period       uint16
 	output       uint8
 	counter      uint16
+	level        uint16
 	toneEnabled  bool
 	noiseEnabled bool
 	useEnvelope  bool
-	mix          uint16
 	levels       [AY38910VolumeLevels]uint16
 	envelope     *AY38910Envelope
 	noise        *AY38910Noise
@@ -345,6 +348,7 @@ type AY38910Channel struct {
 
 func (c *AY38910Channel) initLevels(factor float64) {
 	// level = max / sqrt(2)^(15-nn)
+	factor /= 2 // mono output
 	for l := 0; l < AY38910VolumeLevels; l++ {
 		val := float64(AY38910VolumeRange) / math.Pow(math.Sqrt(2), float64(AY38910VolumeLevels-1-l))
 		c.levels[l] = uint16(val * factor)
@@ -359,7 +363,7 @@ func (c *AY38910Channel) reset() {
 	c.toneEnabled = false
 	c.noiseEnabled = false
 	c.useEnvelope = false
-	c.mix = 0
+	c.level = 0
 }
 
 func (c *AY38910Channel) setPeriod(high, low uint8) {
@@ -386,9 +390,9 @@ func (c *AY38910Channel) onClock() {
 	}
 	output := (c.noiseEnabled && c.noise.output != 0) || (c.toneEnabled && c.output != 0)
 	if output {
-		c.mix = c.levels[volume]
+		c.level = c.levels[volume]
 	} else {
-		c.mix = -c.levels[volume]
+		c.level = -c.levels[volume]
 	}
 }
 

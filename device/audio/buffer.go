@@ -6,19 +6,15 @@ package audio
 
 // Buffer is a 16bit audio doble buffer : samples and audio data
 type Buffer struct {
-	frequency int      // Frequency of audio
-	fps       int      // Frames per second
-	size      int      // buffer size in samples
-	samples   []uint16 // sample data u16 format
-	data      []byte   // data buffer. Format : SDL AUDIO_U16LSB
+	size    int      // buffer size in samples
+	samples []uint16 // sample data u16 format
+	data    []byte   // data buffer. Format : SDL AUDIO_U16LSB
 }
 
 // NewBuffer creates a new buffer of Freq and FPS
-func NewBuffer(frequency, fps int) *Buffer {
+func NewBuffer(size int) *Buffer {
 	buffer := new(Buffer)
-	buffer.frequency = frequency
-	buffer.fps = fps
-	buffer.size = frequency / fps
+	buffer.size = size
 	buffer.samples = make([]uint16, buffer.size)
 	buffer.data = make([]byte, buffer.size*2) // 2 bps
 	return buffer
@@ -51,16 +47,6 @@ func (buffer *Buffer) BuildData() {
 // Data gets the audio data buffer. SDL AUDIO_U16LSB format.
 func (buffer *Buffer) Data() []byte {
 	return buffer.data
-}
-
-// FPS of the audio buffer
-func (buffer *Buffer) FPS() int {
-	return buffer.fps
-}
-
-// Frequency of the audio buffer
-func (buffer *Buffer) Frequency() int {
-	return buffer.frequency
 }
 
 // GetSample gets sample at index

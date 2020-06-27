@@ -8,30 +8,31 @@ var beeperDefaultMap = []uint16{0, 50 * 256} // default beeper levels (0 - 1)
 
 // Beeper is a simple audio device
 type Beeper struct {
-	buffer       *Buffer  // Audio buffer
-	levelMap     []uint16 // Beeper samples level mapping
-	frameTstates int      // Tstates per frame
-	factor       float32  // Timing factor
-	level        int      // Current level
-	tstate       int      // Current tstate
+	config   *Config  // Audio config
+	buffer   *Buffer  // Audio buffer
+	levelMap []uint16 // Beeper samples level mapping
+	level    int      // Current level
+	tstate   int      // Current tstate
 }
 
 // NewBeeper a new Beeper device
-func NewBeeper(frequency, fps, tstates int) *Beeper {
+func NewBeeper(config *Config) *Beeper {
 	beeper := new(Beeper)
-	beeper.buffer = NewBuffer(frequency, fps)
+	beeper.config = config
+	beeper.buffer = NewBuffer(config.Samples)
 	beeper.levelMap = beeperDefaultMap
-	beeper.frameTstates = tstates
-	beeper.factor = float32(beeper.buffer.size) / float32(tstates)
 	return beeper
 }
+
+// Config the audio device
+func (beeper *Beeper) Config() *Config { return beeper.config }
 
 // AddSamples add beeper samples at tstates interval
 func (beeper *Beeper) AddSamples(from, to, level int) {
 	sample := beeper.levelMap[level]
 	if sample != 0 {
-		start := int(float32(from) * beeper.factor)
-		end := int(float32(to) * beeper.factor)
+		start := int(float32(from) * beeper.config.Rate)
+		end := int(float32(to) * beeper.config.Rate)
 		beeper.buffer.AddSamples(start, end, sample)
 	}
 }
@@ -71,7 +72,7 @@ func (beeper *Beeper) Buffer() *Buffer {
 
 // EndFrame ends audio frame
 func (beeper *Beeper) EndFrame() {
-	beeper.SetLevel(beeper.frameTstates, beeper.level)
+	beeper.SetLevel(beeper.config.TStates, beeper.level)
 	beeper.buffer.BuildData()
 	beeper.buffer.Reset()
 	beeper.tstate = 0

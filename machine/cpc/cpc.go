@@ -22,8 +22,9 @@ import (
 
 // Default Amstrad CPC
 const (
-	cpcFPS          = 50    // 50 Hz ( 50.08 Hz )
-	cpcFrameTStates = 79872 // TStates per frame ( 312 sl * 256 Ts ) ~ 4 Mhz
+	cpcFPS          = 50              // 50 Hz ( 50.08 Hz )
+	cpcTStates      = 79872           // TStates per frame ( 312 sl * 256 Ts ) ~ 4 Mhz
+	cpcAudioTStates = cpcTStates >> 5 // Audio TStates (~ 1MHz / 8)
 	cpcRomName      = "cpc464.rom"
 	cpcJumpers      = 0x1e
 )
@@ -62,7 +63,7 @@ type AmstradCPC struct {
 func NewAmstradCPC(model int) *AmstradCPC {
 	cpc := new(AmstradCPC)
 	cpc.config.Model = model
-	cpc.config.FrameTStates = cpcFrameTStates
+	cpc.config.FrameTStates = cpcTStates
 	cpc.config.SetFPS(cpcFPS)
 	// memory map
 	cpc.memory = memory.New(memory.Size64K, 6)
@@ -81,7 +82,7 @@ func NewAmstradCPC(model int) *AmstradCPC {
 	cpc.gatearray = NewGateArray(cpc)
 	cpc.video = NewVduVideo(cpc)
 	cpc.keyboard = NewKeyboard()
-	cpc.psg = audio.NewAY38910()
+	cpc.psg = audio.NewAY38910(audio.NewConfig(cpcFPS, cpcAudioTStates))
 	cpc.psg.OnReadPortA = cpc.onPsgReadPortA
 	cpc.ppi = NewPpi(cpc)
 	cpc.tape = tape.New(cpc.clock)

@@ -5,30 +5,30 @@ import (
 )
 
 // Default values
-const (
-	AudioFrecuency = 48000 // 48 KHz
-)
+const ()
 
 // Default configuration constants
 const (
-	DefaultAppTitle     = "emu8"
-	DefaultAppUI        = "sdl"
-	DefaultMachineModel = "Speccy"
-	DefaultVideoScale   = 2
-	DefaultFullScreen   = false
-	DefaultMuteAudio    = false
+	DefaultAppTitle       = "emu8"
+	DefaultAppUI          = "sdl"
+	DefaultMachineModel   = "Speccy"
+	DefaultVideoScale     = 2
+	DefaultFullScreen     = false
+	DefaultMuteAudio      = false
+	DefaultAudioFrecuency = 48000 // 48 KHz
 )
 
 // Config is the main configuration
 type Config struct {
-	AppTitle     string
-	AppUI        string
-	MachineModel string
-	RomFile      string
-	FileName     string
-	VideoScale   int
-	FullScreen   bool
-	MuteAudio    bool
+	AppTitle       string
+	AppUI          string
+	MachineModel   string
+	RomFile        string
+	FileName       string
+	VideoScale     int
+	FullScreen     bool
+	MuteAudio      bool
+	AudioFrequency int
 }
 
 // config is the application main configuration
@@ -67,5 +67,6 @@ func init() {
 	config.MachineModel = DefaultMachineModel
 	config.VideoScale = DefaultVideoScale
 	config.FullScreen = DefaultFullScreen
+	config.AudioFrequency = DefaultAudioFrecuency
 	config.MuteAudio = DefaultMuteAudio
 }

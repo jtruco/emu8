@@ -25,7 +25,7 @@ func NewAudio(app *App) *Audio {
 // Init the SDL audio
 func (audio *Audio) Init() bool {
 	var want, spec sdl.AudioSpec
-	want.Freq = config.AudioFrecuency
+	want.Freq = int32(config.Get().AudioFrequency)
 	want.Format = sdl.AUDIO_S16LSB
 	want.Channels = 1
 	want.Samples = 1024

@@ -13,7 +13,7 @@ import (
  * (Now scaled up for 16-bit.)
  */
 const (
-	amplRate   = 2
+	amplRate   = 1
 	amplBeeper = (50 * 256) >> amplRate
 	amplTape   = (2 * 256) >> amplRate
 	amplAyTone = (24 * 256) >> amplRate
@@ -29,7 +29,7 @@ var beeperMap = []uint16{0, amplTape, amplBeeper, (amplBeeper + amplTape)}
 var ulaIoPageContention = [4]bool{false, true, false, false}
 
 // ULA contention delay table
-var ulaDelayTable [frameTStates + tvLineTstates]int
+var ulaDelayTable [zxTStates + tvLineTstates]int
 
 func init() {
 	// contention table
