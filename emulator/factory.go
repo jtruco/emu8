@@ -10,7 +10,7 @@ import (
 )
 
 // -----------------------------------------------------------------------------
-// Machine factory
+// Emulator factory
 // -----------------------------------------------------------------------------
 
 // GetDefault returns the configured emulator
@@ -21,12 +21,16 @@ func GetDefault() *Emulator {
 // FromModel returns an emulator for a machine model
 func FromModel(modelname string) *Emulator {
 	model := machine.GetModel(modelname)
-	if model == machine.UnknownModel {
-		model = machine.DefaultModel
-	}
 	machine := CreateMachine(model)
-	return New(machine)
+	if machine != nil {
+		return New(machine)
+	}
+	return nil
 }
+
+// -----------------------------------------------------------------------------
+// Machine factory
+// -----------------------------------------------------------------------------
 
 // CreateMachine returns a machine from a model
 func CreateMachine(model int) machine.Machine {
@@ -38,8 +42,6 @@ func CreateMachine(model int) machine.Machine {
 
 	case machine.AmstradCPC:
 		return cpc.NewAmstradCPC(model)
-
-	// TODO :Commodore64, MSX
 
 	case machine.UnknownMachine:
 		log.Println("Emulator : Unknown machine model")

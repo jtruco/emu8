@@ -10,6 +10,24 @@ import (
 )
 
 // -----------------------------------------------------------------------------
+// Machine configuration
+// -----------------------------------------------------------------------------
+
+// Config machine configuration
+type Config struct {
+	Model        int           // Machine model
+	FPS          float32       // Frames per second
+	FrameTime    time.Duration // Duration of a frame
+	FrameTStates int           // TStates per frame
+}
+
+// SetFPS sets FPS and FrameDuration
+func (conf *Config) SetFPS(FPS float32) {
+	conf.FPS = FPS
+	conf.FrameTime = time.Duration(1e9 / FPS)
+}
+
+// -----------------------------------------------------------------------------
 // Machine
 // -----------------------------------------------------------------------------
 
@@ -32,22 +50,4 @@ type Machine interface {
 	EndFrame()
 	// LoadFile loads a file into machine
 	LoadFile(name string)
-}
-
-// -----------------------------------------------------------------------------
-// Machine configuration
-// -----------------------------------------------------------------------------
-
-// Config machine configuration
-type Config struct {
-	Model        int           // Machine model
-	FPS          float32       // Frames per second
-	FrameTime    time.Duration // Duration of a frame
-	FrameTStates int           // TStates per frame
-}
-
-// SetFPS sets FPS and FrameDuration
-func (conf *Config) SetFPS(FPS float32) {
-	conf.FPS = FPS
-	conf.FrameTime = time.Duration(1e9 / FPS)
 }

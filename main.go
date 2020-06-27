@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/jtruco/emu8/app"
 	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/emulator"
@@ -15,7 +13,6 @@ func main() {
 	}
 	emu := emulator.GetDefault()
 	if emu == nil {
-		log.Println("Error initializing emulator : machine model is not valid.")
 		return
 	}
 	app := app.GetDefault()

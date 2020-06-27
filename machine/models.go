@@ -15,14 +15,6 @@ const (
 	MSX         // NOT IMPLEMENTED
 )
 
-// Machines machine name mapping
-var Machines = map[string]int{
-	"ZXSpectrum":  ZXSpectrum,
-	"AmstradCPC":  AmstradCPC,
-	"Commodore64": Commodore64,
-	"MSX":         MSX,
-}
-
 // Machine models
 const (
 	UnknownModel = iota
@@ -36,18 +28,17 @@ const (
 // DefaultModel default machine model is ZX Spectrum 48k
 const DefaultModel = ZXSpectrum48k
 
-// Models machine model name mapping
-var Models = map[string]int{
-	"ZX16K":  ZXSpectrum16k,
-	"ZX48K":  ZXSpectrum48k,
-	"SPECCY": ZXSpectrum48k,
-	"CPC464": AmstradCPC464,
-	"C64":    CommodoreC64,
-	"MSX1":   MSX1,
+// Machines machine name mapping
+var Machines = map[string]int{
+	"zxspectrum":  ZXSpectrum,
+	"amstradcpc":  AmstradCPC,
+	"commodore64": Commodore64,
+	"msx":         MSX,
 }
 
-// GetMachine gets model from name
+// GetMachine gets machine from name
 func GetMachine(name string) int {
+	name = strings.ToLower(name)
 	machine, ok := Machines[name]
 	if ok {
 		return machine
@@ -55,9 +46,19 @@ func GetMachine(name string) int {
 	return UnknownMachine
 }
 
+// Models machine model name mapping
+var Models = map[string]int{
+	"zx16k":  ZXSpectrum16k,
+	"zx48k":  ZXSpectrum48k,
+	"speccy": ZXSpectrum48k,
+	"cpc464": AmstradCPC464,
+	"c64":    CommodoreC64,
+	"msx1":   MSX1,
+}
+
 // GetModel gets model from name
 func GetModel(name string) int {
-	name = strings.ToUpper(name)
+	name = strings.ToLower(name)
 	model, ok := Models[name]
 	if ok {
 		return model
