@@ -18,37 +18,19 @@ func GetDefault() *Emulator {
 	return FromModel(config.Get().MachineModel)
 }
 
-// FromModel returns an emulator for a machine model
-func FromModel(modelname string) *Emulator {
-	model := machine.GetModel(modelname)
-	machine := CreateMachine(model)
-	if machine != nil {
-		return New(machine)
+// FromModel returns an emulator for a machine model name
+func FromModel(model string) *Emulator {
+	machine, err := machine.Create(model)
+	if err != nil {
+		log.Println(err.Error())
+		return nil
 	}
-	return nil
+	return New(machine)
 }
 
-// -----------------------------------------------------------------------------
-// Machine factory
-// -----------------------------------------------------------------------------
-
-// CreateMachine returns a machine from a model
-func CreateMachine(model int) machine.Machine {
-	// creates the machine from model
-	switch machine.GetFromModel(model) {
-
-	case machine.ZXSpectrum:
-		return spectrum.NewSpectrum(model)
-
-	case machine.AmstradCPC:
-		return cpc.NewAmstradCPC(model)
-
-	case machine.UnknownMachine:
-		log.Println("Emulator : Unknown machine model")
-		return nil
-
-	default:
-		log.Println("Emulator : Unsupported machine model")
-		return nil
-	}
+// emulator package init
+func init() {
+	// register avaible machines
+	spectrum.Register()
+	cpc.Register()
 }

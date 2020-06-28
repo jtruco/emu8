@@ -59,8 +59,8 @@ type AmstradCPC struct {
 	tape       *tape.Drive           // The tape drive
 }
 
-// NewAmstradCPC returns a new Amstrad CPC
-func NewAmstradCPC(model int) *AmstradCPC {
+// New returns a new Amstrad CPC
+func New(model int) machine.Machine {
 	cpc := new(AmstradCPC)
 	cpc.config.Model = model
 	cpc.config.FrameTStates = cpcTStates
@@ -100,6 +100,9 @@ func NewAmstradCPC(model int) *AmstradCPC {
 	cpc.components.Add(cpc.ppi)
 	return cpc
 }
+
+// Register cpc machine
+func Register() { machine.Register(machine.AmstradCPC, New) }
 
 // Device interface
 // -----------------------------------------------------------------------------

@@ -56,8 +56,8 @@ type Spectrum struct {
 	joystick   *Joystick             // The spectrum Joystick
 }
 
-// NewSpectrum returns a new ZX Spectrum
-func NewSpectrum(model int) *Spectrum {
+// New returns a new ZX Spectrum
+func New(model int) machine.Machine {
 	spectrum := new(Spectrum)
 	spectrum.config.Model = model
 	spectrum.config.FrameTStates = zxTStates
@@ -101,6 +101,9 @@ func NewSpectrum(model int) *Spectrum {
 
 	return spectrum
 }
+
+// Register spectrum machine
+func Register() { machine.Register(machine.ZXSpectrum, New) }
 
 // Device interface
 

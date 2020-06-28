@@ -36,7 +36,7 @@ var Machines = map[string]int{
 	"msx":         MSX,
 }
 
-// GetMachine gets machine from name
+// GetMachine gets machine ID from name
 func GetMachine(name string) int {
 	name = strings.ToLower(name)
 	machine, ok := Machines[name]
@@ -56,7 +56,7 @@ var Models = map[string]int{
 	"msx1":   MSX1,
 }
 
-// GetModel gets model from name
+// GetModel gets model ID from name
 func GetModel(name string) int {
 	name = strings.ToLower(name)
 	model, ok := Models[name]
@@ -74,8 +74,8 @@ var MachineModels = map[int][]int{
 	MSX:         {MSX1},
 }
 
-// GetFromModel gets machine from model
-func GetFromModel(model int) int {
+// GetMachineFromModel gets machine ID from model ID
+func GetMachineFromModel(model int) int {
 	for machine, models := range MachineModels {
 		for _, m := range models {
 			if m == model {
