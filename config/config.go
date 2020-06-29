@@ -4,9 +4,6 @@ import (
 	"flag"
 )
 
-// Default values
-const ()
-
 // Default configuration constants
 const (
 	DefaultAppTitle       = "emu8"
