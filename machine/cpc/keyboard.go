@@ -46,8 +46,8 @@ func (keyboard *Keyboard) Reset() { keyboard.Init() }
 // ProcessKeyEvent processes the keyboard events
 func (keyboard *Keyboard) ProcessKeyEvent(event *keyboard.KeyEvent) {
 	row := event.Key >> 4
-	bit := event.Key & 0x07
-	mask := byte(1 << bit)
+	bit := uint8(event.Key & 0x07)
+	mask := uint8(1 << bit)
 	if event.Pressed {
 		keyboard.rowstates[row] &= ^mask
 	} else {

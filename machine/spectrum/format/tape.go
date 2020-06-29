@@ -56,7 +56,7 @@ func readWord(data []byte, pos int) uint16 {
 func readIntN(data []byte, pos int, len int) int {
 	value := uint(data[pos])
 	if len > 1 && len < 4 {
-		lshift := 8
+		lshift := uint(8)
 		for len > 1 {
 			pos++
 			value += uint(data[pos]) << lshift
