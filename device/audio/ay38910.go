@@ -35,12 +35,12 @@ const (
 
 // AY38910 register constants
 const (
-	AY38910ToneAFrequencyLow = iota
-	AY38910ToneAFrequencyHigh
-	AY38910ToneBFrequencyLow
-	AY38910ToneBFrequencyHigh
-	AY38910ToneCFrequencyLow
-	AY38910ToneCFrequencyHigh
+	AY38910ChannelAFrequencyLow = iota
+	AY38910ChannelAFrequencyHigh
+	AY38910ChannelBFrequencyLow
+	AY38910ChannelBFrequencyHigh
+	AY38910ChannelCFrequencyLow
+	AY38910ChannelCFrequencyHigh
 	AY38910NoiseFrequency
 	AY38910MixerControl
 	AY38910ChannelAVolume
@@ -76,12 +76,12 @@ type AY38910 struct {
 	counter   int
 	nsample   int
 	// registers
-	ToneAFrequencyLow     byte
-	ToneAFrequencyHigh    byte
-	ToneBFrequencyLow     byte
-	ToneBFrequencyHigh    byte
-	ToneCFrequencyLow     byte
-	ToneCFrequencyHigh    byte
+	ChannelAFrequencyLow  byte
+	ChannelAFrequencyHigh byte
+	ChannelBFrequencyLow  byte
+	ChannelBFrequencyHigh byte
+	ChannelCFrequencyLow  byte
+	ChannelCFrequencyHigh byte
 	NoiseFrequency        byte
 	MixerControl          byte
 	ChannelAVolume        byte
@@ -111,12 +111,12 @@ func NewAY38910(config *Config) *AY38910 {
 	ay.config = config
 	ay.buffer = NewBuffer(config.Samples)
 	ay.registers = [AY38910Nreg]*byte{
-		&ay.ToneAFrequencyLow,
-		&ay.ToneAFrequencyHigh,
-		&ay.ToneBFrequencyLow,
-		&ay.ToneBFrequencyHigh,
-		&ay.ToneCFrequencyLow,
-		&ay.ToneCFrequencyHigh,
+		&ay.ChannelAFrequencyLow,
+		&ay.ChannelAFrequencyHigh,
+		&ay.ChannelBFrequencyLow,
+		&ay.ChannelBFrequencyHigh,
+		&ay.ChannelCFrequencyLow,
+		&ay.ChannelCFrequencyHigh,
 		&ay.NoiseFrequency,
 		&ay.MixerControl,
 		&ay.ChannelAVolume,
@@ -252,12 +252,12 @@ func (ay *AY38910) WriteRegister(register, data byte) {
 	*ay.registers[register] = data & ay38910Masks[register]
 
 	switch register {
-	case AY38910ToneAFrequencyLow, AY38910ToneAFrequencyHigh:
-		ay.channelA.setPeriod(ay.ToneAFrequencyHigh, ay.ToneAFrequencyLow)
-	case AY38910ToneBFrequencyLow, AY38910ToneBFrequencyHigh:
-		ay.channelB.setPeriod(ay.ToneBFrequencyHigh, ay.ToneBFrequencyLow)
-	case AY38910ToneCFrequencyLow, AY38910ToneCFrequencyHigh:
-		ay.channelC.setPeriod(ay.ToneCFrequencyHigh, ay.ToneCFrequencyLow)
+	case AY38910ChannelAFrequencyLow, AY38910ChannelAFrequencyHigh:
+		ay.channelA.setPeriod(ay.ChannelAFrequencyHigh, ay.ChannelAFrequencyLow)
+	case AY38910ChannelBFrequencyLow, AY38910ChannelBFrequencyHigh:
+		ay.channelB.setPeriod(ay.ChannelBFrequencyHigh, ay.ChannelBFrequencyLow)
+	case AY38910ChannelCFrequencyLow, AY38910ChannelCFrequencyHigh:
+		ay.channelC.setPeriod(ay.ChannelCFrequencyHigh, ay.ChannelCFrequencyLow)
 	case AY38910NoiseFrequency:
 		ay.noise.period = data
 	case AY38910MixerControl:
