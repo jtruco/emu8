@@ -38,11 +38,16 @@ func (controller *AudioController) SetPlayer(player audio.Player) {
 	controller.player = player
 }
 
+var count = 5
+
 // Flush ends the audio frame and flush out the buffer to player
 func (controller *AudioController) Flush() {
 	if controller.audio == nil {
 		return
 	}
 	controller.audio.EndFrame()
-	controller.player.Play(controller.audio.Buffer())
+	buffer := controller.audio.Buffer()
+	buffer.BuildData()
+	controller.player.Play(buffer)
+	buffer.Reset()
 }

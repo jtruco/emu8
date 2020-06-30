@@ -181,8 +181,6 @@ func (ay *AY38910) Buffer() *Buffer {
 
 // EndFrame ends audio frame
 func (ay *AY38910) EndFrame() {
-	ay.buffer.BuildData()
-	ay.buffer.Reset()
 	ay.nsample = 0
 }
 

@@ -73,7 +73,5 @@ func (beeper *Beeper) Buffer() *Buffer {
 // EndFrame ends audio frame
 func (beeper *Beeper) EndFrame() {
 	beeper.SetLevel(beeper.config.TStates, beeper.level)
-	beeper.buffer.BuildData()
-	beeper.buffer.Reset()
 	beeper.tstate = 0
 }
