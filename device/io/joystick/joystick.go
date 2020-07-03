@@ -9,7 +9,7 @@ import "github.com/jtruco/emu8/device"
 // Joystick event types
 const (
 	EventJoyAxis   = iota // Joystick axis event
-	EventJoyBotton        // Joystick button event
+	EventJoyButton        // Joystick button event
 )
 
 // JoyEvent is a joystick event
@@ -34,7 +34,7 @@ func NewJoyAxisEvent(id, axis, value byte) *JoyEvent {
 // NewJoyButtonEvent creates a joystick axis event
 func NewJoyButtonEvent(id, button, state byte) *JoyEvent {
 	return &JoyEvent{
-		Event:       device.CreateEvent(EventJoyAxis),
+		Event:       device.CreateEvent(EventJoyButton),
 		ID:          id,
 		Button:      button,
 		ButtonState: state}

@@ -80,7 +80,7 @@ func (controller *JoystickController) emitEvent(joyEvent *joystick.JoyEvent) {
 		switch joyEvent.Code() {
 		case joystick.EventJoyAxis:
 			joy.SetAxis(joyEvent.Axis, joyEvent.AxisValue)
-		case joystick.EventJoyBotton:
+		case joystick.EventJoyButton:
 			joy.SetButton(joyEvent.Button, joyEvent.ButtonState)
 		}
 	}
