@@ -57,6 +57,7 @@ type AmstradCPC struct {
 	video      *VduVideo             // The VDU video
 	keyboard   *Keyboard             // The matrix keyboard
 	tape       *tape.Drive           // The tape drive
+	joystick   *Joystick             // The CPC Joystick
 }
 
 // New returns a new Amstrad CPC
@@ -86,8 +87,9 @@ func New(model int) machine.Machine {
 	cpc.psg.OnReadPortA = cpc.onPsgReadPortA
 	cpc.ppi = NewPpi(cpc)
 	cpc.tape = tape.New(cpc.clock)
+	cpc.joystick = NewJoystick(cpc.keyboard)
 	// register all components
-	cpc.components = device.NewComponents(10)
+	cpc.components = device.NewComponents(11)
 	cpc.components.Add(cpc.clock)
 	cpc.components.Add(cpc.cpu)
 	cpc.components.Add(cpc.memory)
@@ -98,6 +100,7 @@ func New(model int) machine.Machine {
 	cpc.components.Add(cpc.psg)
 	cpc.components.Add(cpc.tape)
 	cpc.components.Add(cpc.ppi)
+	cpc.components.Add(cpc.joystick)
 	return cpc
 }
 
@@ -163,6 +166,7 @@ func (cpc *AmstradCPC) SetController(control controller.Controller) {
 	control.File().RegisterFormat(controller.FormatSnap, cpcSnapFormats)
 	control.File().RegisterFormat(controller.FormatTape, cpcTapeFormats)
 	control.Tape().SetDrive(cpc.tape)
+	control.Joystick().AddReceiver(cpc.joystick, 0)
 	cpc.controller = control
 }
 
