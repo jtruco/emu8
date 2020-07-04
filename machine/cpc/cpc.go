@@ -4,6 +4,7 @@ package cpc
 import (
 	"log"
 
+	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/device"
 	"github.com/jtruco/emu8/device/audio"
 	"github.com/jtruco/emu8/device/cpu"
@@ -26,6 +27,8 @@ const (
 	cpcTStates      = 79872           // TStates per frame ( 312 sl * 256 Ts ) ~ 4 Mhz
 	cpcAudioTStates = cpcTStates >> 5 // Audio TStates (~ 1MHz / 8)
 	cpcOsRomName    = "cpc464_os.rom"
+	cpcOsRomNameES  = "cpc464_os_es.rom"
+	cpcOsRomNameFR  = "cpc464_os_fr.rom"
 	cpcBasicRomName = "cpc464_basic.rom"
 	cpcJumpers      = 0x1e
 )
@@ -126,7 +129,14 @@ func (cpc *AmstradCPC) Reset() {
 // initAmstrad common init tasks
 func (cpc *AmstradCPC) initAmstrad() {
 	// load lower rom (os)
-	data, err := cpc.controller.File().LoadROM(cpcOsRomName)
+	romname := cpcOsRomName
+	switch config.Get().MachineOptions {
+	case "es":
+		romname = cpcOsRomNameES
+	case "fr":
+		romname = cpcOsRomNameFR
+	}
+	data, err := cpc.controller.File().LoadROM(romname)
 	if err != nil {
 		return
 	}
