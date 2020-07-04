@@ -20,6 +20,7 @@ type Config struct {
 	AppTitle       string
 	AppUI          string
 	MachineModel   string
+	MachineOptions string
 	FileName       string
 	VideoScale     int
 	FullScreen     bool
@@ -28,7 +29,7 @@ type Config struct {
 }
 
 // config is the application main configuration
-var config *Config
+var config = new(Config)
 
 // Get gets the main configuration
 func Get() *Config {
@@ -44,6 +45,7 @@ func Init() bool {
 // parse command line arguments
 func parseArgs() {
 	flag.StringVar(&config.MachineModel, "m", "Speccy", "Machine model")
+	flag.StringVar(&config.MachineOptions, "o", "", "Machine options")
 	flag.StringVar(&config.FileName, "f", "", "Load file")
 	flag.IntVar(&config.VideoScale, "vs", DefaultVideoScale, "Video scale (1..4)")
 	flag.BoolVar(&config.FullScreen, "vf", DefaultFullScreen, "Video in full screen mode")
@@ -56,7 +58,6 @@ func parseArgs() {
 
 // init initializes configuration
 func init() {
-	config = new(Config)
 	config.AppTitle = DefaultAppTitle
 	config.AppUI = DefaultAppUI
 	config.MachineModel = DefaultMachineModel
