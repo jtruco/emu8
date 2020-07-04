@@ -20,7 +20,6 @@ type Config struct {
 	AppTitle       string
 	AppUI          string
 	MachineModel   string
-	RomFile        string
 	FileName       string
 	VideoScale     int
 	FullScreen     bool
@@ -45,7 +44,6 @@ func Init() bool {
 // parse command line arguments
 func parseArgs() {
 	flag.StringVar(&config.MachineModel, "m", "Speccy", "Machine model")
-	flag.StringVar(&config.RomFile, "r", "", "Load rom file")
 	flag.StringVar(&config.FileName, "f", "", "Load file")
 	flag.IntVar(&config.VideoScale, "vs", DefaultVideoScale, "Video scale (1..4)")
 	flag.BoolVar(&config.FullScreen, "vf", DefaultFullScreen, "Video in full screen mode")
