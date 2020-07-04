@@ -25,7 +25,8 @@ const (
 	cpcFPS          = 50              // 50 Hz ( 50.08 Hz )
 	cpcTStates      = 79872           // TStates per frame ( 312 sl * 256 Ts ) ~ 4 Mhz
 	cpcAudioTStates = cpcTStates >> 5 // Audio TStates (~ 1MHz / 8)
-	cpcRomName      = "cpc464.rom"
+	cpcOsRomName    = "cpc464_os.rom"
+	cpcBasicRomName = "cpc464_basic.rom"
 	cpcJumpers      = 0x1e
 )
 
@@ -124,13 +125,18 @@ func (cpc *AmstradCPC) Reset() {
 
 // initAmstrad common init tasks
 func (cpc *AmstradCPC) initAmstrad() {
-	// rom load
-	data, err := cpc.controller.File().LoadROM(cpcRomName)
+	// load lower rom (os)
+	data, err := cpc.controller.File().LoadROM(cpcOsRomName)
 	if err != nil {
 		return
 	}
 	cpc.lowerRom.Bank().Load(0, data[:0x4000]) // lower rom
-	cpc.upperRom.Bank().Load(0, data[0x4000:]) // upper rom
+	// load upper rom (basic)
+	data, err = cpc.controller.File().LoadROM(cpcBasicRomName)
+	if err != nil {
+		return
+	}
+	cpc.upperRom.Bank().Load(0, data[:0x4000]) // upper rom
 	// devices
 	cpc.ppi.jumpers = cpcJumpers
 }
