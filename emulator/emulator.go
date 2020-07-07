@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/machine"
 )
@@ -29,6 +30,23 @@ func New(machine machine.Machine) *Emulator {
 	emulator.controller = controller.New()
 	emulator.machine.SetController(emulator.controller)
 	return emulator
+}
+
+// Emulator factory
+
+// GetDefault returns the configured emulator
+func GetDefault() *Emulator {
+	return FromModel(config.Get().MachineModel)
+}
+
+// FromModel returns an emulator for a machine model name
+func FromModel(model string) *Emulator {
+	machine, err := machine.Create(model)
+	if err != nil {
+		log.Println(err.Error())
+		return nil
+	}
+	return New(machine)
 }
 
 // Machine controller
