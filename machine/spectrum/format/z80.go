@@ -117,9 +117,7 @@ func z80LoadFileV23(data []byte, snap *Snapshot) bool {
 		if size < _Z80BankSize {
 			bankdata = z80DecompressBlock(bankdata)
 		}
-		for i := 0; i < _Z80BankSize; i++ {
-			snap.Memory[address+i] = bankdata[i]
-		}
+		copy(snap.Memory[address:], bankdata[:_Z80BankSize])
 		idx += size
 	}
 	return true

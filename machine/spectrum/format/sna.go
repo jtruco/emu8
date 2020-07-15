@@ -49,9 +49,7 @@ func LoadSNA(data []byte) *Snapshot {
 	snap.IM = data[25] & 0x03
 	snap.PC = 0x72 // RETN at address 0x72
 	snap.Border = data[26] & 0x07
-	for i := 0; i < 0xc000; i++ {
-		snap.Memory[i] = data[i+27]
-	}
+	copy(snap.Memory[0:0xc000], data[27:])
 	snap.Tstates = 0
 	return snap
 }
