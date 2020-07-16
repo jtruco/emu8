@@ -52,6 +52,12 @@ func readWord(data []byte, pos int) uint16 {
 	return uint16(data[pos]) | (uint16(data[pos+1]) << 8)
 }
 
+// writeWord writes a 16 bit LSB unsgined integer
+func writeWord(data []byte, pos int, value uint16) {
+	data[pos] = byte(value)
+	data[pos+1] = byte(value >> 8)
+}
+
 // readIntN reads LSB unsgined integer as integer
 func readIntN(data []byte, pos int, len int) int {
 	value := uint(data[pos])

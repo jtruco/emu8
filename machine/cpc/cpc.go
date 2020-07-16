@@ -325,3 +325,8 @@ func (cpc *AmstradCPC) LoadState(snap *format.Snapshot) {
 		cpc.psg.WriteRegister(i, snap.PsgRegisters[i])
 	}
 }
+
+// TakeSnapshot takes and saves snapshop of the machine state
+func (cpc *AmstradCPC) TakeSnapshot() {
+	// TODO: NOT IMPLEMENTED
+}

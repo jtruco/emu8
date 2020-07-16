@@ -130,7 +130,7 @@ func (spectrum *Spectrum) initSpectrum() {
 	if err != nil {
 		return
 	}
-	rom := spectrum.memory.Map(0).Bank()
+	rom := spectrum.memory.Bank(0)
 	rom.Load(0, data[0:0x4000])
 }
 
@@ -170,7 +170,7 @@ func (spectrum *Spectrum) SetController(control controller.Controller) {
 
 // VideoMemory gets the video memory bank
 func (spectrum *Spectrum) VideoMemory() *memory.Bank {
-	return spectrum.memory.Map(1).Bank()
+	return spectrum.memory.Bank(1)
 }
 
 // Emulation control
@@ -252,6 +252,19 @@ func (spectrum *Spectrum) LoadFile(filename string) {
 	}
 }
 
+// TakeSnapshot takes and saves snapshop of the machine state
+func (spectrum *Spectrum) TakeSnapshot() {
+	snap := spectrum.SaveState()
+	data := snap.SaveSNA()
+	name := spectrum.controller.File().NewName("speccy", formatSNA)
+	err := spectrum.controller.File().SaveFileFormat(name, controller.FormatSnap, data)
+	if err == nil {
+		log.Println("Spectrum : Snapshot saved: ", name)
+	} else {
+		log.Println("Spectrum : Error saving snapshot: ", name)
+	}
+}
+
 // LoadState loads a ZX Spectrum snapshot
 func (spectrum *Spectrum) LoadState(snap *format.Snapshot) {
 	// CPU
@@ -261,5 +274,23 @@ func (spectrum *Spectrum) LoadState(snap *format.Snapshot) {
 	// Border
 	spectrum.tv.SetBorder(snap.Border)
 	// Memory
-	spectrum.memory.LoadRAM(0x4000, snap.Memory[0:0xc000])
+	spectrum.memory.LoadRAM(0x4000, snap.Memory[0:0xC000])
+}
+
+// SaveState save ZX Spectrum state
+func (spectrum *Spectrum) SaveState() *format.Snapshot {
+	var snap = new(format.Snapshot)
+	// CPU
+	snap.State.Copy(&spectrum.cpu.State)
+	// Clock
+	snap.Tstates = spectrum.clock.Tstates()
+	// Border
+	snap.Border = spectrum.tv.border
+	// Memory banks (16k, 48k)
+	copy(snap.Memory[0x0000:], spectrum.memory.Bank(1).Data())
+	if spectrum.config.Model == machine.ZXSpectrum48k {
+		copy(snap.Memory[0x4000:], spectrum.memory.Bank(2).Data())
+		copy(snap.Memory[0x8000:], spectrum.memory.Bank(3).Data())
+	}
+	return snap
 }

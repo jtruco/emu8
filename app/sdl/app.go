@@ -67,8 +67,8 @@ func (app *App) Run() {
 
 	// init emulator
 	app.emulator.Init()
-	if app.config.FileName != "" { // fixme : move to emulator init
-		app.emulator.Machine().LoadFile(app.config.FileName)
+	if app.config.FileName != "" {
+		app.emulator.LoadFile(app.config.FileName)
 	}
 	app.emulator.Start()
 
@@ -110,6 +110,10 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 	if e.Type == sdl.KEYDOWN {
 		captured = true
 		switch e.Keysym.Sym {
+		// Snaps
+		case sdl.K_F2:
+			app.emulator.TakeSnapshot()
+
 		// Emulator
 		case sdl.K_F5:
 			app.emulator.Reset()

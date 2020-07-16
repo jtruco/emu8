@@ -96,6 +96,24 @@ func (emulator *Emulator) Stop() {
 	}
 }
 
+// LoadFile loads file into the emulator
+func (emulator *Emulator) LoadFile(name string) {
+	if emulator.running {
+		emulator.Stop()
+		defer emulator.Start()
+	}
+	emulator.machine.LoadFile(name)
+}
+
+// TakeSnapshot takes and saves snapshop of the machine state
+func (emulator *Emulator) TakeSnapshot() {
+	if emulator.running {
+		emulator.Stop()
+		defer emulator.Start()
+	}
+	emulator.machine.TakeSnapshot()
+}
+
 // Emulation
 
 // runEmulation the emulation loop goroutine

@@ -51,6 +51,8 @@ type Machine interface {
 	EndFrame()
 	// LoadFile loads a file into machine
 	LoadFile(name string)
+	// TakeSnap takes and saves snapshop of the machine state
+	TakeSnapshot()
 }
 
 // -----------------------------------------------------------------------------

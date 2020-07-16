@@ -3,6 +3,7 @@ package memory
 
 // Common memory sizes
 const (
+	Size00K  = 0x0000
 	Size128B = 0x0080
 	Size256B = 0x0100
 	Size512B = 0x0200
@@ -12,12 +13,13 @@ const (
 	Size8K   = 0x2000
 	Size16K  = 0x4000
 	Size32K  = 0x8000
+	Size48K  = 0xC000
 	Size64K  = 0x10000
 )
 
 // Defaults
 const (
-	DataDefault = byte(0)
+	DataDefault byte = 0
 )
 
 // -----------------------------------------------------------------------------
@@ -40,9 +42,16 @@ func New(size int, banks int) *Memory {
 	return memory
 }
 
+// Bank mapping
+
 // Banks returns Banks
 func (memory *Memory) Banks() []*BankMap {
 	return memory.banks
+}
+
+// Bank returns bank mapped at index
+func (memory *Memory) Bank(index int) *Bank {
+	return memory.Map(index).Bank()
 }
 
 // Map returns bank map at index
@@ -71,15 +80,15 @@ func (memory *Memory) SetMapper(mapper Mapper) {
 	memory.mapper = mapper
 }
 
-// LoadRAM data to memory
+// LoadRAM loads data into memory starting at address
 func (memory *Memory) LoadRAM(address uint16, data []byte) {
 	length := len(data)
 	offset, last := 0, 0
 	for offset < length {
 		bankaddr := address + uint16(offset)
-		info, rel := memory.mapper.SelectBankWrite(bankaddr)
-		last = offset + info.bank.size
-		info.bank.Load(rel, data[offset:last])
+		bank, rel := memory.mapper.SelectBankWrite(bankaddr)
+		last = offset + bank.bank.size
+		bank.bank.Load(rel, data[offset:last])
 		offset = last
 	}
 }

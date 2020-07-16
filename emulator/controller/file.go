@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // -----------------------------------------------------------------------------
@@ -24,13 +25,15 @@ const (
 	FormatRom
 	FormatSnap
 	FormatTape
-	_formatMax // limit count
+	_FormatMax // limit count
 )
+
+const defaultFileMode = 0664
 
 // FileManager is the emulator files manager
 type FileManager struct {
 	path     string             // The file manager base path
-	subpaths [_formatMax]string // Subpaths by file format
+	subpaths [_FormatMax]string // Subpaths by file format
 	formats  map[string]int     // The file type extension mapping
 }
 
@@ -82,9 +85,27 @@ func (manager *FileManager) LoadFile(filename string) ([]byte, error) {
 	return ioutil.ReadFile(filename)
 }
 
+// SaveFileFormat saves data to a new file
+func (manager *FileManager) SaveFileFormat(filename string, format int, data []byte) error {
+	// find base file in standar location
+	filename = filepath.Join(manager.subpaths[format], filepath.Base(filename))
+	return manager.SaveFile(filename, data)
+}
+
+// SaveFile saves data to a new file
+func (manager *FileManager) SaveFile(filename string, data []byte) error {
+	return ioutil.WriteFile(filename, data, defaultFileMode)
+}
+
 // BaseName helper funcion to obtain base filename
 func (manager *FileManager) BaseName(filename string) string {
 	return filepath.Base(filename)
+}
+
+// NewName helper funcion to obtain a new filename
+func (manager *FileManager) NewName(prefix, ext string) string {
+	now := time.Now().Format("20060102030405")
+	return (prefix + "_" + now + "." + ext)
 }
 
 // File extension type management
