@@ -13,8 +13,8 @@ import (
 
 // AY38910 constants
 const (
-	AY38910Nreg         = 0X10   // 16 registers
-	AY38910VolumeLevels = 0X10   // 16 volume levels
+	AY38910Nreg         = 0x10   // 16 registers
+	AY38910VolumeLevels = 0x10   // 16 volume levels
 	AY38910VolumeRange  = 0x7fff // 32767
 )
 
@@ -195,17 +195,17 @@ func (ay *AY38910) Read() byte {
 			data &= ay.OnReadPortA()
 		}
 		if !ay.inPortA {
-			data &= ay.readSelected()
+			data &= ay.ReadRegister(ay.selected)
 		}
 	case AY38910DataPortB: // port B
 		if ay.OnReadPortB != nil {
 			data &= ay.OnReadPortB()
 		}
 		if !ay.inPortB {
-			data &= ay.readSelected()
+			data &= ay.ReadRegister(ay.selected)
 		}
 	default:
-		data &= ay.readSelected()
+		data &= ay.ReadRegister(ay.selected)
 	}
 	return data
 }
@@ -216,20 +216,21 @@ func (ay *AY38910) Write(data byte) {
 	case AY38910SelectRegister:
 		ay.SelectRegister(data & 0x0f)
 	case AY38910WriteRegister:
-		ay.writeSelected(data)
+		ay.WriteRegister(ay.selected, data)
 	}
 }
 
 // register operations
 
+// Selected selected register
+func (ay *AY38910) Selected() byte { return ay.selected }
+
+// Register gets register value at index
+func (ay *AY38910) Register(index byte) byte { return *ay.registers[index] }
+
 // SelectRegister selects current register
 func (ay *AY38910) SelectRegister(selected byte) {
 	ay.selected = selected
-}
-
-// readSelected returns current register value
-func (ay *AY38910) readSelected() byte {
-	return ay.ReadRegister(ay.selected)
 }
 
 // ReadRegister returns register value
@@ -238,11 +239,6 @@ func (ay *AY38910) ReadRegister(register byte) byte {
 		return *ay.registers[register]
 	}
 	return 0 // write only
-}
-
-// writeSelected writes value to selected register
-func (ay *AY38910) writeSelected(data byte) {
-	ay.WriteRegister(ay.selected, data)
 }
 
 // WriteRegister writes value to register

@@ -51,6 +51,23 @@ func (ga *GateArray) Reset() {
 	ga.countSlVsync = 0
 }
 
+// Config gets current config
+func (ga *GateArray) Config() byte {
+	var data byte = 0x80
+	// mode / rom selection / interrupts
+	data |= (ga.mode & 0x03)
+	if !ga.cpc.lowerRom.Active() {
+		data |= 0x04
+	}
+	if !ga.cpc.upperRom.Active() {
+		data |= 0x08
+	}
+	if ga.cpc.cpu.IntRq {
+		data |= 0x10
+	}
+	return data
+}
+
 // Mode gets current mode
 func (ga *GateArray) Mode() byte { return ga.mode }
 

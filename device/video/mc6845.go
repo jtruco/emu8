@@ -8,7 +8,7 @@ import "github.com/jtruco/emu8/device"
 
 // MC6845 constants
 const (
-	MC6845Nreg = 0X12 // 18 registers
+	MC6845Nreg = 0x12 // 18 registers
 )
 
 // MC6845 register constants
@@ -157,7 +157,7 @@ func (mc *MC6845) Reset() {
 func (mc *MC6845) Read(port byte) byte {
 	var data byte = 0xff
 	if port == 0x03 {
-		data &= mc.readSelected()
+		data &= mc.ReadRegister(mc.selected)
 	}
 	return data
 }
@@ -168,20 +168,21 @@ func (mc *MC6845) Write(port byte, data byte) {
 	case 0x00:
 		mc.SelectRegister(data & 0x1f)
 	case 0x01:
-		mc.writeSelected(data)
+		mc.WriteRegister(mc.selected, data)
 	}
 }
 
 // register operations
 
+// Selected selected register
+func (mc *MC6845) Selected() byte { return mc.selected }
+
+// Register gets register value at index
+func (mc *MC6845) Register(index byte) byte { return *mc.registers[index] }
+
 // SelectRegister selects current register
 func (mc *MC6845) SelectRegister(selected byte) {
 	mc.selected = selected
-}
-
-// readSelected returns current register value
-func (mc *MC6845) readSelected() byte {
-	return mc.ReadRegister(mc.selected)
 }
 
 // ReadRegister returns register value
@@ -190,11 +191,6 @@ func (mc *MC6845) ReadRegister(register byte) byte {
 		return *mc.registers[register]
 	}
 	return 0 // write only
-}
-
-// writeSelected writes value to selected register
-func (mc *MC6845) writeSelected(data byte) {
-	mc.WriteRegister(mc.selected, data)
 }
 
 // WriteRegister writes value to register

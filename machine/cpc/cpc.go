@@ -302,6 +302,19 @@ func (cpc *AmstradCPC) LoadFile(filename string) {
 	}
 }
 
+// TakeSnapshot takes and saves snapshop of the machine state
+func (cpc *AmstradCPC) TakeSnapshot() {
+	snap := cpc.SaveState()
+	data := snap.SaveSNA()
+	name := cpc.controller.File().NewName("cpc", cpcFormatSNA)
+	err := cpc.controller.File().SaveFileFormat(name, controller.FormatSnap, data)
+	if err == nil {
+		log.Println("CPC : Snapshot saved: ", name)
+	} else {
+		log.Println("CPC : Error saving snapshot: ", name)
+	}
+}
+
 // LoadState loads the Amstrad CPC snapshot
 func (cpc *AmstradCPC) LoadState(snap *format.Snapshot) {
 	// CPU
@@ -310,8 +323,9 @@ func (cpc *AmstradCPC) LoadState(snap *format.Snapshot) {
 	cpc.memory.LoadRAM(0x00, snap.Memory[0:])
 	// GateArray
 	cpc.gatearray.SetPen(snap.GaSelectedPen)
+	palette := cpc.gatearray.Palette()
 	for i := 0; i < gaTotalPens; i++ {
-		cpc.gatearray.Palette()[i] = int(snap.GaPenColours[i])
+		palette[i] = int(snap.GaPenColours[i])
 	}
 	cpc.gatearray.Write(snap.GaMultiConfig)
 	// Crtc
@@ -326,7 +340,32 @@ func (cpc *AmstradCPC) LoadState(snap *format.Snapshot) {
 	}
 }
 
-// TakeSnapshot takes and saves snapshop of the machine state
-func (cpc *AmstradCPC) TakeSnapshot() {
-	// TODO: NOT IMPLEMENTED
+// SaveState save Amstrad CPC state
+func (cpc *AmstradCPC) SaveState() *format.Snapshot {
+	var snap = new(format.Snapshot)
+	// CPU
+	snap.State.Copy(&cpc.cpu.State)
+	// Memory banks (64k)
+	copy(snap.Memory[0x0000:], cpc.memory.Bank(1).Data())
+	copy(snap.Memory[0x4000:], cpc.memory.Bank(2).Data())
+	copy(snap.Memory[0x8000:], cpc.memory.Bank(3).Data())
+	copy(snap.Memory[0xC000:], cpc.memory.Bank(5).Data())
+	// GateArray
+	snap.GaSelectedPen = cpc.gatearray.Pen()
+	palette := cpc.gatearray.Palette()
+	for i := 0; i < gaTotalPens; i++ {
+		snap.GaPenColours[i] = byte(palette[i])
+	}
+	snap.GaMultiConfig = cpc.gatearray.Config()
+	// Crtc
+	snap.CrtcSelected = cpc.crtc.Selected()
+	for i := byte(0); i < 18; i++ {
+		snap.CrtcRegisters[i] = cpc.crtc.Register(i)
+	}
+	// Psg
+	snap.PsgSelected = cpc.psg.Selected()
+	for i := byte(0); i < 16; i++ {
+		snap.PsgRegisters[i] = cpc.psg.Register(i)
+	}
+	return snap
 }
