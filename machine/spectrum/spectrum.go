@@ -209,44 +209,45 @@ func (spectrum *Spectrum) onInterruptAck() bool {
 
 // LoadFile loads a file into machine
 func (spectrum *Spectrum) LoadFile(filename string) {
-	filefmt, ext := spectrum.controller.File().FileFormat(filename)
-	if filefmt == controller.FormatUnknown {
-		log.Println("Spectrum : Not supported format:", ext)
+	info := spectrum.controller.File().FileInfo(filename)
+	if info.Format == controller.FormatUnknown {
+		log.Println("Spectrum : Not supported format:", info.Ext)
 		return
 	}
-	name := spectrum.controller.File().BaseName(filename)
-	data, err := spectrum.controller.File().LoadFileFormat(filename, filefmt)
+	err := spectrum.controller.File().LoadFile(info)
 	if err != nil {
-		log.Println("Spectrum : Error loading file:", name)
+		log.Println("Spectrum : Error loading file:", info.Name)
 		return
 	}
 	// load snapshop formats
-	if filefmt == controller.FormatSnap {
+	if info.Format == controller.FormatSnap {
 		var snap *format.Snapshot
-		switch ext {
+		switch info.Ext {
 		case formatSNA:
-			snap = format.LoadSNA(data)
+			snap = format.LoadSNA(info.Data)
 		case formatZ80:
-			snap = format.LoadZ80(data)
+			snap = format.LoadZ80(info.Data)
 		default:
-			log.Println("Spectrum : Not implemented format:", ext)
+			log.Println("Spectrum : Not implemented snap format:", info.Ext)
 		}
 		if snap != nil {
 			spectrum.LoadState(snap)
 		}
-	} else if filefmt == controller.FormatTape {
+	} else if info.Format == controller.FormatTape {
 		var tape tape.Tape
 		loaded := false
-		switch ext {
+		switch info.Ext {
 		case formatTAP:
 			tape = format.NewTap()
-			loaded = tape.Load(data)
-		default:
+			loaded = tape.Load(info.Data)
+		case formatTZX:
 			tape = format.NewTzx()
-			loaded = tape.Load(data)
+			loaded = tape.Load(info.Data)
+		default:
+			log.Println("Spectrum : Not implemented tape format:", info.Ext)
 		}
 		if loaded {
-			tape.Info().Name = name
+			tape.Info().Name = info.Name
 			spectrum.tape.Insert(tape)
 		}
 	}
@@ -257,7 +258,7 @@ func (spectrum *Spectrum) TakeSnapshot() {
 	snap := spectrum.SaveState()
 	data := snap.SaveSNA()
 	name := spectrum.controller.File().NewName("speccy", formatSNA)
-	err := spectrum.controller.File().SaveFileFormat(name, controller.FormatSnap, data)
+	err := spectrum.controller.File().SaveFile(name, controller.FormatSnap, data)
 	if err == nil {
 		log.Println("Spectrum : Snapshot saved: ", name)
 	} else {

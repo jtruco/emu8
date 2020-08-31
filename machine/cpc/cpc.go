@@ -262,41 +262,40 @@ func (cpc *AmstradCPC) onPsgReadPortA() byte {
 
 // LoadFile loads a file into machine
 func (cpc *AmstradCPC) LoadFile(filename string) {
-	filefmt, ext := cpc.controller.File().FileFormat(filename)
-	if filefmt == controller.FormatUnknown {
-		log.Println("CPC : Not supported format:", ext)
+	info := cpc.controller.File().FileInfo(filename)
+	if info.Format == controller.FormatUnknown {
+		log.Println("CPC : Not supported format:", info.Ext)
 		return
 	}
-	name := cpc.controller.File().BaseName(filename)
-	data, err := cpc.controller.File().LoadFileFormat(filename, filefmt)
+	err := cpc.controller.File().LoadFile(info)
 	if err != nil {
-		log.Println("CPC : Error loading file:", name)
+		log.Println("CPC : Error loading file:", info.Name)
 		return
 	}
 	// load snapshop formats
-	if filefmt == controller.FormatSnap {
+	if info.Format == controller.FormatSnap {
 		var snap *format.Snapshot
-		switch ext {
+		switch info.Ext {
 		case cpcFormatSNA:
-			snap = format.LoadSNA(data)
+			snap = format.LoadSNA(info.Data)
 		default:
-			log.Println("Spectrum : Not implemented format:", ext)
+			log.Println("CPC : Not implemented snap format:", info.Ext)
 		}
 		if snap != nil {
 			cpc.LoadState(snap)
 		}
-	} else if filefmt == controller.FormatTape {
+	} else if info.Format == controller.FormatTape {
 		var tape tape.Tape
 		loaded := false
-		switch ext {
+		switch info.Ext {
 		case cpcFormatCDT:
 			tape = format.NewCdt()
-			loaded = tape.Load(data)
+			loaded = tape.Load(info.Data)
 		default:
-			log.Println("CPC : Not implemented format:", ext)
+			log.Println("CPC : Not implemented tape format:", info.Ext)
 		}
 		if loaded {
-			tape.Info().Name = name
+			tape.Info().Name = info.Name
 			cpc.tape.Insert(tape)
 		}
 	}
@@ -307,7 +306,7 @@ func (cpc *AmstradCPC) TakeSnapshot() {
 	snap := cpc.SaveState()
 	data := snap.SaveSNA()
 	name := cpc.controller.File().NewName("cpc", cpcFormatSNA)
-	err := cpc.controller.File().SaveFileFormat(name, controller.FormatSnap, data)
+	err := cpc.controller.File().SaveFile(name, controller.FormatSnap, data)
 	if err == nil {
 		log.Println("CPC : Snapshot saved: ", name)
 	} else {

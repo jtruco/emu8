@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"archive/zip"
+	"bytes"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,9 +17,9 @@ import (
 
 // Path constants
 const (
-	defaultRomPath  = "roms"  // ROMs default subpath
-	defaultSnapPath = "snaps" // Snapshots default subpath
-	defaultTapePath = "tapes" // Tapes default subpath
+	PathRom  = "roms"  // ROMs default subpath
+	PathSnap = "snaps" // Snapshots default subpath
+	PathTape = "tapes" // Tapes default subpath
 )
 
 // File formats
@@ -28,13 +31,18 @@ const (
 	_FormatMax // limit count
 )
 
-const defaultFileMode = 0664
+// Other constants
+const (
+	ExtRom    = "rom"
+	ExtZip    = "zip"
+	_FileMode = 0664
+)
 
 // FileManager is the emulator files manager
 type FileManager struct {
 	path     string             // The file manager base path
 	subpaths [_FormatMax]string // Subpaths by file format
-	formats  map[string]int     // The file type extension mapping
+	formats  map[string]int     // The format extension mapping
 }
 
 // DefaultFileManager returns the default file manager
@@ -47,68 +55,21 @@ func DefaultFileManager() *FileManager {
 func NewFileManager(path string) *FileManager {
 	manager := new(FileManager)
 	manager.formats = make(map[string]int)
+	manager.AddFormat(FormatRom, ExtRom)
 	manager.SetPath(path)
 	return manager
 }
-
-// Path management
 
 // SetPath sets the base path of the file manager
 func (manager *FileManager) SetPath(path string) {
 	manager.path = path
 	manager.subpaths[FormatUnknown] = path
-	manager.subpaths[FormatRom] = filepath.Join(path, defaultRomPath)
-	manager.subpaths[FormatSnap] = filepath.Join(path, defaultSnapPath)
-	manager.subpaths[FormatTape] = filepath.Join(path, defaultTapePath)
+	manager.subpaths[FormatRom] = filepath.Join(path, PathRom)
+	manager.subpaths[FormatSnap] = filepath.Join(path, PathSnap)
+	manager.subpaths[FormatTape] = filepath.Join(path, PathTape)
 }
 
-// File management
-
-// LoadROM loads a file from ROMs path
-func (manager *FileManager) LoadROM(name string) ([]byte, error) {
-	return manager.LoadFileFormat(name, FormatRom)
-}
-
-// LoadFileFormat loads a base filename from its format default location
-func (manager *FileManager) LoadFileFormat(filename string, format int) ([]byte, error) {
-	data, err := manager.LoadFile(filename)
-	if err == nil || format == FormatUnknown {
-		return data, err
-	}
-	// find base file in standar location
-	filename = filepath.Join(manager.subpaths[format], filepath.Base(filename))
-	return manager.LoadFile(filename)
-}
-
-// LoadFile loads a file and return its data bytes
-func (manager *FileManager) LoadFile(filename string) ([]byte, error) {
-	return ioutil.ReadFile(filename)
-}
-
-// SaveFileFormat saves data to a new file
-func (manager *FileManager) SaveFileFormat(filename string, format int, data []byte) error {
-	// find base file in standar location
-	filename = filepath.Join(manager.subpaths[format], filepath.Base(filename))
-	return manager.SaveFile(filename, data)
-}
-
-// SaveFile saves data to a new file
-func (manager *FileManager) SaveFile(filename string, data []byte) error {
-	return ioutil.WriteFile(filename, data, defaultFileMode)
-}
-
-// BaseName helper funcion to obtain base filename
-func (manager *FileManager) BaseName(filename string) string {
-	return filepath.Base(filename)
-}
-
-// NewName helper funcion to obtain a new filename
-func (manager *FileManager) NewName(prefix, ext string) string {
-	now := time.Now().Format("20060102030405")
-	return (prefix + "_" + now + "." + ext)
-}
-
-// File extension type management
+// Format management
 
 // RegisterFormat adds a format and its extensions
 func (manager *FileManager) RegisterFormat(format int, extensions []string) {
@@ -122,15 +83,119 @@ func (manager *FileManager) AddFormat(format int, extension string) {
 	manager.formats[extension] = format
 }
 
-// FileFormat detects and returns the file machine format and supported extension
-func (manager *FileManager) FileFormat(filename string) (int, string) {
-	extension := filepath.Ext(filename)
-	if len(extension) > 0 {
-		extension = strings.ToLower(extension[1:])
-		format, ok := manager.formats[extension]
-		if ok {
-			return format, extension
+// FormatPath gets filename from format path
+func (manager *FileManager) FormatPath(format int, filename string) string {
+	return filepath.Join(manager.subpaths[format], filepath.Base(filename))
+}
+
+// Load files
+
+// LoadROM loads a file from ROMs path
+func (manager *FileManager) LoadROM(filename string) ([]byte, error) {
+	return ioutil.ReadFile(manager.FormatPath(FormatRom, filename))
+}
+
+// LoadFile loads a base filename from its format default location
+func (manager *FileManager) LoadFile(file *FileInfo) error {
+	data, err := ioutil.ReadFile(file.Path)
+	if err != nil {
+		return err
+	}
+	if file.IsZip {
+		return file.Unzip(data)
+	}
+	file.Data = data
+	return err
+}
+
+// Save files
+
+// SaveFile saves data to a new file
+func (manager *FileManager) SaveFile(filename string, format int, data []byte) error {
+	// find base file in standar location
+	filename = filepath.Join(manager.subpaths[format], filepath.Base(filename))
+	return ioutil.WriteFile(filename, data, _FileMode)
+}
+
+// NewName helper funcion to obtain a new filename
+func (manager *FileManager) NewName(prefix, ext string) string {
+	now := time.Now().Format("20060102030405")
+	return (prefix + "_" + now + "." + ext)
+}
+
+// -----------------------------------------------------------------------------
+// File information
+// -----------------------------------------------------------------------------
+
+// FileInfo contains file information
+type FileInfo struct {
+	Name   string // File name
+	Path   string // File path
+	Format int    // File format
+	Ext    string // File format extension
+	Data   []byte // File data
+	IsZip  bool   // Is a zip file
+}
+
+// NewFileInfo returns new FileInfo
+func NewFileInfo(filename string) *FileInfo {
+	info := new(FileInfo)
+	info.Name = filepath.Base(filename)
+	info.checkExtension()
+	info.Path = filename
+	info.Format = FormatUnknown
+	return info
+}
+
+// checkExtension validates file extension and zip
+func (info *FileInfo) checkExtension() {
+	const extIsZip = "." + ExtZip
+	name := strings.ToLower(info.Name)
+	ext := filepath.Ext(name)
+	if ext == extIsZip { // check if is a zip file
+		info.IsZip = true
+		ext = filepath.Ext(name[:len(name)-4])
+	}
+	if ext != "" {
+		info.Ext = ext[1:]
+	}
+}
+
+// Unzip unzips file data
+func (info *FileInfo) Unzip(zipdata []byte) error {
+	zr, err := zip.NewReader(bytes.NewReader(zipdata), int64(len(zipdata)))
+	if err != nil {
+		return err
+	}
+	for _, f := range zr.File {
+		name := strings.ToLower(f.Name)
+		if strings.HasSuffix(name, info.Ext) {
+			rc, err := f.Open()
+			if err != nil {
+				return err
+			}
+			defer rc.Close()
+			var buffer bytes.Buffer
+			_, err = io.Copy(&buffer, rc)
+			info.Data = buffer.Bytes()
+			return err
 		}
 	}
-	return FormatUnknown, extension
+	return nil // no contents in zip file
+}
+
+// FileInfo returns the file information
+func (manager *FileManager) FileInfo(filename string) *FileInfo {
+	info := NewFileInfo(filename)
+	// check extension format
+	format, ok := manager.formats[info.Ext]
+	if ok {
+		info.Format = format
+		// check file path
+		_, err := os.Stat(info.Path)
+		if os.IsNotExist(err) {
+			info.Path = manager.FormatPath(info.Format, info.Name)
+		}
+	}
+	return info
 }
