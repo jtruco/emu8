@@ -189,7 +189,7 @@ func (spectrum *Spectrum) Emulate() {
 	}
 	// Exetues a CPU instruction
 	spectrum.cpu.Execute()
-	// Maskable interrupt request lenght
+	// Maskable interrupt request length
 	if spectrum.cpu.IntRq && spectrum.clock.Tstates() >= zxIntTstates {
 		spectrum.cpu.InterruptRequest(false)
 	}

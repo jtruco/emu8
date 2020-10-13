@@ -97,7 +97,7 @@ func (bmap *BankMap) SetActive(active bool) {
 // Default Mapper implementation
 // -----------------------------------------------------------------------------
 
-// DefaultMapper is a simple but inefficent memory mapper
+// DefaultMapper is a simple but inefficient memory mapper
 type DefaultMapper struct {
 	memory *Memory
 }
@@ -133,7 +133,7 @@ func (mapper *DefaultMapper) selectInternal(address uint16, write bool) (*BankMa
 // MaskMapper
 // -----------------------------------------------------------------------------
 
-// MaskMapper is a efficent memory mapper based on address bits (shift and mask)
+// MaskMapper is a efficient memory mapper based on address bits (shift and mask)
 type MaskMapper struct {
 	memory *Memory
 	Shift  uint

@@ -50,7 +50,7 @@ type Tzx struct {
 	info          tape.Info    // Tape information
 	data          []byte       // Data buffer
 	blocks        []tape.Block // block array
-	blockLength   int          // Block lenght
+	blockLength   int          // Block length
 	pilotPulses   int          // Pilot pulses
 	pilotTiming   int          // Pilot timing
 	sync1Timing   int          // Sync1 timing

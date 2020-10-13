@@ -4,7 +4,7 @@ package tape
 // Tape Control
 // -----------------------------------------------------------------------------
 
-// EAR level constans
+// EAR level constants
 const (
 	LevelLow  = 0
 	LevelHigh = 0x80

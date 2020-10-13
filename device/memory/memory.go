@@ -64,7 +64,7 @@ func (memory *Memory) SetMap(index int, bank *BankMap) {
 	memory.banks[index] = bank
 }
 
-// Switch switchs two memory banks and update its active state
+// Switch switches two memory banks and update its active state
 func (memory *Memory) Switch(current, new int) {
 	curbank, newbank := memory.banks[current], memory.banks[new]
 	memory.banks[current], memory.banks[new] = newbank, curbank
