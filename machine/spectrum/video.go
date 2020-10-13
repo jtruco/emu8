@@ -238,8 +238,10 @@ func (tv *TVVideo) DoScanlines() {
 	endX, endY := tvTstateToXY(endtstate)
 	for y <= endY {
 		// horizontal 448 px : 48 border left + 256 screen/border  + 48 border right + 96 sync
-		hBorder, vBorder := false, y < tvFirstScreenLine || y > tvLastScreenLine
-		nextX, lastX := x, (tvTotalWidth - 1)
+		var hBorder, vBorder bool
+		var nextX, lastX int
+		vBorder = y < tvFirstScreenLine || y > tvLastScreenLine
+		lastX = (tvTotalWidth - 1)
 		if y == endY && endX < lastX {
 			lastX = endX
 		}
