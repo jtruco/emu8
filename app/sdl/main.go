@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/jtruco/emu8/app"
 	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/emulator"
 )
@@ -15,7 +14,7 @@ func main() {
 	if emu == nil {
 		return
 	}
-	app := app.GetDefault()
+	app := NewApp()
 	if !app.Init(emu) {
 		return
 	}

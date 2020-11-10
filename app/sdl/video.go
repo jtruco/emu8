@@ -1,4 +1,4 @@
-package sdl
+package main
 
 import (
 	"log"
