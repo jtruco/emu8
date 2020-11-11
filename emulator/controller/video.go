@@ -1,6 +1,6 @@
 package controller
 
-import "github.com/jtruco/emu8/device/video"
+import "github.com/jtruco/emu8/emulator/device/video"
 
 // -----------------------------------------------------------------------------
 // Video Controller

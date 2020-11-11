@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/emulator"
+	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/veandco/go-sdl2/sdl"
 )

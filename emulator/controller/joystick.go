@@ -3,7 +3,7 @@ package controller
 import (
 	"sync"
 
-	"github.com/jtruco/emu8/device/io/joystick"
+	"github.com/jtruco/emu8/emulator/device/io/joystick"
 )
 
 // -----------------------------------------------------------------------------

@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jtruco/emu8/config"
+	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/controller"
-	"github.com/jtruco/emu8/machine"
+	"github.com/jtruco/emu8/emulator/machine"
 )
 
 // -----------------------------------------------------------------------------

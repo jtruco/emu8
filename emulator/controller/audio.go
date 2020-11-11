@@ -1,6 +1,6 @@
 package controller
 
-import "github.com/jtruco/emu8/device/audio"
+import "github.com/jtruco/emu8/emulator/device/audio"
 
 // -----------------------------------------------------------------------------
 // Audio Controller

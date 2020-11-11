@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/jtruco/emu8/device/tape"
+	"github.com/jtruco/emu8/emulator/device/tape"
 )
 
 // -----------------------------------------------------------------------------

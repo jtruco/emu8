@@ -5,7 +5,7 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/jtruco/emu8/device/video"
+	"github.com/jtruco/emu8/emulator/device/video"
 	"github.com/veandco/go-sdl2/sdl"
 )
 

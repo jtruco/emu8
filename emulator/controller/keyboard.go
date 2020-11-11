@@ -3,7 +3,7 @@ package controller
 import (
 	"sync"
 
-	"github.com/jtruco/emu8/device/io/keyboard"
+	"github.com/jtruco/emu8/emulator/device/io/keyboard"
 )
 
 // -----------------------------------------------------------------------------

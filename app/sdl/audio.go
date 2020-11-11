@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/jtruco/emu8/config"
-	"github.com/jtruco/emu8/device/audio"
+	"github.com/jtruco/emu8/emulator/config"
+	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/veandco/go-sdl2/sdl"
 )
 

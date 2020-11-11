@@ -1,8 +1,8 @@
 package emulator
 
 import (
-	"github.com/jtruco/emu8/machine/cpc"
-	"github.com/jtruco/emu8/machine/spectrum"
+	"github.com/jtruco/emu8/emulator/machine/cpc"
+	"github.com/jtruco/emu8/emulator/machine/spectrum"
 )
 
 // emulator package init
