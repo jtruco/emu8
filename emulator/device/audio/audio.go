@@ -21,7 +21,7 @@ type Config struct {
 // NewConfig creates audio config
 func NewConfig(fps, tstates int) *Config {
 	c := new(Config)
-	c.Frequency = config.Get().AudioFrequency
+	c.Frequency = config.Get().Audio.Frequency
 	c.Fps = fps
 	c.TStates = tstates
 	c.Samples = c.Frequency / c.Fps

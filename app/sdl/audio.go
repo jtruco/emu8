@@ -1,9 +1,8 @@
-package main
+package sdl
 
 import (
 	"log"
 
-	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -18,14 +17,14 @@ type Audio struct {
 func NewAudio(app *App) *Audio {
 	audio := new(Audio)
 	audio.app = app
-	audio.mute = app.config.MuteAudio
+	audio.mute = app.config.Audio.Mute
 	return audio
 }
 
 // Init the SDL audio
 func (audio *Audio) Init() bool {
 	var want, spec sdl.AudioSpec
-	want.Freq = int32(config.Get().AudioFrequency)
+	want.Freq = int32(audio.app.config.Audio.Frequency)
 	want.Format = sdl.AUDIO_S16LSB
 	want.Channels = 1
 	want.Samples = 1024

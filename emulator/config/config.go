@@ -1,31 +1,19 @@
 package config
 
-import (
-	"flag"
-)
-
 // Default configuration constants
 const (
-	DefaultAppTitle       = "emu8"
-	DefaultAppUI          = "sdl"
-	DefaultMachineModel   = "Speccy"
-	DefaultVideoScale     = 2
-	DefaultFullScreen     = false
-	DefaultMuteAudio      = false
-	DefaultAudioFrecuency = 48000 // 48 KHz
+	DefaultAppTitle     = "emu8"
+	DefaultMachineModel = "Speccy"
 )
 
 // Config is the main configuration
 type Config struct {
 	AppTitle       string
-	AppUI          string
 	MachineModel   string
 	MachineOptions string
 	FileName       string
-	VideoScale     int
-	FullScreen     bool
-	MuteAudio      bool
-	AudioFrequency int
+	Video          VideoConfig
+	Audio          AudioConfig
 }
 
 // config is the application main configuration
@@ -36,33 +24,36 @@ func Get() *Config {
 	return config
 }
 
-// Init parses configuration and arguments
-func Init() bool {
-	parseArgs()
-	return true
+// Default configuration constants
+const (
+	DefaultVideoScale      = 2
+	DefaultVideoFullScreen = false
+)
+
+// VideoConfig the video configuration
+type VideoConfig struct {
+	Scale      int
+	FullScreen bool
 }
 
-// parse command line arguments
-func parseArgs() {
-	flag.StringVar(&config.MachineModel, "m", "Speccy", "Machine model")
-	flag.StringVar(&config.MachineOptions, "o", "", "Machine options")
-	flag.StringVar(&config.FileName, "f", "", "Load file")
-	flag.IntVar(&config.VideoScale, "vs", DefaultVideoScale, "Video scale (1..4)")
-	flag.BoolVar(&config.FullScreen, "vf", DefaultFullScreen, "Video in full screen mode")
-	flag.BoolVar(&config.MuteAudio, "am", DefaultMuteAudio, "Audio Mute")
-	flag.Parse()
-	if len(flag.Args()) > 0 {
-		config.FileName = flag.Args()[0]
-	}
+// Default configuration constants
+const (
+	DefaultAudioFrecuency = 48000 // 48 KHz
+	DefaultAudioMute      = false
+)
+
+// AudioConfig the audio configuration
+type AudioConfig struct {
+	Frequency int
+	Mute      bool
 }
 
 // init initializes configuration
 func init() {
 	config.AppTitle = DefaultAppTitle
-	config.AppUI = DefaultAppUI
 	config.MachineModel = DefaultMachineModel
-	config.VideoScale = DefaultVideoScale
-	config.FullScreen = DefaultFullScreen
-	config.AudioFrequency = DefaultAudioFrecuency
-	config.MuteAudio = DefaultMuteAudio
+	config.Video.Scale = DefaultVideoScale
+	config.Video.FullScreen = DefaultVideoFullScreen
+	config.Audio.Frequency = DefaultAudioFrecuency
+	config.Audio.Mute = DefaultAudioMute
 }

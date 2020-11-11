@@ -1,4 +1,4 @@
-package main
+package sdl
 
 import (
 	"log"
@@ -35,8 +35,8 @@ func NewVideo(app *App) *Video {
 func (video *Video) Init() bool {
 	// configuration
 	video.device = video.app.emulator.Controller().Video().Video()
-	video.scale = video.app.config.VideoScale
-	video.fullscreen = video.app.config.FullScreen
+	video.scale = video.app.config.Video.Scale
+	video.fullscreen = video.app.config.Video.FullScreen
 	// initialization
 	return video.initSDLVideo()
 }
