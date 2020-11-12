@@ -158,8 +158,8 @@ func (spectrum *Spectrum) Components() *device.Components {
 
 // SetController connect controllers & components
 func (spectrum *Spectrum) SetController(control controller.Controller) {
-	control.Video().SetVideo(spectrum.tv)
-	control.Audio().SetAudio(spectrum.beeper)
+	control.Video().SetDevice(spectrum.tv)
+	control.Audio().SetDevice(spectrum.beeper)
 	control.Keyboard().AddReceiver(spectrum.keyboard, zxKeyboardMap)
 	control.File().RegisterFormat(controller.FormatSnap, snapFormats)
 	control.File().RegisterFormat(controller.FormatTape, tapeFormats)

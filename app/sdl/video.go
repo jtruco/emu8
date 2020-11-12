@@ -34,7 +34,7 @@ func NewVideo(app *App) *Video {
 // Init initialices video
 func (video *Video) Init() bool {
 	// configuration
-	video.device = video.app.emulator.Controller().Video().Video()
+	video.device = video.app.emulator.Controller().Video().Device()
 	video.scale = video.app.config.Video.Scale
 	video.fullscreen = video.app.config.Video.FullScreen
 	// initialization

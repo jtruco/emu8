@@ -8,7 +8,7 @@ import "github.com/jtruco/emu8/emulator/device/audio"
 
 // AudioController is the audio controller
 type AudioController struct {
-	audio  audio.Audio  // The audio device
+	device audio.Audio  // The audio device
 	player audio.Player // The audio player
 }
 
@@ -18,9 +18,9 @@ func NewAudioController() *AudioController {
 	return controller
 }
 
-// Audio the audio device
-func (controller *AudioController) Audio() audio.Audio {
-	return controller.audio
+// Device the audio device
+func (controller *AudioController) Device() audio.Audio {
+	return controller.device
 }
 
 // Player the audio player
@@ -28,9 +28,9 @@ func (controller *AudioController) Player() audio.Player {
 	return controller.player
 }
 
-// SetAudio sets audio device
-func (controller *AudioController) SetAudio(audio audio.Audio) {
-	controller.audio = audio
+// SetDevice sets audio device
+func (controller *AudioController) SetDevice(device audio.Audio) {
+	controller.device = device
 }
 
 // SetPlayer sets audio player
@@ -40,11 +40,11 @@ func (controller *AudioController) SetPlayer(player audio.Player) {
 
 // Flush ends the audio frame and flush out the buffer to player
 func (controller *AudioController) Flush() {
-	if controller.audio == nil {
+	if controller.device == nil {
 		return
 	}
-	controller.audio.EndFrame()
-	controller.audio.Buffer().BuildData()
-	controller.player.Play(controller.audio.Buffer())
-	controller.audio.Buffer().Reset()
+	controller.device.EndFrame()
+	controller.device.Buffer().BuildData()
+	controller.player.Play(controller.device.Buffer())
+	controller.device.Buffer().Reset()
 }
