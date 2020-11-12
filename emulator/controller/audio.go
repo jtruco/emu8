@@ -44,7 +44,10 @@ func (controller *AudioController) Flush() {
 		return
 	}
 	controller.device.EndFrame()
-	controller.device.Buffer().BuildData()
-	controller.player.Play(controller.device.Buffer())
-	controller.device.Buffer().Reset()
+	buffer := controller.device.Buffer()
+	buffer.BuildData()
+	if controller.player != nil {
+		controller.player.Play(buffer)
+	}
+	buffer.Reset()
 }

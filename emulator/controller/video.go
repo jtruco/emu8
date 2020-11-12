@@ -46,7 +46,9 @@ func (controller *VideoController) Refresh() {
 	controller.device.EndFrame()
 	screen := controller.device.Screen()
 	if screen.IsDirty() {
-		controller.renderer.Render(screen)
+		if controller.renderer != nil {
+			controller.renderer.Render(screen)
+		}
 		screen.SetDirty(false)
 	}
 }
