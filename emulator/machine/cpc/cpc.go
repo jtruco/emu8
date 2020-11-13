@@ -109,7 +109,7 @@ func New(model int) machine.Machine {
 }
 
 // Register cpc machine
-func Register() { machine.Register(machine.AmstradCPC, New) }
+func init() { machine.Register(machine.AmstradCPC, New) }
 
 // Device interface
 // -----------------------------------------------------------------------------

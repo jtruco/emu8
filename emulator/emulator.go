@@ -78,6 +78,11 @@ func (emulator *Emulator) Reset() {
 	emulator.machine.Reset()
 }
 
+// Emulate one frame loop
+func (emulator *Emulator) Emulate() {
+	emulator.emulateFrame()
+}
+
 // Start the emulation
 func (emulator *Emulator) Start() {
 	if !emulator.running {

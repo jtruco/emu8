@@ -103,7 +103,7 @@ func New(model int) machine.Machine {
 }
 
 // Register spectrum machine
-func Register() { machine.Register(machine.ZXSpectrum, New) }
+func init() { machine.Register(machine.ZXSpectrum, New) }
 
 // Device interface
 
