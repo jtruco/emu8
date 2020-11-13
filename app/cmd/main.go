@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/jtruco/emu8/app/sdl"
+	"github.com/jtruco/emu8/app/cmd/ui/sdl"
 	"github.com/jtruco/emu8/emulator"
 	"github.com/jtruco/emu8/emulator/config"
 )
