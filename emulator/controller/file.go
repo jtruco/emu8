@@ -1,26 +1,14 @@
 package controller
 
 import (
-	"archive/zip"
-	"bytes"
-	"io"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
 )
 
 // -----------------------------------------------------------------------------
-// File Manager
+// File Constants
 // -----------------------------------------------------------------------------
-
-// Path constants
-const (
-	PathRom  = "roms"  // ROMs default subpath
-	PathSnap = "snaps" // Snapshots default subpath
-	PathTape = "tapes" // Tapes default subpath
-)
 
 // File formats
 const (
@@ -28,100 +16,14 @@ const (
 	FormatRom
 	FormatSnap
 	FormatTape
-	_FormatMax // limit count
+	FormatMax // limit count
 )
 
-// Other constants
+// Common extensions
 const (
-	ExtRom    = "rom"
-	ExtZip    = "zip"
-	_FileMode = 0664
+	ExtRom = "rom"
+	ExtZip = "zip"
 )
-
-// FileManager is the emulator files manager
-type FileManager struct {
-	path     string             // The file manager base path
-	subpaths [_FormatMax]string // Subpaths by file format
-	formats  map[string]int     // The format extension mapping
-}
-
-// DefaultFileManager returns the default file manager
-func DefaultFileManager() *FileManager {
-	dir, _ := os.Getwd()
-	return NewFileManager(dir)
-}
-
-// NewFileManager returns a new file manager
-func NewFileManager(path string) *FileManager {
-	manager := new(FileManager)
-	manager.formats = make(map[string]int)
-	manager.AddFormat(FormatRom, ExtRom)
-	manager.SetPath(path)
-	return manager
-}
-
-// SetPath sets the base path of the file manager
-func (manager *FileManager) SetPath(path string) {
-	manager.path = path
-	manager.subpaths[FormatUnknown] = path
-	manager.subpaths[FormatRom] = filepath.Join(path, PathRom)
-	manager.subpaths[FormatSnap] = filepath.Join(path, PathSnap)
-	manager.subpaths[FormatTape] = filepath.Join(path, PathTape)
-}
-
-// Format management
-
-// RegisterFormat adds a format and its extensions
-func (manager *FileManager) RegisterFormat(format int, extensions []string) {
-	for _, ext := range extensions {
-		manager.AddFormat(format, ext)
-	}
-}
-
-// AddFormat adds a file extension format
-func (manager *FileManager) AddFormat(format int, extension string) {
-	manager.formats[extension] = format
-}
-
-// FormatPath gets filename from format path
-func (manager *FileManager) FormatPath(format int, filename string) string {
-	return filepath.Join(manager.subpaths[format], filepath.Base(filename))
-}
-
-// Load files
-
-// LoadROM loads a file from ROMs path
-func (manager *FileManager) LoadROM(filename string) ([]byte, error) {
-	return ioutil.ReadFile(manager.FormatPath(FormatRom, filename))
-}
-
-// LoadFile loads a base filename from its format default location
-func (manager *FileManager) LoadFile(file *FileInfo) error {
-	data, err := ioutil.ReadFile(file.Path)
-	if err != nil {
-		return err
-	}
-	if file.IsZip {
-		return file.Unzip(data)
-	}
-	file.Data = data
-	return err
-}
-
-// Save files
-
-// SaveFile saves data to a new file
-func (manager *FileManager) SaveFile(filename string, format int, data []byte) error {
-	// find base file in standar location
-	filename = filepath.Join(manager.subpaths[format], filepath.Base(filename))
-	return ioutil.WriteFile(filename, data, _FileMode)
-}
-
-// NewName helper funcion to obtain a new filename
-func (manager *FileManager) NewName(prefix, ext string) string {
-	now := time.Now().Format("20060102030405")
-	return (prefix + "_" + now + "." + ext)
-}
 
 // -----------------------------------------------------------------------------
 // File information
@@ -129,26 +31,26 @@ func (manager *FileManager) NewName(prefix, ext string) string {
 
 // FileInfo contains file information
 type FileInfo struct {
-	Name   string // File name
 	Path   string // File path
+	Name   string // File name
+	Ext    string // File extension
 	Format int    // File format
-	Ext    string // File format extension
-	Data   []byte // File data
 	IsZip  bool   // Is a zip file
+	Data   []byte // File data
 }
 
 // NewFileInfo returns new FileInfo
-func NewFileInfo(filename string) *FileInfo {
+func NewFileInfo(path string) *FileInfo {
 	info := new(FileInfo)
-	info.Name = filepath.Base(filename)
-	info.checkExtension()
-	info.Path = filename
+	info.Path = path
+	info.Name = filepath.Base(path)
 	info.Format = FormatUnknown
+	info.extension()
 	return info
 }
 
-// checkExtension validates file extension and zip
-func (info *FileInfo) checkExtension() {
+// extension validates file extension and zip
+func (info *FileInfo) extension() {
 	const extIsZip = "." + ExtZip
 	name := strings.ToLower(info.Name)
 	ext := filepath.Ext(name)
@@ -161,27 +63,87 @@ func (info *FileInfo) checkExtension() {
 	}
 }
 
-// Unzip unzips file data
-func (info *FileInfo) Unzip(zipdata []byte) error {
-	zr, err := zip.NewReader(bytes.NewReader(zipdata), int64(len(zipdata)))
-	if err != nil {
-		return err
+// -----------------------------------------------------------------------------
+// Virtual File System
+// -----------------------------------------------------------------------------
+
+// VFileSystem the virtual filesystem interface
+type VFileSystem interface {
+	// LoadFile loads the file data from it's storage location.
+	LoadFile(info *FileInfo) error
+	// SaveFile saves fhe file data to it's storage location.
+	SaveFile(info *FileInfo) error
+}
+
+// DefaultFileSystem the current filesystem
+var DefaultFileSystem VFileSystem
+
+// -----------------------------------------------------------------------------
+// File Manager
+// -----------------------------------------------------------------------------
+
+// FileManager is the emulator files manager
+type FileManager struct {
+	vfs     VFileSystem    // The underlying virtual file system
+	formats map[string]int // The format extension mapping
+}
+
+// NewFileManager returns a new file manager
+func NewFileManager() *FileManager {
+	manager := new(FileManager)
+	manager.vfs = DefaultFileSystem
+	manager.formats = make(map[string]int)
+	manager.AddFormat(FormatRom, ExtRom)
+	return manager
+}
+
+// SetFileSystem set virtual file system
+func (manager *FileManager) SetFileSystem(vfs VFileSystem) {
+	manager.vfs = vfs
+}
+
+// Format management
+
+// AddFormat adds a file extension format
+func (manager *FileManager) AddFormat(format int, extension string) {
+	manager.formats[extension] = format
+}
+
+// RegisterFormat adds a format and its extensions
+func (manager *FileManager) RegisterFormat(format int, extensions []string) {
+	for _, ext := range extensions {
+		manager.AddFormat(format, ext)
 	}
-	for _, f := range zr.File {
-		name := strings.ToLower(f.Name)
-		if strings.HasSuffix(name, info.Ext) {
-			rc, err := f.Open()
-			if err != nil {
-				return err
-			}
-			defer rc.Close()
-			var buffer bytes.Buffer
-			_, err = io.Copy(&buffer, rc)
-			info.Data = buffer.Bytes()
-			return err
-		}
-	}
-	return nil // no contents in zip file
+}
+
+// Load & Save Files
+
+// LoadROM loads a file from ROMs path
+func (manager *FileManager) LoadROM(filename string) ([]byte, error) {
+	info := NewFileInfo(filename)
+	info.Format = FormatRom
+	return info.Data, manager.vfs.LoadFile(info)
+}
+
+// LoadFile loads a base filename from its format default location
+func (manager *FileManager) LoadFile(info *FileInfo) error {
+	return manager.vfs.LoadFile(info)
+}
+
+// SaveFile saves data to a new file
+func (manager *FileManager) SaveFile(filename string, format int, data []byte) error {
+	info := NewFileInfo(filename)
+	info.Format = format
+	info.Data = data
+	return manager.vfs.SaveFile(info)
+}
+
+// FileInfo
+
+// NewName helper funcion to obtain a new filename
+func (manager *FileManager) NewName(prefix, ext string) string {
+	now := time.Now().Format("20060102030405")
+	return (prefix + "_" + now + "." + ext)
 }
 
 // FileInfo returns the file information
@@ -191,11 +153,6 @@ func (manager *FileManager) FileInfo(filename string) *FileInfo {
 	format, ok := manager.formats[info.Ext]
 	if ok {
 		info.Format = format
-		// check file path
-		_, err := os.Stat(info.Path)
-		if os.IsNotExist(err) {
-			info.Path = manager.FormatPath(info.Format, info.Name)
-		}
 	}
 	return info
 }

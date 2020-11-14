@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 
+	"github.com/jtruco/emu8/app/cmd/io"
 	"github.com/jtruco/emu8/app/cmd/ui/sdl"
 	"github.com/jtruco/emu8/emulator"
 	"github.com/jtruco/emu8/emulator/config"
@@ -22,8 +23,9 @@ func main() {
 	app.End()
 }
 
-// init parse config parameters
+// init
 func init() {
+	// parse config parameters
 	flag.StringVar(&config.Get().MachineModel, "m", config.DefaultMachineModel, "Machine model")
 	flag.StringVar(&config.Get().MachineOptions, "o", "", "Machine options")
 	flag.StringVar(&config.Get().FileName, "f", "", "Load file")
@@ -34,4 +36,6 @@ func init() {
 	if len(flag.Args()) > 0 {
 		config.Get().FileName = flag.Args()[0]
 	}
+	// default file system
+	io.DefaultFileSystem()
 }
