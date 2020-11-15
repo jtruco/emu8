@@ -1,7 +1,7 @@
 package format
 
 import (
-	"github.com/jtruco/emu8/emulator/device/tape"
+	"github.com/jtruco/emu8/emulator/device/io/tape"
 	"github.com/jtruco/emu8/emulator/machine/spectrum/format"
 )
 

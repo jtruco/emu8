@@ -10,8 +10,8 @@ import (
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/jtruco/emu8/emulator/device/cpu"
 	"github.com/jtruco/emu8/emulator/device/cpu/z80"
+	"github.com/jtruco/emu8/emulator/device/io/tape"
 	"github.com/jtruco/emu8/emulator/device/memory"
-	"github.com/jtruco/emu8/emulator/device/tape"
 	"github.com/jtruco/emu8/emulator/machine"
 	"github.com/jtruco/emu8/emulator/machine/spectrum/format"
 )

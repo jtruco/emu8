@@ -1,8 +1,6 @@
 package io
 
-import (
-	"github.com/jtruco/emu8/emulator/device/tape"
-)
+import "github.com/jtruco/emu8/emulator/device/io/tape"
 
 // -----------------------------------------------------------------------------
 // Tape Controller
