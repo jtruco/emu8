@@ -1,4 +1,4 @@
-package controller
+package ui
 
 import "github.com/jtruco/emu8/emulator/device/audio"
 

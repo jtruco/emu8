@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 
-	"github.com/jtruco/emu8/app/cmd/io"
 	"github.com/jtruco/emu8/app/cmd/ui/sdl"
+	"github.com/jtruco/emu8/app/cmd/vfs"
 	"github.com/jtruco/emu8/emulator"
 	"github.com/jtruco/emu8/emulator/config"
 )
@@ -37,5 +37,5 @@ func init() {
 		config.Get().FileName = flag.Args()[0]
 	}
 	// default file system
-	io.DefaultFileSystem()
+	vfs.DefaultFileSystem()
 }

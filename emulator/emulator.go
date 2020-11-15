@@ -159,7 +159,7 @@ func (emulator *Emulator) emulateFrame() {
 	config := machine.Config()
 
 	// pre-frame actions
-	emulator.controller.Flush()
+	emulator.controller.Scan()
 
 	// frame emulation loop
 	machine.BeginFrame()

@@ -6,6 +6,7 @@ import (
 
 	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/controller"
+	"github.com/jtruco/emu8/emulator/controller/vfs"
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/jtruco/emu8/emulator/device/cpu"
@@ -179,8 +180,8 @@ func (cpc *AmstradCPC) SetController(control controller.Controller) {
 	control.Video().SetDevice(cpc.video)
 	control.Audio().SetDevice(cpc.psg)
 	control.Keyboard().AddReceiver(cpc.keyboard, cpcKeyboardMap)
-	control.File().RegisterFormat(controller.FormatSnap, cpcSnapFormats)
-	control.File().RegisterFormat(controller.FormatTape, cpcTapeFormats)
+	control.File().RegisterFormat(vfs.FormatSnap, cpcSnapFormats)
+	control.File().RegisterFormat(vfs.FormatTape, cpcTapeFormats)
 	control.Tape().SetDrive(cpc.tape)
 	control.Joystick().AddReceiver(cpc.joystick, 0)
 	cpc.controller = control
@@ -263,7 +264,7 @@ func (cpc *AmstradCPC) onPsgReadPortA() byte {
 // LoadFile loads a file into machine
 func (cpc *AmstradCPC) LoadFile(filename string) {
 	info := cpc.controller.File().FileInfo(filename)
-	if info.Format == controller.FormatUnknown {
+	if info.Format == vfs.FormatUnknown {
 		log.Println("CPC : Not supported format:", info.Ext)
 		return
 	}
@@ -273,7 +274,7 @@ func (cpc *AmstradCPC) LoadFile(filename string) {
 		return
 	}
 	// load snapshop formats
-	if info.Format == controller.FormatSnap {
+	if info.Format == vfs.FormatSnap {
 		var snap *format.Snapshot
 		switch info.Ext {
 		case cpcFormatSNA:
@@ -284,7 +285,7 @@ func (cpc *AmstradCPC) LoadFile(filename string) {
 		if snap != nil {
 			cpc.LoadState(snap)
 		}
-	} else if info.Format == controller.FormatTape {
+	} else if info.Format == vfs.FormatTape {
 		var tape tape.Tape
 		loaded := false
 		switch info.Ext {
@@ -306,7 +307,7 @@ func (cpc *AmstradCPC) TakeSnapshot() {
 	snap := cpc.SaveState()
 	data := snap.SaveSNA()
 	name := cpc.controller.File().NewName("cpc", cpcFormatSNA)
-	err := cpc.controller.File().SaveFile(name, controller.FormatSnap, data)
+	err := cpc.controller.File().SaveFile(name, vfs.FormatSnap, data)
 	if err == nil {
 		log.Println("CPC : Snapshot saved: ", name)
 	} else {

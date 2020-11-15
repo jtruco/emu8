@@ -1,4 +1,4 @@
-package io
+package vfs
 
 import (
 	"archive/zip"
@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	vfs "github.com/jtruco/emu8/emulator/controller"
+	"github.com/jtruco/emu8/emulator/controller/vfs"
 )
 
 // Path constants

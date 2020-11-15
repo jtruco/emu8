@@ -1,4 +1,4 @@
-package controller
+package vfs
 
 import (
 	"path/filepath"
@@ -67,8 +67,8 @@ func (info *FileInfo) extension() {
 // Virtual File System
 // -----------------------------------------------------------------------------
 
-// VFileSystem the virtual filesystem interface
-type VFileSystem interface {
+// FileSystem the virtual filesystem interface
+type FileSystem interface {
 	// LoadFile loads the file data from it's storage location.
 	LoadFile(info *FileInfo) error
 	// SaveFile saves fhe file data to it's storage location.
@@ -76,7 +76,7 @@ type VFileSystem interface {
 }
 
 // DefaultFileSystem the current filesystem
-var DefaultFileSystem VFileSystem
+var DefaultFileSystem FileSystem
 
 // -----------------------------------------------------------------------------
 // File Manager
@@ -84,7 +84,7 @@ var DefaultFileSystem VFileSystem
 
 // FileManager is the emulator files manager
 type FileManager struct {
-	vfs     VFileSystem    // The underlying virtual file system
+	vfs     FileSystem     // The underlying virtual file system
 	formats map[string]int // The format extension mapping
 }
 
@@ -98,7 +98,7 @@ func NewFileManager() *FileManager {
 }
 
 // SetFileSystem set virtual file system
-func (manager *FileManager) SetFileSystem(vfs VFileSystem) {
+func (manager *FileManager) SetFileSystem(vfs FileSystem) {
 	manager.vfs = vfs
 }
 

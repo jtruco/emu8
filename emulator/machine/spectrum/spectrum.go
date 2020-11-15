@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/jtruco/emu8/emulator/controller"
+	"github.com/jtruco/emu8/emulator/controller/vfs"
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/jtruco/emu8/emulator/device/cpu"
@@ -161,8 +162,8 @@ func (spectrum *Spectrum) SetController(control controller.Controller) {
 	control.Video().SetDevice(spectrum.tv)
 	control.Audio().SetDevice(spectrum.beeper)
 	control.Keyboard().AddReceiver(spectrum.keyboard, zxKeyboardMap)
-	control.File().RegisterFormat(controller.FormatSnap, snapFormats)
-	control.File().RegisterFormat(controller.FormatTape, tapeFormats)
+	control.File().RegisterFormat(vfs.FormatSnap, snapFormats)
+	control.File().RegisterFormat(vfs.FormatTape, tapeFormats)
 	control.Tape().SetDrive(spectrum.tape)
 	control.Joystick().AddReceiver(spectrum.joystick, 0)
 	spectrum.controller = control
@@ -210,7 +211,7 @@ func (spectrum *Spectrum) onInterruptAck() bool {
 // LoadFile loads a file into machine
 func (spectrum *Spectrum) LoadFile(filename string) {
 	info := spectrum.controller.File().FileInfo(filename)
-	if info.Format == controller.FormatUnknown {
+	if info.Format == vfs.FormatUnknown {
 		log.Println("Spectrum : Not supported format:", info.Ext)
 		return
 	}
@@ -220,7 +221,7 @@ func (spectrum *Spectrum) LoadFile(filename string) {
 		return
 	}
 	// load snapshop formats
-	if info.Format == controller.FormatSnap {
+	if info.Format == vfs.FormatSnap {
 		var snap *format.Snapshot
 		switch info.Ext {
 		case formatSNA:
@@ -233,7 +234,7 @@ func (spectrum *Spectrum) LoadFile(filename string) {
 		if snap != nil {
 			spectrum.LoadState(snap)
 		}
-	} else if info.Format == controller.FormatTape {
+	} else if info.Format == vfs.FormatTape {
 		var tape tape.Tape
 		loaded := false
 		switch info.Ext {
@@ -258,7 +259,7 @@ func (spectrum *Spectrum) TakeSnapshot() {
 	snap := spectrum.SaveState()
 	data := snap.SaveSNA()
 	name := spectrum.controller.File().NewName("speccy", formatSNA)
-	err := spectrum.controller.File().SaveFile(name, controller.FormatSnap, data)
+	err := spectrum.controller.File().SaveFile(name, vfs.FormatSnap, data)
 	if err == nil {
 		log.Println("Spectrum : Snapshot saved: ", name)
 	} else {

@@ -1,4 +1,4 @@
-package controller
+package io
 
 import (
 	"github.com/jtruco/emu8/emulator/device/tape"
