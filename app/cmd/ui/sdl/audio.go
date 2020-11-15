@@ -26,7 +26,7 @@ func (audio *Audio) Init() bool {
 	var want, spec sdl.AudioSpec
 	want.Freq = int32(audio.app.config.Audio.Frequency)
 	want.Format = sdl.AUDIO_S16LSB
-	want.Channels = 1
+	want.Channels = 2 // stereo
 	want.Samples = 1024
 	err := sdl.OpenAudio(&want, &spec)
 	if err != nil {

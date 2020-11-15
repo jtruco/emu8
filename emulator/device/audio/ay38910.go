@@ -315,9 +315,8 @@ func (ay *AY38910) OnClock() {
 	// create audio sample
 	left := ay.channelC.level + ay.channelB.level
 	right := ay.channelA.level + ay.channelB.level
-	sample := left + right // mono output
 	index := int(float32(ay.nsample) * ay.config.Rate)
-	ay.buffer.AddSample(index, sample)
+	ay.buffer.AddSample(index, left, right)
 	ay.nsample++
 }
 

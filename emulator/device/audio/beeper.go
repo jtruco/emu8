@@ -33,7 +33,7 @@ func (beeper *Beeper) AddSamples(from, to, level int) {
 	if sample != 0 {
 		start := int(float32(from) * beeper.config.Rate)
 		end := int(float32(to) * beeper.config.Rate)
-		beeper.buffer.AddSamples(start, end, sample)
+		beeper.buffer.AddSamples(start, end, sample, sample)
 	}
 }
 
