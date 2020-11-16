@@ -62,7 +62,9 @@ func (fs *FileSystem) LoadFile(info *vfs.FileInfo) error {
 
 // SaveFile saves fhe file data to it's storage location.
 func (fs *FileSystem) SaveFile(info *vfs.FileInfo) error {
-	return nil
+	const fileMode = 0664
+	fs.formatPath(info)
+	return ioutil.WriteFile(info.Path, info.Data, fileMode)
 }
 
 // stat checks exists file in default folders
