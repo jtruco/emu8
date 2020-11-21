@@ -15,29 +15,29 @@ type Rect struct {
 // Each pixel represents an int32 color, no specific format (RGBA, BGRA,...)
 // Coordinates starts at upper left corner.
 type Screen struct {
-	width   int     // Witdh of screen
-	height  int     // Height of screen
-	data    []int32 // Screen data
-	display Rect    // Visible display of screen
-	palette []int32 // Screen colour palette
-	dirty   bool    // Dirty control
-	regions []Rect  // Screen regions
-	factor  uint8   // Region size factor
-	cols    int     // Number of columns
-	rows    int     // Number of rows
-	refresh []bool  // Regions to refresh
-	rlimit  int     // Refresh limit optimization
-	buffer  []*Rect // Dirty regions buffer
-	wscale  float32 // Width scale factor
-	hscale  float32 // Height scale factor
+	width   int      // Witdh of screen
+	height  int      // Height of screen
+	data    []uint32 // Screen data
+	display Rect     // Visible display of screen
+	palette []uint32 // Screen colour palette
+	dirty   bool     // Dirty control
+	regions []Rect   // Screen regions
+	factor  uint8    // Region size factor
+	cols    int      // Number of columns
+	rows    int      // Number of rows
+	refresh []bool   // Regions to refresh
+	rlimit  int      // Refresh limit optimization
+	buffer  []*Rect  // Dirty regions buffer
+	wscale  float32  // Width scale factor
+	hscale  float32  // Height scale factor
 }
 
 // NewScreen creates a screen of size width x height and palette
-func NewScreen(width, height int, palette []int32) *Screen {
+func NewScreen(width, height int, palette []uint32) *Screen {
 	screen := new(Screen)
 	screen.width = width
 	screen.height = height
-	screen.data = make([]int32, (width * height))
+	screen.data = make([]uint32, (width * height))
 	screen.SetDisplay(0, 0, width, height)
 	screen.palette = palette
 	screen.dirty = false
@@ -58,7 +58,7 @@ func (screen *Screen) Clear(index int) {
 }
 
 // Data is the pixel data buffer
-func (screen *Screen) Data() []int32 { return screen.data }
+func (screen *Screen) Data() []uint32 { return screen.data }
 
 // Width gets screen Width
 func (screen *Screen) Width() int { return screen.width }
@@ -97,17 +97,20 @@ func (screen *Screen) SetDirty(dirty bool) {
 	}
 }
 
+// Palette returns the colour palette
+func (screen *Screen) Palette() []uint32 { return screen.palette }
+
 // GetColour gets colour from palette index
-func (screen *Screen) GetColour(index int) int32 { return screen.palette[index] }
+func (screen *Screen) GetColour(index int) uint32 { return screen.palette[index] }
 
 // GetPixel gets colour from pixel coordinates
-func (screen *Screen) GetPixel(x, y int) int32 {
+func (screen *Screen) GetPixel(x, y int) uint32 {
 	pos := x + y*screen.width
 	return screen.data[pos]
 }
 
 // SetPixel sets colour at pixel coordinates
-func (screen *Screen) SetPixel(x, y int, colour int32) {
+func (screen *Screen) SetPixel(x, y int, colour uint32) {
 	pos := x + y*screen.width
 	if screen.data[pos] != colour {
 		screen.data[pos] = colour

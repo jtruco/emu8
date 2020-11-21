@@ -43,9 +43,10 @@ func (video *Video) Init() bool {
 
 // Render renders screen to video UI
 func (video *Video) Render(screen *video.Screen) {
-	var srcRect sdl.Rect
 	video._sync.Lock()
 	defer video._sync.Unlock()
+
+	var srcRect sdl.Rect
 	display := screen.Display()
 	rects := screen.DirtyRegions()
 	for idx, rect := range rects {
@@ -73,6 +74,7 @@ func (video *Video) ToggleFullscreen() {
 func (video *Video) initSDLVideo() bool {
 	video._sync.Lock()
 	defer video._sync.Unlock()
+
 	video.destroySDLWindow()
 	if !video.createSDLWindow() {
 		return false

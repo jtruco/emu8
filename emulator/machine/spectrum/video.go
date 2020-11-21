@@ -47,8 +47,8 @@ const (
 	tvLineBytes         = tvScreenWidth / tvBytePixels
 )
 
-// ZX Spetrum 16/48k RGB colour palette
-var zxPalette = []int32{
+// ZX Spetrum 16/48k ARGB colour palette
+var zxPalette = []uint32{
 	/* Bright 0 (black, blue, red, magenta, green, cyan, yellow, white) */
 	0x000000, 0x0000c0, 0xc00000, 0xc000c0, 0x00c000, 0x00c0c0, 0xc0c000, 0xc0c0c0,
 	/* BRIGHT 1 (black, blue, red, magenta, green, cyan, yellow, white) */
@@ -323,7 +323,7 @@ func (tv *TVVideo) scanlineScreen(y, x1, x2 int) {
 	}
 }
 
-func (tv *TVVideo) scanlineBorder(y, x1, x2 int, colour int32) {
+func (tv *TVVideo) scanlineBorder(y, x1, x2 int, colour uint32) {
 	for x := x1; x <= x2; x++ {
 		tv.screen.SetPixel(x, y, colour)
 	}

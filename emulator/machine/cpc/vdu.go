@@ -20,8 +20,8 @@ const (
 	videoLineBytes    = 0x800 // 2 KBytes
 )
 
-// CPC 464 RGB colour palette (27 colors)
-var cpcPalette = []int32{
+// CPC 464 ARGB colour palette (27 colors)
+var cpcPalette = []uint32{
 	0x808080, 0x808080, 0x00ff80, 0xffff80, 0x000080, 0xff0080, 0x008080, 0xff8080,
 	0xff0080, 0xffff80, 0xffff00, 0xffffff, 0xff0000, 0xff00ff, 0xff8000, 0xff80ff,
 	0x000080, 0x00ff80, 0x00ff00, 0x00ffff, 0x000000, 0x0000ff, 0x008000, 0x0080ff,
@@ -249,7 +249,7 @@ func (vdu *VduVideo) paintByte2(x, y int, data byte) int {
 }
 
 // paintLine render a line of colour
-func (vdu *VduVideo) paintLine(y, x1, width int, colour int32) {
+func (vdu *VduVideo) paintLine(y, x1, width int, colour uint32) {
 	x2 := x1 + width
 	for x := x1; x < x2; x++ {
 		vdu.screen.SetPixel(x, y, colour)
