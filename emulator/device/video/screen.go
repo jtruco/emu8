@@ -4,7 +4,10 @@ package video
 // Screen
 // -----------------------------------------------------------------------------
 
-const regionFactor = 3 // Default factor : 8x8 pixel regions
+const (
+	screenRegionFactor = 4 // Default factor : 16x16 pixel regions
+	screenRegionLimit  = 4 // Default dirty region limit ( 1 / 16 )
+)
 
 // Rect is a display rectangle
 type Rect struct {
@@ -41,7 +44,7 @@ func NewScreen(width, height int, palette []uint32) *Screen {
 	screen.SetDisplay(0, 0, width, height)
 	screen.palette = palette
 	screen.dirty = false
-	screen.initRegions(regionFactor)
+	screen.initRegions(screenRegionFactor)
 	screen.wscale = 1
 	screen.hscale = 1
 	return screen
@@ -132,8 +135,7 @@ func (screen *Screen) SetPixelIndex(x, y int, index int) {
 // DirtyRegions returns dirty regions to refresh
 func (screen *Screen) DirtyRegions() []*Rect {
 	count := 0
-	size := len(screen.refresh)
-	for i := 0; i < size; i++ {
+	for i := 0; i < len(screen.refresh); i++ {
 		if screen.refresh[i] {
 			screen.buffer[count] = &screen.regions[i]
 			count++
@@ -154,7 +156,9 @@ func (screen *Screen) Regions() []Rect {
 
 // initRegions initializes screen regions
 func (screen *Screen) initRegions(factor uint8) {
+
 	// calculate number of regions
+	screen.factor = factor
 	screen.cols = screen.width >> factor
 	if screen.width > (screen.cols << factor) {
 		screen.cols++
@@ -164,11 +168,11 @@ func (screen *Screen) initRegions(factor uint8) {
 		screen.rows++
 	}
 	nreg := screen.cols * screen.rows
-	screen.factor = factor
-	screen.rlimit = nreg >> 3 // 1/8
+	screen.rlimit = nreg >> screenRegionLimit
 	screen.regions = make([]Rect, nreg)
 	screen.buffer = make([]*Rect, nreg)
 	screen.refresh = make([]bool, nreg)
+
 	// create regions rects
 	s := 1 << screen.factor
 	x, y, w, h := 0, 0, s, s
