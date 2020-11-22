@@ -20,12 +20,12 @@ const (
 	videoLineBytes    = 0x800 // 2 KBytes
 )
 
-// CPC 464 ARGB colour palette (27 colors)
-var cpcPalette = []uint32{
-	0x808080, 0x808080, 0x00ff80, 0xffff80, 0x000080, 0xff0080, 0x008080, 0xff8080,
-	0xff0080, 0xffff80, 0xffff00, 0xffffff, 0xff0000, 0xff00ff, 0xff8000, 0xff80ff,
-	0x000080, 0x00ff80, 0x00ff00, 0x00ffff, 0x000000, 0x0000ff, 0x008000, 0x0080ff,
-	0x800080, 0x80ff80, 0x80ff00, 0x80ffff, 0x800000, 0x8000ff, 0x808000, 0x8080ff,
+// CPC 464 RGBA colour palette (27 colors)
+var cpcPaletteRGBA = []uint32{
+	0xff808080, 0xff808080, 0xff80ff00, 0xff80ffff, 0xff800000, 0xff8000ff, 0xff808000, 0xff8080ff,
+	0xff8000ff, 0xff80ffff, 0xff00ffff, 0xffffffff, 0xff0000ff, 0xffff00ff, 0xff0080ff, 0xffff80ff,
+	0xff800000, 0xff80ff00, 0xff00ff00, 0xffffff00, 0xff000000, 0xffff0000, 0xff008000, 0xffff8000,
+	0xff800080, 0xff80ff80, 0xff00ff80, 0xffffff80, 0xff000080, 0xffff0080, 0xff008080, 0xffff8080,
 }
 
 // CPC mode palette index tables
@@ -56,7 +56,7 @@ type VduVideo struct {
 // NewVduVideo creates a new vdu
 func NewVduVideo(cpc *AmstradCPC) *VduVideo {
 	vdu := new(VduVideo)
-	vdu.screen = video.NewScreen(videoTotalWidth, videoTotalHeight, cpcPalette)
+	vdu.screen = video.NewScreen(videoTotalWidth, videoTotalHeight, cpcPaletteRGBA)
 	vdu.screen.SetWScale(videoWidthScale)
 	vdu.gatearray = cpc.gatearray
 	vdu.crtc = cpc.crtc

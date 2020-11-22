@@ -47,12 +47,12 @@ const (
 	tvLineBytes         = tvScreenWidth / tvBytePixels
 )
 
-// ZX Spetrum 16/48k ARGB colour palette
-var zxPalette = []uint32{
+// ZX Spetrum 16/48k RGBA colour palette
+var zxPaletteRGBA = []uint32{
 	/* Bright 0 (black, blue, red, magenta, green, cyan, yellow, white) */
-	0x000000, 0x0000c0, 0xc00000, 0xc000c0, 0x00c000, 0x00c0c0, 0xc0c000, 0xc0c0c0,
+	0xff000000, 0xffc00000, 0xff0000c0, 0xffc000c0, 0xff00c000, 0xffc0c000, 0xff00c0c0, 0xffc0c0c0,
 	/* BRIGHT 1 (black, blue, red, magenta, green, cyan, yellow, white) */
-	0x000000, 0x0000ff, 0xff0000, 0xff00ff, 0x00ff00, 0x00ffff, 0xffff00, 0xffffff,
+	0xff000000, 0xffff0000, 0xff0000ff, 0xffff00ff, 0xff00ff00, 0xffffff00, 0xff00ffff, 0xffffffff,
 }
 
 // -----------------------------------------------------------------------------
@@ -74,7 +74,7 @@ type TVVideo struct {
 // NewTVVideo creates the video device
 func NewTVVideo(spectrum *Spectrum) *TVVideo {
 	tv := new(TVVideo)
-	tv.screen = video.NewScreen(tvTotalWidth, tvTotalHeight, zxPalette)
+	tv.screen = video.NewScreen(tvTotalWidth, tvTotalHeight, zxPaletteRGBA)
 	tv.screen.SetDisplay(tvDisplayLeft, tvDisplayTop, tvDisplayWidth, tvDisplayHeight)
 	tv.spectrum = spectrum
 	tv.srcdata = spectrum.VideoMemory().Data()

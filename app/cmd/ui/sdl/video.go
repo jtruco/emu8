@@ -129,7 +129,7 @@ func (video *Video) createEmulatorSurface() bool {
 		int32(screen.Height()),
 		32,
 		4*int32(screen.Width()),
-		uint32(sdl.PIXELFORMAT_BGRA32))
+		uint32(sdl.PIXELFORMAT_RGBA32))
 	if err != nil {
 		log.Println("Error creating emulator surface : " + err.Error())
 		return false
