@@ -3,28 +3,27 @@ package sdl
 import (
 	"log"
 
+	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 // Audio the SDL audio engine
 type Audio struct {
-	app  *App // The SDL app
-	mute bool // Audio mute
+	config *config.AudioConfig // Audio configuration
 }
 
 // NewAudio the SDL audio
-func NewAudio(app *App) *Audio {
+func NewAudio(config *config.Config) *Audio {
 	audio := new(Audio)
-	audio.app = app
-	audio.mute = app.config.Audio.Mute
+	audio.config = &config.Audio
 	return audio
 }
 
 // Init the SDL audio
 func (audio *Audio) Init() bool {
 	var want, spec sdl.AudioSpec
-	want.Freq = int32(audio.app.config.Audio.Frequency)
+	want.Freq = int32(audio.config.Frequency)
 	want.Format = sdl.AUDIO_S16LSB
 	want.Channels = 2 // stereo
 	want.Samples = 1024
@@ -40,7 +39,7 @@ func (audio *Audio) Init() bool {
 
 // Play plays the audio buffer
 func (audio *Audio) Play(buffer *audio.Buffer) {
-	if !audio.mute {
+	if !audio.config.Mute {
 		sdl.QueueAudio(1, buffer.Data())
 	}
 }

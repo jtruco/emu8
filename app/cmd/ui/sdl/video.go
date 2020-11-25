@@ -5,38 +5,39 @@ import (
 	"sync"
 	"unsafe"
 
+	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/device/video"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 // Video is the SDL video UI
 type Video struct {
-	_sync      sync.Mutex   // Sync object
-	app        *App         // The SDL app
-	device     video.Video  // The machine video device
-	window     *sdl.Window  // The main window
-	winsurface *sdl.Surface // The window surface
-	surface    *sdl.Surface // The emulator surface
-	buffer     []sdl.Rect   // The buffer
-	scale      int          // Video scale configuration
-	fullscreen bool         // Full Screen window mode
+	_sync      sync.Mutex     // Sync object
+	config     *config.Config // Configuration
+	device     video.Video    // The machine video device
+	window     *sdl.Window    // The main window
+	winsurface *sdl.Surface   // The window surface
+	surface    *sdl.Surface   // The emulator surface
+	buffer     []sdl.Rect     // The buffer
+	scale      float32        // Video scale configuration
+	fullscreen bool           // Full Screen window mode
 	wscale     float32
 	hscale     float32
 }
 
 // NewVideo creates a new video UI
-func NewVideo(app *App) *Video {
+func NewVideo(config *config.Config) *Video {
 	video := new(Video)
-	video.app = app
+	video.config = config
 	return video
 }
 
 // Init initialices video
-func (video *Video) Init() bool {
+func (video *Video) Init(device video.Video) bool {
 	// configuration
-	video.device = video.app.emulator.Controller().Video().Device()
-	video.scale = video.app.config.Video.Scale
-	video.fullscreen = video.app.config.Video.FullScreen
+	video.device = device
+	video.scale = float32(video.config.Video.Scale)
+	video.fullscreen = video.config.Video.FullScreen
 	// initialization
 	return video.initSDLVideo()
 }
@@ -89,10 +90,10 @@ func (video *Video) initSDLVideo() bool {
 func (video *Video) createSDLWindow() bool {
 	screen := video.device.Screen()
 	display := video.device.Screen().Display()
-	video.wscale = float32(video.scale) * screen.WScale()
-	video.hscale = float32(video.scale) * screen.HScale()
+	video.wscale = video.scale * screen.WScale()
+	video.hscale = video.scale * screen.HScale()
 	window, err := sdl.CreateWindow(
-		video.app.config.AppTitle,
+		video.config.AppTitle,
 		sdl.WINDOWPOS_UNDEFINED,
 		sdl.WINDOWPOS_UNDEFINED,
 		int32(float32(display.W)*video.wscale),
@@ -114,6 +115,7 @@ func (video *Video) createSDLWindow() bool {
 	video.winsurface = surface
 	return true
 }
+
 func (video *Video) destroySDLWindow() {
 	if video.window != nil {
 		video.window.Destroy()

@@ -26,8 +26,8 @@ type App struct {
 func NewApp() *App {
 	app := new(App)
 	app.config = config.Get()
-	app.video = NewVideo(app)
-	app.audio = NewAudio(app)
+	app.video = NewVideo(app.config)
+	app.audio = NewAudio(app.config)
 	return app
 }
 
@@ -52,7 +52,7 @@ func (app *App) Init(emu *emulator.Emulator) bool {
 	control.Audio().SetPlayer(app.audio)
 	app.control = control
 	// init SDL video output
-	if !app.video.Init() {
+	if !app.video.Init(control.Video().Device()) {
 		return false
 	}
 	// init SDL audio
