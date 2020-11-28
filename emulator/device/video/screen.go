@@ -5,48 +5,42 @@ package video
 // -----------------------------------------------------------------------------
 
 const (
-	screenRegionFactor = 4 // Default factor : 16x16 pixel regions
-	screenRegionLimit  = 4 // Default dirty region limit ( 1 / 16 )
+	screenRegionFactor = 3 // Default region factor : 8x8 pixel regions
+	screenRegionLimit  = 3 // Default dirty regions limit : 1 / 8
 )
-
-// Rect is a display rectangle
-type Rect struct {
-	X, Y, W, H int
-}
 
 // Screen represents a video screen with a pixel buffer of width x height size.
 // Each pixel represents an int32 color, no specific format (RGBA, BGRA,...)
 // Coordinates starts at upper left corner.
 type Screen struct {
-	width   int      // Witdh of screen
-	height  int      // Height of screen
+	rect    Rect     // Screen rect dimensions
 	data    []uint32 // Screen data
-	display Rect     // Visible display of screen
 	palette []uint32 // Screen colour palette
-	dirty   bool     // Dirty control
-	regions []Rect   // Screen regions
+	display Rect     // Visible display of screen
+	scaleX  float32  // Horizontal scale factor
+	scaleY  float32  // Vertical scale factor
+	dirty   bool     // Dirty screen control
+	rects   []Rect   // Screen regions
+	rdirty  []bool   // Dirty regions control
+	rbuffer []*Rect  // Dirty regions buffer
 	factor  uint8    // Region size factor
 	cols    int      // Number of columns
 	rows    int      // Number of rows
-	refresh []bool   // Regions to refresh
-	rlimit  int      // Refresh limit optimization
-	buffer  []*Rect  // Dirty regions buffer
-	wscale  float32  // Width scale factor
-	hscale  float32  // Height scale factor
+	rlimit  int      // Regions refresh limit
 }
 
 // NewScreen creates a screen of size width x height and palette
 func NewScreen(width, height int, palette []uint32) *Screen {
 	screen := new(Screen)
-	screen.width = width
-	screen.height = height
-	screen.data = make([]uint32, (width * height))
-	screen.SetDisplay(0, 0, width, height)
 	screen.palette = palette
+	screen.rect.W, screen.rect.H = width, height
+	screen.display = screen.rect
+	screen.scaleX = 1
+	screen.scaleY = 1
+	screen.data = make([]uint32, (width * height))
 	screen.dirty = false
-	screen.initRegions(screenRegionFactor)
-	screen.wscale = 1
-	screen.hscale = 1
+	screen.factor = screenRegionFactor
+	screen.initRects()
 	return screen
 }
 
@@ -64,22 +58,22 @@ func (screen *Screen) Clear(index int) {
 func (screen *Screen) Data() []uint32 { return screen.data }
 
 // Width gets screen Width
-func (screen *Screen) Width() int { return screen.width }
+func (screen *Screen) Width() int { return screen.rect.W }
 
 // Height gets screen Height
-func (screen *Screen) Height() int { return screen.height }
+func (screen *Screen) Height() int { return screen.rect.H }
 
-// WScale gets screen width scale
-func (screen *Screen) WScale() float32 { return screen.wscale }
+// ScaleX gets screen horizontal scale
+func (screen *Screen) ScaleX() float32 { return screen.scaleX }
 
-// SetWScale sets screen width scale
-func (screen *Screen) SetWScale(scale float32) { screen.wscale = scale }
+// SetScaleX sets screen horizontal scale
+func (screen *Screen) SetScaleX(scale float32) { screen.scaleX = scale }
 
-// HScale gets screen height scale
-func (screen *Screen) HScale() float32 { return screen.hscale }
+// ScaleY gets screen vertical scale
+func (screen *Screen) ScaleY() float32 { return screen.scaleY }
 
-// SetHScale sets screen height scale
-func (screen *Screen) SetHScale(scale float32) { screen.hscale = scale }
+// SetScaleY sets screen vertical scale
+func (screen *Screen) SetScaleY(scale float32) { screen.scaleY = scale }
 
 // Display is the display rect
 func (screen *Screen) Display() Rect { return screen.display }
@@ -95,8 +89,8 @@ func (screen *Screen) IsDirty() bool { return screen.dirty }
 // SetDirty sets if screen is dirty
 func (screen *Screen) SetDirty(dirty bool) {
 	screen.dirty = dirty
-	for i := range screen.refresh {
-		screen.refresh[i] = dirty
+	for i := range screen.rdirty {
+		screen.rdirty[i] = dirty
 	}
 }
 
@@ -108,18 +102,18 @@ func (screen *Screen) GetColour(index int) uint32 { return screen.palette[index]
 
 // GetPixel gets colour from pixel coordinates
 func (screen *Screen) GetPixel(x, y int) uint32 {
-	pos := x + y*screen.width
+	pos := x + y*screen.rect.W
 	return screen.data[pos]
 }
 
 // SetPixel sets colour at pixel coordinates
 func (screen *Screen) SetPixel(x, y int, colour uint32) {
-	pos := x + y*screen.width
+	pos := x + y*screen.rect.W
 	if screen.data[pos] != colour {
 		screen.data[pos] = colour
 		region := ((y >> screen.factor) * screen.cols) + (x >> screen.factor)
-		if !screen.refresh[region] {
-			screen.refresh[region] = true
+		if !screen.rdirty[region] {
+			screen.rdirty[region] = true
 			screen.dirty = true
 		}
 	}
@@ -132,61 +126,61 @@ func (screen *Screen) SetPixelIndex(x, y int, index int) {
 
 // regions
 
-// DirtyRegions returns dirty regions to refresh
-func (screen *Screen) DirtyRegions() []*Rect {
+// Rects returns all screen regions
+func (screen *Screen) Rects() []Rect {
+	return screen.rects
+}
+
+// DirtyRects returns the regions to refresh
+func (screen *Screen) DirtyRects() []*Rect {
 	count := 0
-	for i := 0; i < len(screen.refresh); i++ {
-		if screen.refresh[i] {
-			screen.buffer[count] = &screen.regions[i]
+	for i := 0; i < len(screen.rdirty); i++ {
+		if screen.rdirty[i] {
+			screen.rbuffer[count] = &screen.rects[i]
 			count++
+			// optimization : limit regions to refresh
+			if count > screen.rlimit {
+				count = 1
+				screen.rbuffer[0] = &screen.display
+				break
+			}
 		}
 	}
-	// optimization : limit regions to refresh
-	if count > screen.rlimit {
-		count = 1
-		screen.buffer[0] = &screen.display
-	}
-	return screen.buffer[:count]
+	return screen.rbuffer[:count]
 }
 
-// Regions returns all regions
-func (screen *Screen) Regions() []Rect {
-	return screen.regions
-}
-
-// initRegions initializes screen regions
-func (screen *Screen) initRegions(factor uint8) {
+// initRects initializes screen regions
+func (screen *Screen) initRects() {
 
 	// calculate number of regions
-	screen.factor = factor
-	screen.cols = screen.width >> factor
-	if screen.width > (screen.cols << factor) {
+	screen.cols = screen.rect.W >> screen.factor
+	if screen.rect.W > (screen.cols << screen.factor) {
 		screen.cols++
 	}
-	screen.rows = screen.height >> factor
-	if screen.height > (screen.rows << factor) {
+	screen.rows = screen.rect.H >> screen.factor
+	if screen.rect.H > (screen.rows << screen.factor) {
 		screen.rows++
 	}
 	nreg := screen.cols * screen.rows
 	screen.rlimit = nreg >> screenRegionLimit
-	screen.regions = make([]Rect, nreg)
-	screen.buffer = make([]*Rect, nreg)
-	screen.refresh = make([]bool, nreg)
+	screen.rects = make([]Rect, nreg)
+	screen.rbuffer = make([]*Rect, nreg)
+	screen.rdirty = make([]bool, nreg)
 
 	// create regions rects
 	s := 1 << screen.factor
 	x, y, w, h := 0, 0, s, s
 	for i := 0; i < nreg; i++ {
-		if x+w > screen.width {
-			w = screen.width - x
+		if x+w > screen.rect.W {
+			w = screen.rect.W - x
 		}
-		screen.regions[i] = Rect{x, y, w, h}
+		screen.rects[i] = Rect{x, y, w, h}
 		x += s
-		if x >= screen.width {
+		if x >= screen.rect.W {
 			x, w = 0, s
 			y += s
-			if y+h > screen.height {
-				h = screen.height - y
+			if y+h > screen.rect.H {
+				h = screen.rect.H - y
 			}
 		}
 	}

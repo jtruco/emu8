@@ -13,16 +13,16 @@ import (
 // Video is the SDL video UI
 type Video struct {
 	_sync      sync.Mutex     // Sync object
-	config     *config.Config // Configuration
 	device     video.Video    // The machine video device
+	config     *config.Config // Configuration
 	window     *sdl.Window    // The main window
 	winsurface *sdl.Surface   // The window surface
 	surface    *sdl.Surface   // The emulator surface
 	buffer     []sdl.Rect     // The buffer
-	scale      float32        // Video scale configuration
 	fullscreen bool           // Full Screen window mode
-	wscale     float32
-	hscale     float32
+	scale      float32        // Video scale configuration
+	scaleX     float32        // Render horizontal scale factor
+	scaleY     float32        // Render vertical scale factor
 }
 
 // NewVideo creates a new video UI
@@ -49,7 +49,7 @@ func (video *Video) Render(screen *video.Screen) {
 
 	var srcRect sdl.Rect
 	display := screen.Display()
-	rects := screen.DirtyRegions()
+	rects := screen.DirtyRects()
 	for idx, rect := range rects {
 		srcRect = sdl.Rect{
 			X: int32(rect.X),
@@ -57,10 +57,10 @@ func (video *Video) Render(screen *video.Screen) {
 			W: int32(rect.W),
 			H: int32(rect.H)}
 		video.buffer[idx] = sdl.Rect{
-			X: int32(float32(rect.X-display.X) * video.wscale),
-			Y: int32(float32(rect.Y-display.Y) * video.hscale),
-			W: int32(float32(rect.W) * video.wscale),
-			H: int32(float32(rect.H) * video.hscale)}
+			X: int32(float32(rect.X-display.X) * video.scaleX),
+			Y: int32(float32(rect.Y-display.Y) * video.scaleY),
+			W: int32(float32(rect.W) * video.scaleX),
+			H: int32(float32(rect.H) * video.scaleY)}
 		video.surface.BlitScaled(&srcRect, video.winsurface, &video.buffer[idx])
 	}
 	video.window.UpdateSurfaceRects(video.buffer[:len(rects)])
@@ -90,14 +90,14 @@ func (video *Video) initSDLVideo() bool {
 func (video *Video) createSDLWindow() bool {
 	screen := video.device.Screen()
 	display := video.device.Screen().Display()
-	video.wscale = video.scale * screen.WScale()
-	video.hscale = video.scale * screen.HScale()
+	video.scaleX = video.scale * screen.ScaleX()
+	video.scaleY = video.scale * screen.ScaleY()
 	window, err := sdl.CreateWindow(
 		video.config.AppTitle,
 		sdl.WINDOWPOS_UNDEFINED,
 		sdl.WINDOWPOS_UNDEFINED,
-		int32(float32(display.W)*video.wscale),
-		int32(float32(display.H)*video.hscale),
+		int32(float32(display.W)*video.scaleX),
+		int32(float32(display.H)*video.scaleY),
 		0)
 	if err != nil {
 		log.Println("Error initializing SDL window : " + err.Error())
@@ -138,6 +138,6 @@ func (video *Video) createEmulatorSurface() bool {
 	}
 	surface.SetBlendMode(sdl.BLENDMODE_NONE)
 	video.surface = surface
-	video.buffer = make([]sdl.Rect, len(screen.Regions()))
+	video.buffer = make([]sdl.Rect, len(screen.Rects()))
 	return true
 }

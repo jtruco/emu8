@@ -57,7 +57,7 @@ type VduVideo struct {
 func NewVduVideo(cpc *AmstradCPC) *VduVideo {
 	vdu := new(VduVideo)
 	vdu.screen = video.NewScreen(videoTotalWidth, videoTotalHeight, cpcPaletteRGBA)
-	vdu.screen.SetWScale(videoWidthScale)
+	vdu.screen.SetScaleX(videoWidthScale)
 	vdu.gatearray = cpc.gatearray
 	vdu.crtc = cpc.crtc
 	vdu.ram = make([][]byte, 4)
