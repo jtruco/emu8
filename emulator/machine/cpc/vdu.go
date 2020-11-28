@@ -173,77 +173,77 @@ func (vdu *VduVideo) OnHSync() {
 
 // paintByte0 paints mode 0 screen byte
 func (vdu *VduVideo) paintByte0(x, y int, data byte) int {
-	colour := vdu.palette[cpcMode0[data][0]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour := vdu.screen.Palette()[vdu.palette[cpcMode0[data][0]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	vdu.screen.SetPixelIndex(x, y, colour)
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	vdu.screen.SetPixelIndex(x, y, colour)
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	vdu.screen.SetPixelIndex(x, y, colour)
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	colour = vdu.palette[cpcMode0[data][1]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour = vdu.screen.Palette()[vdu.palette[cpcMode0[data][1]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	vdu.screen.SetPixelIndex(x, y, colour)
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	vdu.screen.SetPixelIndex(x, y, colour)
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	vdu.screen.SetPixelIndex(x, y, colour)
+	vdu.screen.SetPixel(x, y, colour)
 	x++
 	return x
 }
 
 // paintByte1 paints mode 1 screen byte
 func (vdu *VduVideo) paintByte1(x, y int, data byte) int {
-	colour := vdu.palette[cpcMode1[data][0]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour := vdu.screen.Palette()[vdu.palette[cpcMode1[data][0]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	vdu.screen.SetPixelIndex(x, y, colour)
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	colour = vdu.palette[cpcMode1[data][1]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour = vdu.screen.Palette()[vdu.palette[cpcMode1[data][1]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	vdu.screen.SetPixelIndex(x, y, colour)
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	colour = vdu.palette[cpcMode1[data][2]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour = vdu.screen.Palette()[vdu.palette[cpcMode1[data][2]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	vdu.screen.SetPixelIndex(x, y, colour)
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	colour = vdu.palette[cpcMode1[data][3]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour = vdu.screen.Palette()[vdu.palette[cpcMode1[data][3]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	vdu.screen.SetPixelIndex(x, y, colour)
+	vdu.screen.SetPixel(x, y, colour)
 	x++
 	return x
 }
 
 // paintByte2 paints mode 2 screen byte
 func (vdu *VduVideo) paintByte2(x, y int, data byte) int {
-	colour := vdu.palette[cpcMode2[data][0]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour := vdu.screen.Palette()[vdu.palette[cpcMode2[data][0]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	colour = vdu.palette[cpcMode2[data][1]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour = vdu.screen.Palette()[vdu.palette[cpcMode2[data][1]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	colour = vdu.palette[cpcMode2[data][2]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour = vdu.screen.Palette()[vdu.palette[cpcMode2[data][2]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	colour = vdu.palette[cpcMode2[data][3]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour = vdu.screen.Palette()[vdu.palette[cpcMode2[data][3]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	colour = vdu.palette[cpcMode2[data][4]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour = vdu.screen.Palette()[vdu.palette[cpcMode2[data][4]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	colour = vdu.palette[cpcMode2[data][5]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour = vdu.screen.Palette()[vdu.palette[cpcMode2[data][5]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	colour = vdu.palette[cpcMode2[data][6]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour = vdu.screen.Palette()[vdu.palette[cpcMode2[data][6]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
-	colour = vdu.palette[cpcMode2[data][7]]
-	vdu.screen.SetPixelIndex(x, y, colour)
+	colour = vdu.screen.Palette()[vdu.palette[cpcMode2[data][7]]]
+	vdu.screen.SetPixel(x, y, colour)
 	x++
 	return x
 }
