@@ -1,3 +1,6 @@
+// +build darwin freebsd linux windows
+// +build !android,!ios,!js
+
 package vfs
 
 import (
@@ -8,44 +11,46 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/jtruco/emu8/emulator/controller/vfs"
 )
 
-// Path constants
+// Default subpath constants
 const (
 	PathRom  = "roms"  // ROMs default subpath
 	PathSnap = "snaps" // Snapshots default subpath
 	PathTape = "tapes" // Tapes default subpath
 )
 
-// FileSystem implements the virtual file system
-type FileSystem struct {
+// -----------------------------------------------------------------------------
+// DesktopFileSystem
+// -----------------------------------------------------------------------------
+
+// DesktopFileSystem implements the file system for desktop
+type DesktopFileSystem struct {
 	path     string
-	subpaths [vfs.FormatMax]string // Subpaths by file format
+	subpaths [FormatMax]string // Subpaths by file format
 }
 
-// NewFileSystem creates a new filesystem
-func NewFileSystem(path string) *FileSystem {
-	fs := new(FileSystem)
+// NewDesktopFileSystem creates a new desktop filesystem
+func NewDesktopFileSystem(path string) *DesktopFileSystem {
+	fs := new(DesktopFileSystem)
 	fs.path = path
-	fs.subpaths[vfs.FormatUnknown] = path
-	fs.subpaths[vfs.FormatRom] = filepath.Join(path, PathRom)
-	fs.subpaths[vfs.FormatSnap] = filepath.Join(path, PathSnap)
-	fs.subpaths[vfs.FormatTape] = filepath.Join(path, PathTape)
+	fs.subpaths[FormatUnknown] = path
+	fs.subpaths[FormatRom] = filepath.Join(path, PathRom)
+	fs.subpaths[FormatSnap] = filepath.Join(path, PathSnap)
+	fs.subpaths[FormatTape] = filepath.Join(path, PathTape)
 	return fs
 }
 
-// DefaultFileSystem creates the default filesystem
-func DefaultFileSystem() {
+// InitDesktop initialices the desktop filesystem
+func InitDesktop() {
 	cwd, _ := os.Getwd()
-	vfs.DefaultFileSystem = NewFileSystem(cwd)
+	SetFileSystem(NewDesktopFileSystem(cwd))
 }
 
 // LoadFile loads the file data from it's storage location.
-func (fs *FileSystem) LoadFile(info *vfs.FileInfo) error {
+func (dfs *DesktopFileSystem) LoadFile(info *FileInfo) error {
 	// check for file
-	err := fs.stat(info)
+	err := dfs.stat(info)
 	if err != nil {
 		return err
 	}
@@ -54,38 +59,38 @@ func (fs *FileSystem) LoadFile(info *vfs.FileInfo) error {
 	if err == nil {
 		info.Data = data
 		if info.IsZip {
-			err = fs.unzip(info)
+			err = dfs.unzip(info)
 		}
 	}
 	return err
 }
 
 // SaveFile saves fhe file data to it's storage location.
-func (fs *FileSystem) SaveFile(info *vfs.FileInfo) error {
+func (dfs *DesktopFileSystem) SaveFile(info *FileInfo) error {
 	const fileMode = 0664
-	fs.formatPath(info)
+	dfs.formatPath(info)
 	return ioutil.WriteFile(info.Path, info.Data, fileMode)
 }
 
 // stat checks exists file in default folders
-func (fs *FileSystem) stat(info *vfs.FileInfo) error {
+func (dfs *DesktopFileSystem) stat(info *FileInfo) error {
 	// check for file
 	_, err := os.Stat(info.Path)
 	if os.IsNotExist(err) {
 		// search in format folder
-		fs.formatPath(info)
+		dfs.formatPath(info)
 		_, err = os.Stat(info.Path)
 	}
 	return err
 }
 
 // FormatPath gets filename from format path
-func (fs *FileSystem) formatPath(info *vfs.FileInfo) {
-	info.Path = filepath.Join(fs.subpaths[info.Format], filepath.Base(info.Name))
+func (dfs *DesktopFileSystem) formatPath(info *FileInfo) {
+	info.Path = filepath.Join(dfs.subpaths[info.Format], filepath.Base(info.Name))
 }
 
 // Unzip unzips file data
-func (fs *FileSystem) unzip(file *vfs.FileInfo) error {
+func (dfs *DesktopFileSystem) unzip(file *FileInfo) error {
 	zipdata := file.Data
 	zr, err := zip.NewReader(bytes.NewReader(zipdata), int64(len(zipdata)))
 	if err != nil {

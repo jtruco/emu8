@@ -1,8 +1,6 @@
 package vfs
 
 import (
-	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -19,64 +17,11 @@ const (
 	FormatMax // limit count
 )
 
-// Common extensions
+// Commont extensions
 const (
 	ExtRom = "rom"
 	ExtZip = "zip"
 )
-
-// -----------------------------------------------------------------------------
-// File information
-// -----------------------------------------------------------------------------
-
-// FileInfo contains file information
-type FileInfo struct {
-	Path   string // File path
-	Name   string // File name
-	Ext    string // File extension
-	Format int    // File format
-	IsZip  bool   // Is a zip file
-	Data   []byte // File data
-}
-
-// NewFileInfo returns new FileInfo
-func NewFileInfo(path string) *FileInfo {
-	info := new(FileInfo)
-	info.Path = path
-	info.Name = filepath.Base(path)
-	info.Format = FormatUnknown
-	info.extension()
-	return info
-}
-
-// extension validates file extension and zip
-func (info *FileInfo) extension() {
-	const extIsZip = "." + ExtZip
-	name := strings.ToLower(info.Name)
-	ext := filepath.Ext(name)
-	if ext == extIsZip { // check if is a zip file
-		info.IsZip = true
-		ext = filepath.Ext(name[:len(name)-4])
-	}
-	if ext != "" {
-		info.Ext = ext[1:]
-	}
-}
-
-// -----------------------------------------------------------------------------
-// Virtual File System
-// -----------------------------------------------------------------------------
-
-// FileSystem the virtual filesystem interface
-type FileSystem interface {
-	// LoadFile loads the file data from it's storage location.
-	LoadFile(info *FileInfo) error
-	// SaveFile saves fhe file data to it's storage location.
-	SaveFile(info *FileInfo) error
-}
-
-// DefaultFileSystem the current filesystem
-var DefaultFileSystem FileSystem
 
 // -----------------------------------------------------------------------------
 // File Manager
@@ -91,7 +36,7 @@ type FileManager struct {
 // NewFileManager returns a new file manager
 func NewFileManager() *FileManager {
 	manager := new(FileManager)
-	manager.vfs = DefaultFileSystem
+	manager.vfs = GetFileSystem()
 	manager.formats = make(map[string]int)
 	manager.AddFormat(FormatRom, ExtRom)
 	return manager
