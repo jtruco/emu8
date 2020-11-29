@@ -1,13 +1,12 @@
 package emulator
 
 import (
-	"github.com/jtruco/emu8/machine/cpc"
-	"github.com/jtruco/emu8/machine/spectrum"
+	// init config
+	_ "github.com/jtruco/emu8/emulator/config"
+	// register machines
+	_ "github.com/jtruco/emu8/emulator/machine/cpc"
+	_ "github.com/jtruco/emu8/emulator/machine/spectrum"
 )
 
 // emulator package init
-func init() {
-	// register avaible machines
-	spectrum.Register()
-	cpc.Register()
-}
+func init() {}

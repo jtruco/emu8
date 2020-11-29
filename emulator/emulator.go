@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jtruco/emu8/config"
+	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/controller"
-	"github.com/jtruco/emu8/machine"
+	"github.com/jtruco/emu8/emulator/machine"
 )
 
 // -----------------------------------------------------------------------------
@@ -78,6 +78,11 @@ func (emulator *Emulator) Reset() {
 	emulator.machine.Reset()
 }
 
+// Emulate one frame loop
+func (emulator *Emulator) Emulate() {
+	emulator.emulateFrame()
+}
+
 // Start the emulation
 func (emulator *Emulator) Start() {
 	if !emulator.running {
@@ -121,29 +126,16 @@ func (emulator *Emulator) runEmulation() {
 	emulator.wg.Add(1)
 	defer emulator.wg.Done()
 
-	// emulation speed
-	fps := int(emulator.machine.Config().FPS)
+	// emulation timmings
 	frameTime := emulator.machine.Config().FrameTime
 	sleep := frameTime
-	startTime := time.Now()
-	frame := 0
 
 	// emulation loop
-	timer := time.NewTimer(sleep)
-	defer timer.Stop()
 	for emulator.running {
-		startFrame := time.Now()
+		start := time.Now()
 		emulator.emulateFrame()
-		// timer control
-		<-timer.C
-		sleep += frameTime - time.Since(startFrame)
-		frame++
-		if frame == fps { // FPS bias control
-			frame = 0
-			sleep += time.Second - time.Since(startTime)
-			startTime = time.Now()
-		}
-		timer.Reset(sleep) // sleep until next frame
+		time.Sleep(sleep) // sleep until next frame
+		sleep += frameTime - time.Since(start)
 	}
 }
 
@@ -154,7 +146,7 @@ func (emulator *Emulator) emulateFrame() {
 	config := machine.Config()
 
 	// pre-frame actions
-	emulator.controller.Flush()
+	emulator.controller.Scan()
 
 	// frame emulation loop
 	machine.BeginFrame()
