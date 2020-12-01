@@ -30,11 +30,11 @@ func (keyboard *Keyboard) Reset() { keyboard.Init() }
 
 // Keyboard
 
-// ProcessKeyEvent processes the keyboard events
-func (keyboard *Keyboard) ProcessKeyEvent(event *keyboard.KeyEvent) {
-	state, ok := keyStates[event.Key]
+// ProcessKey processes the ZX keyboard events
+func (keyboard *Keyboard) ProcessKey(key keyboard.Key, pressed bool) {
+	state, ok := keyStates[key]
 	if ok {
-		if event.Pressed {
+		if pressed {
 			keyboard.rowstates[state[0]] &= ^(state[1])
 		} else {
 			keyboard.rowstates[state[0]] |= state[1]

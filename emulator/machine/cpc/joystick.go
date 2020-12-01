@@ -26,21 +26,21 @@ func (joy *Joystick) Reset() {}
 func (joy *Joystick) SetAxis(axis byte, value byte) {
 	if axis == 0 { // right / left
 		if value == 0 {
-			joy.keyboard.processKey(CpcKeyJoyRight, false)
-			joy.keyboard.processKey(CpcKeyJoyLeft, false)
+			joy.keyboard.ProcessKey(CpcKeyJoyRight, false)
+			joy.keyboard.ProcessKey(CpcKeyJoyLeft, false)
 		} else if value < 128 {
-			joy.keyboard.processKey(CpcKeyJoyRight, true)
+			joy.keyboard.ProcessKey(CpcKeyJoyRight, true)
 		} else {
-			joy.keyboard.processKey(CpcKeyJoyLeft, true)
+			joy.keyboard.ProcessKey(CpcKeyJoyLeft, true)
 		}
 	} else if axis == 1 { // down / up
 		if value == 0 {
-			joy.keyboard.processKey(CpcKeyJoyDown, false)
-			joy.keyboard.processKey(CpcKeyJoyUp, false)
+			joy.keyboard.ProcessKey(CpcKeyJoyDown, false)
+			joy.keyboard.ProcessKey(CpcKeyJoyUp, false)
 		} else if value < 128 {
-			joy.keyboard.processKey(CpcKeyJoyDown, true)
+			joy.keyboard.ProcessKey(CpcKeyJoyDown, true)
 		} else {
-			joy.keyboard.processKey(CpcKeyJoyUp, true)
+			joy.keyboard.ProcessKey(CpcKeyJoyUp, true)
 		}
 	}
 }
@@ -49,8 +49,8 @@ func (joy *Joystick) SetAxis(axis byte, value byte) {
 func (joy *Joystick) SetButton(button byte, state byte) {
 	switch button {
 	case 0:
-		joy.keyboard.processKey(CpcKeyJoyFire1, state > 0)
+		joy.keyboard.ProcessKey(CpcKeyJoyFire1, state > 0)
 	case 1:
-		joy.keyboard.processKey(CpcKeyJoyFire2, state > 0)
+		joy.keyboard.ProcessKey(CpcKeyJoyFire2, state > 0)
 	}
 }

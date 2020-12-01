@@ -13,7 +13,7 @@ import (
 // JoystickController is the emulator joystick(s) controller
 type JoystickController struct {
 	receivers  map[byte]joystick.Joystick // Joystick devices mapped by ID
-	eventQueue []*joystick.JoyEvent       // Events to dispatch
+	eventQueue []joystick.JoyEvent        // Events to dispatch
 	mtx        sync.Mutex                 // Sync
 }
 
@@ -21,7 +21,7 @@ type JoystickController struct {
 func NewJoystickController() *JoystickController {
 	controller := new(JoystickController)
 	controller.receivers = make(map[byte]joystick.Joystick)
-	controller.eventQueue = make([]*joystick.JoyEvent, 0, 5)
+	controller.eventQueue = make([]joystick.JoyEvent, 0, 5)
 	return controller
 }
 
@@ -56,7 +56,7 @@ func (controller *JoystickController) ButtonEvent(id, button, state byte) {
 }
 
 // appendEvent adds event to queue
-func (controller *JoystickController) appendEvent(joyEvent *joystick.JoyEvent) {
+func (controller *JoystickController) appendEvent(joyEvent joystick.JoyEvent) {
 	controller.mtx.Lock()
 	defer controller.mtx.Unlock()
 
@@ -69,7 +69,7 @@ func (controller *JoystickController) Flush() {
 	defer controller.mtx.Unlock()
 
 	for _, e := range controller.eventQueue {
-		controller.emitEvent(e)
+		controller.emitEvent(&e)
 	}
 	controller.eventQueue = controller.eventQueue[:0]
 }

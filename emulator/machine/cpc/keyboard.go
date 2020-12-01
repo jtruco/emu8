@@ -43,15 +43,10 @@ func (keyboard *Keyboard) Reset() { keyboard.Init() }
 
 // Keyboard
 
-// ProcessKeyEvent processes the keyboard events
-func (keyboard *Keyboard) ProcessKeyEvent(event *keyboard.KeyEvent) {
-	keyboard.processKey(event.Key, event.Pressed)
-}
-
-// processKey processes CPC keyboard matrix
-func (keyboard *Keyboard) processKey(cpcKey int, pressed bool) {
-	row := cpcKey >> 4
-	bit := uint8(cpcKey & 0x07)
+// ProcessKey processes CPC keyboard matrix
+func (keyboard *Keyboard) ProcessKey(key keyboard.Key, pressed bool) {
+	row := key >> 4
+	bit := uint8(key & 0x07)
 	mask := uint8(1 << bit)
 	if pressed {
 		keyboard.rowstates[row] &= ^mask

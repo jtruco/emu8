@@ -76,15 +76,15 @@ func (controller *KeyboardController) Flush() {
 }
 
 // emitEvent emits a keyboard event
-func (controller *KeyboardController) emitEvent(keyEvent keyEvent) {
+func (controller *KeyboardController) emitEvent(e keyEvent) {
 	// For every receiver checks if keycode is mapped
 	for receiver, keymap := range controller.receivers {
-		keys, ok := keymap[keyEvent.Keycode]
+		keys, ok := keymap[e.Keycode]
 		if ok {
 			// For each key emit event to receiver
 			for _, key := range keys {
-				keyevent := keyboard.NewKeyEvent(keyEvent.EventType, key)
-				receiver.ProcessKeyEvent(keyevent)
+				evt := keyboard.NewKeyEvent(e.EventType, key)
+				receiver.ProcessKey(evt.Key, evt.Pressed)
 			}
 		}
 	}

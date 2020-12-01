@@ -20,8 +20,8 @@ type KeyEvent struct {
 }
 
 // NewKeyEvent creates a joystick axis event
-func NewKeyEvent(code int, key Key) *KeyEvent {
-	return &KeyEvent{
+func NewKeyEvent(code int, key Key) KeyEvent {
+	return KeyEvent{
 		Event:   device.CreateEvent(code),
 		Key:     key,
 		Pressed: code == KeyDown}
@@ -29,7 +29,7 @@ func NewKeyEvent(code int, key Key) *KeyEvent {
 
 // Receiver is a component that process keyboard events
 type Receiver interface {
-	ProcessKeyEvent(event *KeyEvent)
+	ProcessKey(key Key, pressed bool) // Sets key state
 }
 
 // Keyboard is a keyboard (receiver) device

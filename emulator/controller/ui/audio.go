@@ -38,7 +38,7 @@ func (controller *AudioController) SetPlayer(player audio.Player) {
 	controller.player = player
 }
 
-// Flush ends the audio frame and flush out the buffer to player
+// Flush ends the audio frame and flushes out the buffer to player
 func (controller *AudioController) Flush() {
 	if controller.device == nil {
 		return
