@@ -22,7 +22,7 @@ type Screen struct {
 	dirty   bool     // Dirty screen control
 	rects   []Rect   // Screen regions
 	rdirty  []bool   // Dirty regions control
-	rbuffer []*Rect  // Dirty regions buffer
+	rbuffer []int    // Dirty regions buffer
 	factor  uint8    // Region size factor
 	cols    int      // Number of columns
 	rows    int      // Number of rows
@@ -132,16 +132,15 @@ func (screen *Screen) Rects() []Rect {
 }
 
 // DirtyRects returns the regions to refresh
-func (screen *Screen) DirtyRects() []*Rect {
+func (screen *Screen) DirtyRects() []int {
 	count := 0
 	for i := 0; i < len(screen.rdirty); i++ {
 		if screen.rdirty[i] {
-			screen.rbuffer[count] = &screen.rects[i]
+			screen.rbuffer[count] = i
 			count++
 			// optimization : limit regions to refresh
 			if count > screen.rlimit {
-				count = 1
-				screen.rbuffer[0] = &screen.display
+				count = 0
 				break
 			}
 		}
@@ -164,7 +163,7 @@ func (screen *Screen) initRects() {
 	nreg := screen.cols * screen.rows
 	screen.rlimit = nreg >> screenRegionLimit
 	screen.rects = make([]Rect, nreg)
-	screen.rbuffer = make([]*Rect, nreg)
+	screen.rbuffer = make([]int, nreg)
 	screen.rdirty = make([]bool, nreg)
 
 	// create regions rects

@@ -18,7 +18,9 @@ type Video struct {
 	window     *sdl.Window    // The main window
 	winsurface *sdl.Surface   // The window surface
 	surface    *sdl.Surface   // The emulator surface
-	buffer     []sdl.Rect     // The buffer
+	buffer     []sdl.Rect     // The update surface buffer
+	srcRects   []sdl.Rect     // The source regions cache
+	dstRects   []sdl.Rect     // The dest regions cache
 	fullscreen bool           // Full Screen window mode
 	scale      float32        // Video scale configuration
 	scaleX     float32        // Render horizontal scale factor
@@ -47,23 +49,48 @@ func (video *Video) Render(screen *video.Screen) {
 	video._sync.Lock()
 	defer video._sync.Unlock()
 
-	var srcRect sdl.Rect
-	display := screen.Display()
 	rects := screen.DirtyRects()
-	for idx, rect := range rects {
-		srcRect = sdl.Rect{
-			X: int32(rect.X),
-			Y: int32(rect.Y),
-			W: int32(rect.W),
-			H: int32(rect.H)}
-		video.buffer[idx] = sdl.Rect{
+	if len(rects) == 0 {
+		idx := len(video.srcRects) - 1
+		video.surface.BlitScaled(&video.srcRects[idx], video.winsurface, &video.dstRects[idx])
+		video.window.UpdateSurface()
+	} else {
+		for idx, rect := range rects {
+			video.buffer[idx] = video.dstRects[rect]
+			video.surface.BlitScaled(&video.srcRects[rect], video.winsurface, &video.dstRects[rect])
+		}
+		video.window.UpdateSurfaceRects(video.buffer[:len(rects)])
+	}
+}
+
+func (video *Video) initScreenRects() {
+	screen := video.device.Screen()
+	display := screen.Display()
+	screen.SetDirty(true)
+	// create regions cache
+	rects := screen.Rects()
+	l := len(rects)
+	video.srcRects = make([]sdl.Rect, l+1)
+	video.dstRects = make([]sdl.Rect, l+1)
+	for i, r := range rects {
+		rect := r.Intersect(&display) // only in display
+		video.srcRects[i] = sdl.Rect{
+			X: int32(rect.X), Y: int32(rect.Y),
+			W: int32(rect.W), H: int32(rect.H)}
+		video.dstRects[i] = sdl.Rect{
 			X: int32(float32(rect.X-display.X) * video.scaleX),
 			Y: int32(float32(rect.Y-display.Y) * video.scaleY),
 			W: int32(float32(rect.W) * video.scaleX),
 			H: int32(float32(rect.H) * video.scaleY)}
-		video.surface.BlitScaled(&srcRect, video.winsurface, &video.buffer[idx])
 	}
-	video.window.UpdateSurfaceRects(video.buffer[:len(rects)])
+	// display
+	video.srcRects[l] = sdl.Rect{
+		X: int32(display.X), Y: int32(display.Y),
+		W: int32(display.W), H: int32(display.H)}
+	video.dstRects[l] = sdl.Rect{
+		X: 0, Y: 0,
+		W: int32(float32(display.W) * video.scaleX),
+		H: int32(float32(display.H) * video.scaleY)}
 }
 
 // ToggleFullscreen enable / disable fullscreen mode
@@ -83,7 +110,7 @@ func (video *Video) initSDLVideo() bool {
 	if !video.createEmulatorSurface() {
 		return false
 	}
-	video.device.Screen().SetDirty(true)
+	video.initScreenRects()
 	return true
 }
 
