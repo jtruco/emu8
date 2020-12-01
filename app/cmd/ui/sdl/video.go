@@ -65,7 +65,7 @@ func (video *Video) Render(screen *video.Screen) {
 
 func (video *Video) initScreenRects() {
 	screen := video.device.Screen()
-	display := screen.Display()
+	viewport := screen.View()
 	screen.SetDirty(true)
 	// create regions cache
 	rects := screen.Rects()
@@ -73,24 +73,24 @@ func (video *Video) initScreenRects() {
 	video.srcRects = make([]sdl.Rect, l+1)
 	video.dstRects = make([]sdl.Rect, l+1)
 	for i, r := range rects {
-		rect := r.Intersect(&display) // only in display
+		rect := r.Intersect(&viewport) // only in view
 		video.srcRects[i] = sdl.Rect{
 			X: int32(rect.X), Y: int32(rect.Y),
 			W: int32(rect.W), H: int32(rect.H)}
 		video.dstRects[i] = sdl.Rect{
-			X: int32(float32(rect.X-display.X) * video.scaleX),
-			Y: int32(float32(rect.Y-display.Y) * video.scaleY),
+			X: int32(float32(rect.X-viewport.X) * video.scaleX),
+			Y: int32(float32(rect.Y-viewport.Y) * video.scaleY),
 			W: int32(float32(rect.W) * video.scaleX),
 			H: int32(float32(rect.H) * video.scaleY)}
 	}
-	// display
+	// viewport
 	video.srcRects[l] = sdl.Rect{
-		X: int32(display.X), Y: int32(display.Y),
-		W: int32(display.W), H: int32(display.H)}
+		X: int32(viewport.X), Y: int32(viewport.Y),
+		W: int32(viewport.W), H: int32(viewport.H)}
 	video.dstRects[l] = sdl.Rect{
 		X: 0, Y: 0,
-		W: int32(float32(display.W) * video.scaleX),
-		H: int32(float32(display.H) * video.scaleY)}
+		W: int32(float32(viewport.W) * video.scaleX),
+		H: int32(float32(viewport.H) * video.scaleY)}
 }
 
 // ToggleFullscreen enable / disable fullscreen mode
@@ -116,15 +116,15 @@ func (video *Video) initSDLVideo() bool {
 
 func (video *Video) createSDLWindow() bool {
 	screen := video.device.Screen()
-	display := video.device.Screen().Display()
+	viewport := video.device.Screen().View()
 	video.scaleX = video.scale * screen.ScaleX()
 	video.scaleY = video.scale * screen.ScaleY()
 	window, err := sdl.CreateWindow(
 		video.config.AppTitle,
 		sdl.WINDOWPOS_UNDEFINED,
 		sdl.WINDOWPOS_UNDEFINED,
-		int32(float32(display.W)*video.scaleX),
-		int32(float32(display.H)*video.scaleY),
+		int32(float32(viewport.W)*video.scaleX),
+		int32(float32(viewport.H)*video.scaleY),
 		0)
 	if err != nil {
 		log.Println("Error initializing SDL window : " + err.Error())

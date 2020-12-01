@@ -16,7 +16,7 @@ type Screen struct {
 	rect    Rect     // Screen rect dimensions
 	data    []uint32 // Screen data
 	palette []uint32 // Screen colour palette
-	display Rect     // Visible display of screen
+	view    Rect     // Visible viewport of the screen
 	scaleX  float32  // Horizontal scale factor
 	scaleY  float32  // Vertical scale factor
 	dirty   bool     // Dirty screen control
@@ -34,7 +34,7 @@ func NewScreen(width, height int, palette []uint32) *Screen {
 	screen := new(Screen)
 	screen.palette = palette
 	screen.rect.W, screen.rect.H = width, height
-	screen.display = screen.rect
+	screen.view = screen.rect
 	screen.scaleX = 1
 	screen.scaleY = 1
 	screen.data = make([]uint32, (width * height))
@@ -75,12 +75,12 @@ func (screen *Screen) ScaleY() float32 { return screen.scaleY }
 // SetScaleY sets screen vertical scale
 func (screen *Screen) SetScaleY(scale float32) { screen.scaleY = scale }
 
-// Display is the display rect
-func (screen *Screen) Display() Rect { return screen.display }
+// View is the screen viewport rect
+func (screen *Screen) View() Rect { return screen.view }
 
-// SetDisplay sets screen display
-func (screen *Screen) SetDisplay(X, Y, W, H int) {
-	screen.display = Rect{X: X, Y: Y, W: W, H: H}
+// SetView sets screen viewport rect
+func (screen *Screen) SetView(X, Y, W, H int) {
+	screen.view = Rect{X: X, Y: Y, W: W, H: H}
 }
 
 // IsDirty true if screen is dirty

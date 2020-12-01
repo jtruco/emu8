@@ -11,18 +11,18 @@ import (
 
 // Video screen constants
 const (
-	tvScreenWidth   = 256
-	tvScreenHeight  = 192
-	tvBorderLeft    = 48
-	tvBorderRight   = 48
-	tvBorderTop     = 64
-	tvBorderBottom  = 56
-	tvTotalWidth    = tvScreenWidth + tvBorderLeft + tvBorderRight
-	tvTotalHeight   = tvScreenHeight + tvBorderTop + tvBorderBottom
-	tvDisplayLeft   = 16 // Border : 32
-	tvDisplayTop    = 40 // Border : 24
-	tvDisplayWidth  = tvScreenWidth + 2*(tvBorderLeft-tvDisplayLeft)
-	tvDisplayHeight = tvScreenHeight + 2*(tvBorderTop-tvDisplayTop)
+	tvScreenWidth  = 256
+	tvScreenHeight = 192
+	tvBorderLeft   = 48
+	tvBorderRight  = 48
+	tvBorderTop    = 64
+	tvBorderBottom = 56
+	tvTotalWidth   = tvScreenWidth + tvBorderLeft + tvBorderRight
+	tvTotalHeight  = tvScreenHeight + tvBorderTop + tvBorderBottom
+	tvViewLeft     = 16 // Border : 32
+	tvViewTop      = 40 // Border : 24
+	tvViewWidth    = tvScreenWidth + 2*(tvBorderLeft-tvViewLeft)
+	tvViewHeight   = tvScreenHeight + 2*(tvBorderTop-tvViewTop)
 )
 
 // Video memory constants
@@ -75,7 +75,7 @@ type TVVideo struct {
 func NewTVVideo(spectrum *Spectrum) *TVVideo {
 	tv := new(TVVideo)
 	tv.screen = video.NewScreen(tvTotalWidth, tvTotalHeight, zxPaletteRGBA)
-	tv.screen.SetDisplay(tvDisplayLeft, tvDisplayTop, tvDisplayWidth, tvDisplayHeight)
+	tv.screen.SetView(tvViewLeft, tvViewTop, tvViewWidth, tvViewHeight)
 	tv.spectrum = spectrum
 	tv.srcdata = spectrum.VideoMemory().Data()
 	spectrum.VideoMemory().OnAccess.Bind(tv.onVideoAccess)
@@ -171,14 +171,14 @@ func (tv *TVVideo) paintScreen() {
 func (tv *TVVideo) paintBorder() {
 	// Border Top, Bottom and Paper
 	border := tv.screen.GetColour(int(tv.border))
-	display := tv.screen.Display()
-	for y := display.Y; y < tvBorderTop; y++ {
+	view := tv.screen.View()
+	for y := view.Y; y < tvBorderTop; y++ {
 		tv.scanlineBorder(y, 0, tvTotalWidth-1, border)
 	}
-	for y := tvBorderTop + tvScreenHeight; y < display.Y+display.H; y++ {
+	for y := tvBorderTop + tvScreenHeight; y < view.Y+view.H; y++ {
 		tv.scanlineBorder(y, 0, tvTotalWidth-1, border)
 	}
-	for y := tvBorderTop; y < display.Y+display.H; y++ {
+	for y := tvBorderTop; y < view.Y+view.H; y++ {
 		tv.scanlineBorder(y, 0, tvBorderLeft-1, border)
 		tv.scanlineBorder(y, tvBorderLeft+tvScreenWidth, tvTotalWidth-1, border)
 	}
@@ -218,12 +218,12 @@ func (tv *TVVideo) DoScanlines() {
 	// Vertical   : 16 Sl sync, 48 Sl border top, 192 Sl Screen, 56 Sl boder bottom
 	// Horizontal : 128 Ts screen, 24 Ts border right, 48 Ts retrace, 24 TS border left
 	// First screen (0,0) pixel Tstate = 14336 TS = 64 Scanlines * 224 Tstates
-	display := tv.screen.Display()
+	view := tv.screen.View()
 	border := tv.screen.GetColour(int(tv.border))
 	tstate := tv.tstate
 	endtstate := tv.spectrum.Clock().Tstates()
-	limitBottom := display.Y*tvLineTstates - tvHBorderTstates
-	limitTop := (display.Y+display.H)*tvLineTstates - tvHBorderTstates
+	limitBottom := view.Y*tvLineTstates - tvHBorderTstates
+	limitTop := (view.Y+view.H)*tvLineTstates - tvHBorderTstates
 	if endtstate < limitBottom || tstate > limitTop {
 		return
 	}
