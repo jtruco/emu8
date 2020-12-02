@@ -16,8 +16,8 @@ type Video interface {
 	Screen() *Screen
 }
 
-// Renderer is the video screen renderer
-type Renderer interface {
-	// Render renders screen
-	Render(screen *Screen)
+// Display is the video screen display
+type Display interface {
+	// Update updates screen changes to video display
+	Update(screen *Screen)
 }

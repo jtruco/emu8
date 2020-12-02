@@ -23,8 +23,8 @@ type Video struct {
 	dstRects   []sdl.Rect     // The dest regions cache
 	fullscreen bool           // Full Screen window mode
 	scale      float32        // Video scale configuration
-	scaleX     float32        // Render horizontal scale factor
-	scaleY     float32        // Render vertical scale factor
+	scaleX     float32        // Screen horizontal scale factor
+	scaleY     float32        // Screen vertical scale factor
 }
 
 // NewVideo creates a new video UI
@@ -44,8 +44,8 @@ func (video *Video) Init(device video.Video) bool {
 	return video.initSDLVideo()
 }
 
-// Render renders screen to video UI
-func (video *Video) Render(screen *video.Screen) {
+// Update updates screen changes to video display
+func (video *Video) Update(screen *video.Screen) {
 	video._sync.Lock()
 	defer video._sync.Unlock()
 

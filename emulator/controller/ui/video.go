@@ -8,8 +8,8 @@ import "github.com/jtruco/emu8/emulator/device/video"
 
 // VideoController is the video controller
 type VideoController struct {
-	device   video.Video    // The video device
-	renderer video.Renderer // The video renderer
+	device  video.Video   // The video device
+	display video.Display // The video display
 }
 
 // NewVideoController creates a new video controller
@@ -18,9 +18,9 @@ func NewVideoController() *VideoController {
 	return controller
 }
 
-// Renderer the video renderer
-func (controller *VideoController) Renderer() video.Renderer {
-	return controller.renderer
+// Display the video display
+func (controller *VideoController) Display() video.Display {
+	return controller.display
 }
 
 // Device the video device
@@ -28,9 +28,9 @@ func (controller *VideoController) Device() video.Video {
 	return controller.device
 }
 
-// SetRenderer sets video renderer
-func (controller *VideoController) SetRenderer(renderer video.Renderer) {
-	controller.renderer = renderer
+// SetDisplay sets video display
+func (controller *VideoController) SetDisplay(display video.Display) {
+	controller.display = display
 }
 
 // SetDevice sets video device
@@ -38,7 +38,7 @@ func (controller *VideoController) SetDevice(device video.Video) {
 	controller.device = device
 }
 
-// Refresh video screen to output renderer
+// Refresh updates screen changes to display output
 func (controller *VideoController) Refresh() {
 	if controller.device == nil {
 		return
@@ -46,8 +46,8 @@ func (controller *VideoController) Refresh() {
 	controller.device.EndFrame()
 	screen := controller.device.Screen()
 	if screen.IsDirty() {
-		if controller.renderer != nil {
-			controller.renderer.Render(screen)
+		if controller.display != nil {
+			controller.display.Update(screen)
 		}
 		screen.SetDirty(false)
 	}
