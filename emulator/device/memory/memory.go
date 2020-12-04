@@ -26,11 +26,11 @@ const (
 // Memory device bus
 // -----------------------------------------------------------------------------
 
-// Memory is a memory structure of banks or bus devices
+// Memory is a memory structure of banks and an address mapper
 type Memory struct {
-	size   int
-	banks  []*BankMap
-	mapper Mapper
+	size   int        // Memory address size
+	banks  []*BankMap // Memory banks structure
+	mapper Mapper     // Memory address mapper
 }
 
 // New creates a new memory device with a size and a number banks
@@ -38,59 +38,8 @@ func New(size int, banks int) *Memory {
 	memory := new(Memory)
 	memory.size = size
 	memory.banks = make([]*BankMap, banks)
-	memory.SetMapper(new(DefaultMapper))
+	memory.SetMapper(NewDefaultMapper())
 	return memory
-}
-
-// Bank mapping
-
-// Banks returns Banks
-func (memory *Memory) Banks() []*BankMap {
-	return memory.banks
-}
-
-// Bank returns bank mapped at index
-func (memory *Memory) Bank(index int) *Bank {
-	return memory.Map(index).Bank()
-}
-
-// Map returns bank map at index
-func (memory *Memory) Map(index int) *BankMap {
-	return memory.banks[index]
-}
-
-// SetMap sets the bank map at index
-func (memory *Memory) SetMap(index int, bank *BankMap) {
-	memory.banks[index] = bank
-}
-
-// Switch switches two memory banks and update its active state
-func (memory *Memory) Switch(current, new int) {
-	curbank, newbank := memory.banks[current], memory.banks[new]
-	memory.banks[current], memory.banks[new] = newbank, curbank
-	curbank.active, newbank.active = false, true
-}
-
-// Mapper returns the bank mapper
-func (memory *Memory) Mapper() Mapper { return memory.mapper }
-
-// SetMapper sets the bank mapper
-func (memory *Memory) SetMapper(mapper Mapper) {
-	mapper.Init(memory)
-	memory.mapper = mapper
-}
-
-// LoadRAM loads data into memory starting at address
-func (memory *Memory) LoadRAM(address uint16, data []byte) {
-	length := len(data)
-	offset, last := 0, 0
-	for offset < length {
-		bankaddr := address + uint16(offset)
-		bank, rel := memory.mapper.SelectBankWrite(bankaddr)
-		last = offset + bank.bank.size
-		bank.bank.Load(rel, data[offset:last])
-		offset = last
-	}
 }
 
 // Device interface
@@ -129,4 +78,46 @@ func (memory *Memory) Write(address uint16, data byte) {
 		bank.bus.Write(bankAddr, data)
 	}
 	// default : no write
+}
+
+// Bank mapping
+
+// Banks returns Banks
+func (memory *Memory) Banks() []*BankMap { return memory.banks }
+
+// Bank returns bank mapped at index
+func (memory *Memory) Bank(index int) *Bank {
+	return memory.Map(index).Bank()
+}
+
+// Map returns bank map at index
+func (memory *Memory) Map(index int) *BankMap {
+	return memory.banks[index]
+}
+
+// SetMap sets the bank map at index
+func (memory *Memory) SetMap(index int, bank *BankMap) {
+	memory.banks[index] = bank
+}
+
+// Mapper returns the bank mapper
+func (memory *Memory) Mapper() Mapper { return memory.mapper }
+
+// SetMapper sets the bank mapper
+func (memory *Memory) SetMapper(mapper Mapper) {
+	mapper.Init(memory)
+	memory.mapper = mapper
+}
+
+// LoadRAM loads a data chunk of bytes into memory starting at address
+func (memory *Memory) LoadRAM(address uint16, data []byte) {
+	length := len(data)
+	offset, last := 0, 0
+	for offset < length {
+		bankaddr := address + uint16(offset)
+		bmap, rel := memory.mapper.SelectBankWrite(bankaddr)
+		last = offset + bmap.bank.Size()
+		bmap.bank.Load(rel, data[offset:last])
+		offset = last
+	}
 }

@@ -75,7 +75,7 @@ func New(model int) machine.Machine {
 		spectrum.memory.SetMap(2, memory.NewRAM(0x8000, memory.Size16K))
 		spectrum.memory.SetMap(3, memory.NewRAM(0xC000, memory.Size16K))
 	}
-	mapper := &memory.MaskMapper{Shift: 14, Mask: 0x3fff}
+	mapper := memory.NewMaskMapper(14, 0x3fff)
 	spectrum.memory.SetMapper(mapper)
 	// build device components
 	spectrum.clock = device.NewClock()

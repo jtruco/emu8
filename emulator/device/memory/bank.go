@@ -6,37 +6,34 @@ import "github.com/jtruco/emu8/emulator/device"
 // Memory bank device
 // -----------------------------------------------------------------------------
 
-// Bank is a memory bank of bytes
+// Bank is a memory bank
 type Bank struct {
-	size         int
-	readonly     bool
-	data         []byte
-	OnAccess     device.EventBus
-	OnPostAccess device.EventBus
+	data         []byte          // The bank bytes
+	readonly     bool            // Is a r/w or ro bank
+	OnAccess     device.EventBus // On bus access event
+	OnPostAccess device.EventBus // On post bus access  event
 }
 
 // NewBank creates a new memory bank
 func NewBank(size int, readonly bool) *Bank {
 	bank := new(Bank)
-	bank.size = size
-	bank.readonly = readonly
 	bank.data = make([]byte, size)
+	bank.readonly = readonly
 	return bank
 }
 
 // Data gets bank data
-func (bank *Bank) Data() []byte {
-	return bank.data
-}
+func (bank *Bank) Data() []byte { return bank.data }
+
+// ReadOnly returns if is a read only bank
+func (bank *Bank) ReadOnly() bool { return bank.readonly }
+
+// Size return bank size
+func (bank *Bank) Size() int { return len(bank.data) }
 
 // Load loads data at address
 func (bank *Bank) Load(address uint16, data []byte) {
 	copy(bank.data[address:], data[:])
-}
-
-// ReadOnly is a read only bank
-func (bank *Bank) ReadOnly() bool {
-	return bank.readonly
 }
 
 // Device interface
@@ -48,7 +45,7 @@ func (bank *Bank) Init() {
 
 // Reset resets bank data
 func (bank *Bank) Reset() {
-	for i := 0; i < bank.size; i++ {
+	for i := 0; i < len(bank.data); i++ {
 		bank.data[i] = 0
 	}
 }
