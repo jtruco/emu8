@@ -26,6 +26,9 @@ type BusDevice interface {
 	Bus    // Is a DataBus
 }
 
+// BusCallback is a device bus event callback
+type BusCallback func(code int, address uint16)
+
 // BusEvent is a bus event
 type BusEvent struct {
 	Event          // Is a Device Event

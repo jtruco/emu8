@@ -1,9 +1,5 @@
 package spectrum
 
-import (
-	"github.com/jtruco/emu8/emulator/device"
-)
-
 // -----------------------------------------------------------------------------
 // Audio constants & vars
 // -----------------------------------------------------------------------------
@@ -66,15 +62,13 @@ type ULA struct {
 func NewULA(spectrum *Spectrum) *ULA {
 	ula := new(ULA)
 	ula.spectrum = spectrum
-	spectrum.VideoMemory().OnAccess.Bind(ula.onVideoAccess)
+	spectrum.VideoMemory().OnAccess = ula.onVideoAccess
 	return ula
 }
 
 // onVideoAccess processes the bus event
-func (ula *ULA) onVideoAccess(event device.IEvent) {
-	if event.Code() == device.EventBusRead || event.Code() == device.EventBusWrite {
-		ula.doContention(0)
-	}
+func (ula *ULA) onVideoAccess(code int, address uint16) {
+	ula.doContention(0)
 }
 
 // Device

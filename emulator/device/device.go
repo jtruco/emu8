@@ -14,6 +14,22 @@ type Device interface {
 }
 
 // -----------------------------------------------------------------------------
+// Device callbacks
+// -----------------------------------------------------------------------------
+
+// Callback is a device callback
+type Callback func()
+
+// AckCallback device callback with ack control
+type AckCallback func() bool
+
+// ReadCallback line read byte callback
+type ReadCallback func() byte
+
+// WriteCallback line write byte callback
+type WriteCallback func(byte)
+
+// -----------------------------------------------------------------------------
 // Events
 // -----------------------------------------------------------------------------
 
@@ -26,7 +42,8 @@ const (
 
 // IEvent is the Event interface
 type IEvent interface {
-	Code() int // Event code
+	Code() int   // Event code
+	SetCode(int) // Set event code
 }
 
 // Event is the base device event
@@ -40,28 +57,15 @@ func CreateEvent(code int) Event { return Event{code} }
 // Code the event code
 func (e *Event) Code() int { return e.code }
 
-// -----------------------------------------------------------------------------
-// Callbacks
-// -----------------------------------------------------------------------------
-
-// Callback is a device callback
-type Callback func()
-
-// EventCallback is a device event callback
-type EventCallback func(IEvent)
-
-// AckCallback device callback with ack control
-type AckCallback func() bool
-
-// ReadCallback line read byte callback
-type ReadCallback func() byte
-
-// WriteCallback line write byte callback
-type WriteCallback func(byte)
+// SetCode sets the event code
+func (e *Event) SetCode(code int) { e.code = code }
 
 // -----------------------------------------------------------------------------
 // Event Bus
 // -----------------------------------------------------------------------------
+
+// EventCallback is a device event callback
+type EventCallback func(IEvent)
 
 // EventBus callback functions
 type EventBus struct {

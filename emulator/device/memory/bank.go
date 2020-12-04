@@ -8,10 +8,10 @@ import "github.com/jtruco/emu8/emulator/device"
 
 // Bank is a memory bank
 type Bank struct {
-	data         []byte          // The bank bytes
-	readonly     bool            // Is a r/w or ro bank
-	OnAccess     device.EventBus // On bus access event
-	OnPostAccess device.EventBus // On post bus access  event
+	data         []byte             // The bank bytes
+	readonly     bool               // Is a r/w or ro bank
+	OnAccess     device.BusCallback // On bus access callback
+	OnPostAccess device.BusCallback // On bus post access callback
 }
 
 // NewBank creates a new memory bank
@@ -54,17 +54,36 @@ func (bank *Bank) Reset() {
 
 // Read reads a byte from the bank address
 func (bank *Bank) Read(address uint16) byte {
-	bank.OnAccess.Emit(device.NewBusEvent(device.EventBusRead, address))
+	// on access
+	if bank.OnAccess != nil {
+		bank.OnAccess(device.EventBusRead, address)
+	}
+
+	// memory read
 	data := bank.data[address]
-	bank.OnPostAccess.Emit(device.NewBusEvent(device.EventBusAfterRead, address))
+
+	// on post access
+	if bank.OnPostAccess != nil {
+		bank.OnPostAccess(device.EventBusAfterRead, address)
+	}
+
 	return data
 }
 
 // Write writes a byte to the bank address
 func (bank *Bank) Write(address uint16, data byte) {
-	bank.OnAccess.Emit(device.NewBusEvent(device.EventBusWrite, address))
+	// on access
+	if bank.OnAccess != nil {
+		bank.OnAccess(device.EventBusWrite, address)
+	}
+
+	// memory read
 	if !bank.readonly {
 		bank.data[address] = data
 	}
-	bank.OnPostAccess.Emit(device.NewBusEvent(device.EventBusAfterWrite, address))
+
+	// on post access
+	if bank.OnPostAccess != nil {
+		bank.OnPostAccess(device.EventBusAfterWrite, address)
+	}
 }

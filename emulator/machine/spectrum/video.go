@@ -78,16 +78,15 @@ func NewTVVideo(spectrum *Spectrum) *TVVideo {
 	tv.screen.SetView(tvViewLeft, tvViewTop, tvViewWidth, tvViewHeight)
 	tv.spectrum = spectrum
 	tv.srcdata = spectrum.VideoMemory().Data()
-	spectrum.VideoMemory().OnAccess.Bind(tv.onVideoAccess)
+	spectrum.VideoMemory().OnPostAccess = tv.onVideoPostAccess
 	tv.accurate = true
 	return tv
 }
 
-// onVideoAccess processes the bus event
-func (tv *TVVideo) onVideoAccess(event device.IEvent) {
-	bevent := event.(*device.BusEvent)
-	if bevent.Code() == device.EventBusWrite {
-		if tv.accurate && bevent.Address < tvVideoSize {
+// onVideoPostAccess on write in video memory
+func (tv *TVVideo) onVideoPostAccess(code int, address uint16) {
+	if code == device.EventBusAfterWrite {
+		if tv.accurate && address < tvVideoSize {
 			tv.DoScanlines()
 		}
 	}
