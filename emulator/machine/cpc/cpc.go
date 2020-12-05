@@ -137,13 +137,13 @@ func (cpc *AmstradCPC) initAmstrad() {
 	case "fr":
 		romname = cpcOsRomNameFR
 	}
-	data, err := cpc.controller.File().LoadROM(romname)
+	data, err := cpc.controller.FileManager().LoadROM(romname)
 	if err != nil {
 		return
 	}
 	cpc.lowerRom.Bank().Load(0, data[:0x4000]) // lower rom
 	// load upper rom (basic)
-	data, err = cpc.controller.File().LoadROM(cpcBasicRomName)
+	data, err = cpc.controller.FileManager().LoadROM(cpcBasicRomName)
 	if err != nil {
 		return
 	}
@@ -180,8 +180,8 @@ func (cpc *AmstradCPC) SetController(control controller.Controller) {
 	control.Video().SetDevice(cpc.video)
 	control.Audio().SetDevice(cpc.psg)
 	control.Keyboard().AddReceiver(cpc.keyboard, cpcKeyboardMap)
-	control.File().RegisterFormat(vfs.FormatSnap, cpcSnapFormats)
-	control.File().RegisterFormat(vfs.FormatTape, cpcTapeFormats)
+	control.FileManager().RegisterFormat(vfs.FormatSnap, cpcSnapFormats)
+	control.FileManager().RegisterFormat(vfs.FormatTape, cpcTapeFormats)
 	control.Tape().SetDrive(cpc.tape)
 	control.Joystick().AddReceiver(cpc.joystick, 0)
 	cpc.controller = control
@@ -263,12 +263,12 @@ func (cpc *AmstradCPC) onPsgReadPortA() byte {
 
 // LoadFile loads a file into machine
 func (cpc *AmstradCPC) LoadFile(filename string) {
-	info := cpc.controller.File().FileInfo(filename)
+	info := cpc.controller.FileManager().CreateFileInfo(filename)
 	if info.Format == vfs.FormatUnknown {
 		log.Println("CPC : Not supported format:", info.Ext)
 		return
 	}
-	err := cpc.controller.File().LoadFile(info)
+	err := cpc.controller.FileManager().LoadFile(info)
 	if err != nil {
 		log.Println("CPC : Error loading file:", info.Name)
 		return
@@ -306,8 +306,8 @@ func (cpc *AmstradCPC) LoadFile(filename string) {
 func (cpc *AmstradCPC) TakeSnapshot() {
 	snap := cpc.SaveState()
 	data := snap.SaveSNA()
-	name := cpc.controller.File().NewName("cpc", cpcFormatSNA)
-	err := cpc.controller.File().SaveFile(name, vfs.FormatSnap, data)
+	name := cpc.controller.FileManager().NewName("cpc", cpcFormatSNA)
+	err := cpc.controller.FileManager().SaveFile(name, vfs.FormatSnap, data)
 	if err == nil {
 		log.Println("CPC : Snapshot saved: ", name)
 	} else {

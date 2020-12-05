@@ -1,12 +1,9 @@
+// Package vfs contains the virtual file system components
 package vfs
 
 import (
 	"time"
 )
-
-// -----------------------------------------------------------------------------
-// File Constants
-// -----------------------------------------------------------------------------
 
 // File formats
 const (
@@ -27,7 +24,7 @@ const (
 // File Manager
 // -----------------------------------------------------------------------------
 
-// FileManager is the emulator files manager
+// FileManager is the emulator file manager
 type FileManager struct {
 	vfs     FileSystem     // The underlying virtual file system
 	formats map[string]int // The format extension mapping
@@ -83,16 +80,10 @@ func (manager *FileManager) SaveFile(filename string, format int, data []byte) e
 	return manager.vfs.SaveFile(info)
 }
 
-// FileInfo
+// File information
 
-// NewName helper funcion to obtain a new filename
-func (manager *FileManager) NewName(prefix, ext string) string {
-	now := time.Now().Format("20060102030405")
-	return (prefix + "_" + now + "." + ext)
-}
-
-// FileInfo returns the file information
-func (manager *FileManager) FileInfo(filename string) *FileInfo {
+// CreateFileInfo returns a the file information from filename
+func (manager *FileManager) CreateFileInfo(filename string) *FileInfo {
 	info := NewFileInfo(filename)
 	// check extension format
 	format, ok := manager.formats[info.Ext]
@@ -100,4 +91,10 @@ func (manager *FileManager) FileInfo(filename string) *FileInfo {
 		info.Format = format
 	}
 	return info
+}
+
+// NewName helper funcion to obtain a new filename
+func (manager *FileManager) NewName(prefix, ext string) string {
+	now := time.Now().Format("20060102030405")
+	return (prefix + "_" + now + "." + ext)
 }

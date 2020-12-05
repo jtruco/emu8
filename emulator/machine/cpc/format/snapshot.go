@@ -1,3 +1,4 @@
+// Package format implements CPC file formats
 package format
 
 import "github.com/jtruco/emu8/emulator/device/cpu/z80"

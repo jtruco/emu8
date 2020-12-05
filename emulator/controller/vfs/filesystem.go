@@ -6,7 +6,15 @@ import "errors"
 // Virtual File System
 // -----------------------------------------------------------------------------
 
-// fileSystem is the current filesystem
+// FileSystem is a virtual filesystem
+type FileSystem interface {
+	// LoadFile loads the file data from the storage location.
+	LoadFile(info *FileInfo) error
+	// SaveFile saves fhe file data to the storage location.
+	SaveFile(info *FileInfo) error
+}
+
+// fileSystem is the current filesystem : default memory
 var fileSystem FileSystem = NewMemFileSystem()
 
 // GetFileSystem returns the current filesystem
@@ -19,13 +27,9 @@ func SetFileSystem(fs FileSystem) {
 	fileSystem = fs
 }
 
-// FileSystem is a virtual filesystem
-type FileSystem interface {
-	// LoadFile loads the file data from the storage location.
-	LoadFile(info *FileInfo) error
-	// SaveFile saves fhe file data to the storage location.
-	SaveFile(info *FileInfo) error
-}
+// -----------------------------------------------------------------------------
+// Memory File System
+// -----------------------------------------------------------------------------
 
 // MemFileSystem is a simple in-memory filesystem
 type MemFileSystem struct {

@@ -1,4 +1,4 @@
-// Package machine contains 8bit machine and coponents implementation
+// Package machine contains 8bit machines and coponents
 package machine
 
 import (
@@ -9,24 +9,6 @@ import (
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/cpu"
 )
-
-// -----------------------------------------------------------------------------
-// Machine configuration
-// -----------------------------------------------------------------------------
-
-// Config machine configuration
-type Config struct {
-	Model        int           // Machine model
-	FPS          float32       // Frames per second
-	FrameTime    time.Duration // Duration of a frame
-	FrameTStates int           // TStates per frame
-}
-
-// SetFPS sets FPS and FrameDuration
-func (conf *Config) SetFPS(FPS float32) {
-	conf.FPS = FPS
-	conf.FrameTime = time.Duration(1e9 / FPS)
-}
 
 // -----------------------------------------------------------------------------
 // Machine
@@ -53,6 +35,20 @@ type Machine interface {
 	LoadFile(name string)
 	// TakeSnap takes and saves snapshop of the machine state
 	TakeSnapshot()
+}
+
+// Config machine configuration
+type Config struct {
+	Model        int           // Machine model
+	FPS          float32       // Frames per second
+	FrameTime    time.Duration // Duration of a frame
+	FrameTStates int           // TStates per frame
+}
+
+// SetFPS sets FPS and FrameDuration
+func (conf *Config) SetFPS(FPS float32) {
+	conf.FPS = FPS
+	conf.FrameTime = time.Duration(1e9 / FPS)
 }
 
 // -----------------------------------------------------------------------------

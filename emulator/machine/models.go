@@ -6,6 +6,9 @@ import "strings"
 // Machines & Models
 // -----------------------------------------------------------------------------
 
+// DefaultModel default machine model is ZX Spectrum 48k
+const DefaultModel = ZXSpectrum48k
+
 // Machines
 const (
 	UnknownMachine = iota
@@ -16,7 +19,7 @@ const (
 	MSX         // NOT IMPLEMENTED
 )
 
-// Machine models
+// Models
 const (
 	UnknownModel = iota
 	ZXSpectrum16k
@@ -28,10 +31,16 @@ const (
 	MSX1         // NOT IMPLEMENTED
 )
 
-// DefaultModel default machine model is ZX Spectrum 48k
-const DefaultModel = ZXSpectrum48k
+// MachineModels is the machines and models mapping
+var MachineModels = map[int][]int{
+	ZXSpectrum:  {ZXSpectrum16k, ZXSpectrum48k},
+	AmstradCPC:  {AmstradCPC464},
+	ZX8081:      {ZX80, ZX81},
+	Commodore64: {CommodoreC64},
+	MSX:         {MSX1},
+}
 
-// Machines machine name mapping
+// Machines is the machine names mapping
 var Machines = map[string]int{
 	"zxspectrum":  ZXSpectrum,
 	"amstradcpc":  AmstradCPC,
@@ -41,17 +50,7 @@ var Machines = map[string]int{
 	"msx":         MSX,
 }
 
-// GetMachine gets machine ID from name
-func GetMachine(name string) int {
-	name = strings.ToLower(name)
-	machine, ok := Machines[name]
-	if ok {
-		return machine
-	}
-	return UnknownMachine
-}
-
-// Models machine model name mapping
+// Models is the model names mapping
 var Models = map[string]int{
 	"zxspectrum16k": ZXSpectrum16k,
 	"zx16k":         ZXSpectrum16k,
@@ -65,6 +64,18 @@ var Models = map[string]int{
 	"msx1":          MSX1,
 }
 
+// Helper functions
+
+// GetMachine gets machine ID from name
+func GetMachine(name string) int {
+	name = strings.ToLower(name)
+	machine, ok := Machines[name]
+	if ok {
+		return machine
+	}
+	return UnknownMachine
+}
+
 // GetModel gets model ID from name
 func GetModel(name string) int {
 	name = strings.ToLower(name)
@@ -75,20 +86,11 @@ func GetModel(name string) int {
 	return UnknownModel
 }
 
-// MachineModels machines and models mapping
-var MachineModels = map[int][]int{
-	ZXSpectrum:  {ZXSpectrum16k, ZXSpectrum48k},
-	AmstradCPC:  {AmstradCPC464},
-	ZX8081:      {ZX80, ZX81},
-	Commodore64: {CommodoreC64},
-	MSX:         {MSX1},
-}
-
 // GetMachineFromModel gets machine ID from model ID
 func GetMachineFromModel(model int) int {
 	for machine, models := range MachineModels {
-		for _, m := range models {
-			if m == model {
+		for _, mID := range models {
+			if mID == model {
 				return machine
 			}
 		}

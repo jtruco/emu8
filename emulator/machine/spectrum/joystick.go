@@ -2,8 +2,8 @@ package spectrum
 
 // -----------------------------------------------------------------------------
 // ZX Spectrum - Joystick emulation
-// Only Kempston emulation supported
 // -----------------------------------------------------------------------------
+// Only Kempston emulation supported
 
 // Joystick models
 const (

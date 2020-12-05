@@ -1,3 +1,4 @@
+// Package joystick contains joystick and control devices
 package joystick
 
 import "github.com/jtruco/emu8/emulator/device"
@@ -11,6 +12,13 @@ const (
 	EventJoyAxis   = iota // Joystick axis event
 	EventJoyButton        // Joystick button event
 )
+
+// Joystick device
+type Joystick interface {
+	device.Device                      // Is a device
+	SetAxis(axis byte, value byte)     // Sets axis value
+	SetButton(button byte, state byte) // Sets button state
+}
 
 // JoyEvent is a joystick event
 type JoyEvent struct {
@@ -38,15 +46,4 @@ func NewJoyButtonEvent(id, button, state byte) JoyEvent {
 		ID:          id,
 		Button:      button,
 		ButtonState: state}
-}
-
-// -----------------------------------------------------------------------------
-// Joystick component
-// -----------------------------------------------------------------------------
-
-// Joystick device
-type Joystick interface {
-	device.Device                      // Is a device
-	SetAxis(axis byte, value byte)     // Sets axis value
-	SetButton(button byte, state byte) // Sets button state
 }

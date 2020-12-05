@@ -1,8 +1,12 @@
 package spectrum
 
 // -----------------------------------------------------------------------------
-// Audio constants & vars
+// ULA constants & vars
 // -----------------------------------------------------------------------------
+
+const ulaInDefault = 0xff
+
+// Audio
 
 /* assume all three tone channels together match the beeper volume (ish).
  * Must be <=127 for all channels; 50+2+(24*3) = 124.
@@ -17,9 +21,7 @@ const (
 
 var beeperMap = []uint16{0, amplTape, amplBeeper, (amplBeeper + amplTape)}
 
-// -----------------------------------------------------------------------------
 // Contention table
-// -----------------------------------------------------------------------------
 
 // IO contention pages
 var ulaIoPageContention = [4]bool{false, true, false, false}
@@ -48,14 +50,10 @@ func init() {
 // ULA
 // -----------------------------------------------------------------------------
 
-const (
-	ulaInDefault = 0xff
-)
-
 // ULA is the Unit Logic Array
 type ULA struct {
-	spectrum    *Spectrum
-	currentRead byte
+	spectrum *Spectrum // The spectrum machine
+	lastRead byte      // Last read value
 }
 
 // NewULA creates
@@ -75,7 +73,7 @@ func (ula *ULA) onVideoAccess(code int, address uint16) {
 
 // Init initializes ULA
 func (ula *ULA) Init() {
-	ula.currentRead = ulaInDefault
+	ula.lastRead = ulaInDefault
 }
 
 // Reset resets ULA
@@ -91,7 +89,7 @@ func (ula *ULA) Read(address uint16) byte {
 	ula.preIO(address)
 	ula.postIO(address)
 	if (address & 0x0001) == 0x00 { // ULA selected
-		result = ula.currentRead
+		result = ula.lastRead
 		// Read keyboard state
 		scan := byte(address>>8) ^ 0xff
 		mask := byte(1)
@@ -130,9 +128,9 @@ func (ula *ULA) Write(address uint16, data byte) {
 		}
 		ula.spectrum.beeper.SetLevel(tstate, beeper)
 		// default read
-		ula.currentRead = ulaInDefault
+		ula.lastRead = ulaInDefault
 		if (data & 0x18) == 0 { // ISSUE 2
-			ula.currentRead ^= 0x40
+			ula.lastRead ^= 0x40
 		}
 	}
 	ula.postIO(address)

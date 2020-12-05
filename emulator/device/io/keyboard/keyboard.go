@@ -1,9 +1,10 @@
+// Package keyboard contains keyboard devices and definitions
 package keyboard
 
 import "github.com/jtruco/emu8/emulator/device"
 
 // -----------------------------------------------------------------------------
-// Keyboard & Events
+// Keyboard
 // -----------------------------------------------------------------------------
 
 // Keyboard event types
@@ -11,6 +12,17 @@ const (
 	EventKeyDown = iota // KeyDown is a key down event
 	EventKeyUp          // KeyDown is a key up event
 )
+
+// Keyboard is a keyboard (receiver) device
+type Keyboard interface {
+	device.Device // Is a device
+	Receiver      // Is a keyboard event receiver
+}
+
+// Receiver is a component that process keyboard events
+type Receiver interface {
+	ProcessKey(key Key, pressed bool) // Sets key state
+}
 
 // KeyEvent is a keyboard event
 type KeyEvent struct {
@@ -25,15 +37,4 @@ func NewKeyEvent(code int, key Key) KeyEvent {
 		Event:   device.CreateEvent(code),
 		Key:     key,
 		Pressed: code == KeyDown}
-}
-
-// Receiver is a component that process keyboard events
-type Receiver interface {
-	ProcessKey(key Key, pressed bool) // Sets key state
-}
-
-// Keyboard is a keyboard (receiver) device
-type Keyboard interface {
-	device.Device // Is a device
-	Receiver      // Is a keyboard event receiver
 }

@@ -1,3 +1,4 @@
+// Package audio contains audio devices and components
 package audio
 
 import (
@@ -6,10 +7,23 @@ import (
 )
 
 // -----------------------------------------------------------------------------
-// Audio & Events
+// Audio
 // -----------------------------------------------------------------------------
 
-// Config device audio configuration
+// Audio device
+type Audio interface {
+	device.Device    // Is a device
+	Buffer() *Buffer // Buffer returns the audio buffer
+	Config() *Config // Config returns the audio configuration
+	EndFrame()       // EndFrame audio frame is finished and buffer is ready
+}
+
+// Player is the audio buffer player
+type Player interface {
+	Play(buffer *Buffer) // Play plays audio buffer
+}
+
+// Config is the device audio configuration
 type Config struct {
 	Frequency int     // Audio frequency
 	Fps       int     // Frames per second
@@ -27,17 +41,4 @@ func NewConfig(fps, tstates int) *Config {
 	c.Samples = c.Frequency / c.Fps
 	c.Rate = float32(c.Samples) / float32(tstates)
 	return c
-}
-
-// Audio device
-type Audio interface {
-	device.Device    // Is a device
-	Buffer() *Buffer // Buffer returns the audio buffer
-	Config() *Config // Config returns the audio configuration
-	EndFrame()       // EndFrame audio frame is finished and buffer is ready
-}
-
-// Player is the audio buffer player
-type Player interface {
-	Play(buffer *Buffer) // Play plays audio buffer
 }

@@ -1,3 +1,4 @@
+// Package controller contains the emulator controller components
 package controller
 
 import (
@@ -12,8 +13,8 @@ import (
 
 // Controller the controller interface
 type Controller interface {
-	// File returns the file manager
-	File() *vfs.FileManager
+	// FileManager returns the file manager
+	FileManager() *vfs.FileManager
 	// Video returns the video controller
 	Video() *ui.VideoController
 	// Audio returns the audio controller
@@ -32,7 +33,7 @@ type Controller interface {
 
 // EmulatorController is the emulator controller implementation.
 type EmulatorController struct {
-	file     *vfs.FileManager       // The files manager
+	fmanager *vfs.FileManager       // The files manager
 	video    *ui.VideoController    // The video controller
 	audio    *ui.AudioController    // The audio controller
 	keyboard *io.KeyboardController // The keyboard controlller
@@ -43,7 +44,7 @@ type EmulatorController struct {
 // New returns a new emulator controller.
 func New() *EmulatorController {
 	controller := new(EmulatorController)
-	controller.file = vfs.NewFileManager()
+	controller.fmanager = vfs.NewFileManager()
 	controller.video = ui.NewVideoController()
 	controller.audio = ui.NewAudioController()
 	controller.keyboard = io.NewKeyboardController()
@@ -52,9 +53,9 @@ func New() *EmulatorController {
 	return controller
 }
 
-// File returns the file manager
-func (controller *EmulatorController) File() *vfs.FileManager {
-	return controller.file
+// FileManager returns the file manager
+func (controller *EmulatorController) FileManager() *vfs.FileManager {
+	return controller.fmanager
 }
 
 // Video the video controller

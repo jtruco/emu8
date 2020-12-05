@@ -1,2 +1,2 @@
-// Package io contains IO devices
+// Package io contains IO devices and components
 package io

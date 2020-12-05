@@ -63,6 +63,12 @@ func (video *Video) Update(screen *video.Screen) {
 	}
 }
 
+// ToggleFullscreen enable / disable fullscreen mode
+func (video *Video) ToggleFullscreen() {
+	video.fullscreen = !video.fullscreen
+	video.initSDLVideo()
+}
+
 func (video *Video) initScreenRects() {
 	screen := video.device.Screen()
 	viewport := screen.View()
@@ -91,12 +97,6 @@ func (video *Video) initScreenRects() {
 		X: 0, Y: 0,
 		W: int32(float32(viewport.W) * video.scaleX),
 		H: int32(float32(viewport.H) * video.scaleY)}
-}
-
-// ToggleFullscreen enable / disable fullscreen mode
-func (video *Video) ToggleFullscreen() {
-	video.fullscreen = !video.fullscreen
-	video.initSDLVideo()
 }
 
 func (video *Video) initSDLVideo() bool {

@@ -56,11 +56,11 @@ var zxPaletteRGBA = []uint32{
 }
 
 // -----------------------------------------------------------------------------
-// ZX Spectrum TVVideo
+// ZX Spectrum TV video output
 // -----------------------------------------------------------------------------
 
-// TVVideo is the spectrum RF video device
-type TVVideo struct {
+// TvVideo is the spectrum RF video device
+type TvVideo struct {
 	screen   *video.Screen // The video screen
 	spectrum *Spectrum     // The Spectrum machine
 	srcdata  []byte        // The screen data
@@ -72,8 +72,8 @@ type TVVideo struct {
 }
 
 // NewTVVideo creates the video device
-func NewTVVideo(spectrum *Spectrum) *TVVideo {
-	tv := new(TVVideo)
+func NewTVVideo(spectrum *Spectrum) *TvVideo {
+	tv := new(TvVideo)
 	tv.screen = video.NewScreen(tvTotalWidth, tvTotalHeight, zxPaletteRGBA)
 	tv.screen.SetView(tvViewLeft, tvViewTop, tvViewWidth, tvViewHeight)
 	tv.spectrum = spectrum
@@ -84,7 +84,7 @@ func NewTVVideo(spectrum *Spectrum) *TVVideo {
 }
 
 // onVideoPostAccess on write in video memory
-func (tv *TVVideo) onVideoPostAccess(code int, address uint16) {
+func (tv *TvVideo) onVideoPostAccess(code int, address uint16) {
 	if code == device.EventBusAfterWrite {
 		if tv.accurate && address < tvVideoSize {
 			tv.DoScanlines()
@@ -93,12 +93,12 @@ func (tv *TVVideo) onVideoPostAccess(code int, address uint16) {
 }
 
 // SetAccurate sets de video emulation algorithm
-func (tv *TVVideo) SetAccurate(accurate bool) {
+func (tv *TvVideo) SetAccurate(accurate bool) {
 	tv.accurate = accurate
 }
 
 // SetBorder sets de current border color
-func (tv *TVVideo) SetBorder(colour byte) {
+func (tv *TvVideo) SetBorder(colour byte) {
 	if tv.accurate {
 		tv.DoScanlines()
 	}
@@ -108,10 +108,10 @@ func (tv *TVVideo) SetBorder(colour byte) {
 // Device
 
 // Init initializes video device
-func (tv *TVVideo) Init() { tv.Reset() }
+func (tv *TvVideo) Init() { tv.Reset() }
 
 // Reset resets video device
-func (tv *TVVideo) Reset() {
+func (tv *TvVideo) Reset() {
 	tv.screen.Clear(0)
 	tv.border = 7
 	tv.flash = false
@@ -120,7 +120,7 @@ func (tv *TVVideo) Reset() {
 // Video
 
 // EndFrame updates screen video frame
-func (tv *TVVideo) EndFrame() {
+func (tv *TvVideo) EndFrame() {
 	if tv.accurate {
 		tv.DoScanlines()
 		tv.tstate = 0
@@ -133,12 +133,12 @@ func (tv *TVVideo) EndFrame() {
 }
 
 // Screen the video screen
-func (tv *TVVideo) Screen() *video.Screen { return tv.screen }
+func (tv *TvVideo) Screen() *video.Screen { return tv.screen }
 
 // Screen: simple and fast emulation
 
 // paintScreen is a simple screen emulation
-func (tv *TVVideo) paintScreen() {
+func (tv *TvVideo) paintScreen() {
 	// 3 banks, of 8 rows, of 8 lines, of 32 cols
 	baddr := 0
 	y, sy := 0, tvBorderTop
@@ -167,7 +167,7 @@ func (tv *TVVideo) paintScreen() {
 }
 
 // paintBorder is a simple border emulation
-func (tv *TVVideo) paintBorder() {
+func (tv *TvVideo) paintBorder() {
 	// Border Top, Bottom and Paper
 	border := tv.screen.GetColour(int(tv.border))
 	view := tv.screen.View()
@@ -184,7 +184,7 @@ func (tv *TVVideo) paintBorder() {
 }
 
 // paintByte paints a byte
-func (tv *TVVideo) paintByte(y, sx int, data, attr byte, flash bool) {
+func (tv *TvVideo) paintByte(y, sx int, data, attr byte, flash bool) {
 	var ink, paper, mask byte
 	ink = attr & 0x07
 	if (attr & 0x40) != 0 {
@@ -212,7 +212,7 @@ func (tv *TVVideo) paintByte(y, sx int, data, attr byte, flash bool) {
 // Screen : accurate emulation
 
 // DoScanlines refresh TV scanlines
-func (tv *TVVideo) DoScanlines() {
+func (tv *TvVideo) DoScanlines() {
 	// Spectrum 48k - Tv Scanlines timings
 	// Vertical   : 16 Sl sync, 48 Sl border top, 192 Sl Screen, 56 Sl boder bottom
 	// Horizontal : 128 Ts screen, 24 Ts border right, 48 Ts retrace, 24 TS border left
@@ -273,7 +273,7 @@ func (tv *TVVideo) DoScanlines() {
 	}
 }
 
-func (tv *TVVideo) scanlineScreen(y, x1, x2 int) {
+func (tv *TvVideo) scanlineScreen(y, x1, x2 int) {
 	var attr, data, ink, paper, mask byte
 
 	xx := x1 - tvBorderLeft
@@ -322,7 +322,7 @@ func (tv *TVVideo) scanlineScreen(y, x1, x2 int) {
 	}
 }
 
-func (tv *TVVideo) scanlineBorder(y, x1, x2 int, colour uint32) {
+func (tv *TvVideo) scanlineBorder(y, x1, x2 int, colour uint32) {
 	for x := x1; x <= x2; x++ {
 		tv.screen.SetPixel(x, y, colour)
 	}

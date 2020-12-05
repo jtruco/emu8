@@ -4,7 +4,7 @@ package audio
 // Beeper
 // -----------------------------------------------------------------------------
 
-var beeperDefaultMap = []uint16{0, 50 * 256} // default beeper levels (0 - 1)
+var beeperDefaultMap = []uint16{0, 0x80} // default beeper levels (0 - 1)
 
 // Beeper is a simple audio device
 type Beeper struct {
@@ -43,6 +43,9 @@ func (beeper *Beeper) SetLevel(tstate, level int) {
 	beeper.tstate = tstate
 	beeper.level = level
 }
+
+// Map gets the sample level mapping
+func (beeper *Beeper) Map() []uint16 { return beeper.levelMap }
 
 // SetMap set beeper sample level mapping
 func (beeper *Beeper) SetMap(levelMap []uint16) {

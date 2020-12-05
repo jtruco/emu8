@@ -50,7 +50,7 @@ type Spectrum struct {
 	cpu        *z80.Z80              // The Zilog Z80A CPU
 	memory     *memory.Memory        // The machine memory
 	ula        *ULA                  // The spectrum ULA
-	tv         *TVVideo              // The spectrum TV video output
+	tv         *TvVideo              // The spectrum TV video output
 	beeper     *audio.Beeper         // The spectrum Beeper
 	keyboard   *Keyboard             // The spectrum Keyboard
 	tape       *tape.Drive           // The spectrum Tape drive
@@ -127,7 +127,7 @@ func (spectrum *Spectrum) Reset() {
 // initSpectrum commont init tasks
 func (spectrum *Spectrum) initSpectrum() {
 	// load ROM at bank 0
-	data, err := spectrum.controller.File().LoadROM(zxRomName)
+	data, err := spectrum.controller.FileManager().LoadROM(zxRomName)
 	if err != nil {
 		return
 	}
@@ -162,8 +162,8 @@ func (spectrum *Spectrum) SetController(control controller.Controller) {
 	control.Video().SetDevice(spectrum.tv)
 	control.Audio().SetDevice(spectrum.beeper)
 	control.Keyboard().AddReceiver(spectrum.keyboard, zxKeyboardMap)
-	control.File().RegisterFormat(vfs.FormatSnap, snapFormats)
-	control.File().RegisterFormat(vfs.FormatTape, tapeFormats)
+	control.FileManager().RegisterFormat(vfs.FormatSnap, snapFormats)
+	control.FileManager().RegisterFormat(vfs.FormatTape, tapeFormats)
 	control.Tape().SetDrive(spectrum.tape)
 	control.Joystick().AddReceiver(spectrum.joystick, 0)
 	spectrum.controller = control
@@ -210,12 +210,12 @@ func (spectrum *Spectrum) onInterruptAck() bool {
 
 // LoadFile loads a file into machine
 func (spectrum *Spectrum) LoadFile(filename string) {
-	info := spectrum.controller.File().FileInfo(filename)
+	info := spectrum.controller.FileManager().CreateFileInfo(filename)
 	if info.Format == vfs.FormatUnknown {
 		log.Println("Spectrum : Not supported format:", info.Ext)
 		return
 	}
-	err := spectrum.controller.File().LoadFile(info)
+	err := spectrum.controller.FileManager().LoadFile(info)
 	if err != nil {
 		log.Println("Spectrum : Error loading file:", info.Name)
 		return
@@ -258,8 +258,8 @@ func (spectrum *Spectrum) LoadFile(filename string) {
 func (spectrum *Spectrum) TakeSnapshot() {
 	snap := spectrum.SaveState()
 	data := snap.SaveSNA()
-	name := spectrum.controller.File().NewName("speccy", formatSNA)
-	err := spectrum.controller.File().SaveFile(name, vfs.FormatSnap, data)
+	name := spectrum.controller.FileManager().NewName("speccy", formatSNA)
+	err := spectrum.controller.FileManager().SaveFile(name, vfs.FormatSnap, data)
 	if err == nil {
 		log.Println("Spectrum : Snapshot saved: ", name)
 	} else {

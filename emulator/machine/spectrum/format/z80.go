@@ -12,9 +12,7 @@ const (
 	_Z80BankSize     = 0x4000
 )
 
-var (
-	_Z80BankMap = map[byte]int{8: 0x0000, 4: 0x4000, 5: 0x8000}
-)
+var z80BankAddresses = map[byte]int{8: 0x0000, 4: 0x4000, 5: 0x8000}
 
 // LoadZ80 loads snap from Z80 data format
 func LoadZ80(data []byte) *Snapshot {
@@ -102,7 +100,7 @@ func z80LoadFileV23(data []byte, snap *Snapshot) bool {
 	// load 16k data banks. 48k model RAM banks
 	for idx := headerSize; idx < totalSize; {
 		num := data[idx+2]
-		address, ok := _Z80BankMap[num]
+		address, ok := z80BankAddresses[num]
 		if !ok {
 			log.Println("Z80 : unsupported bank format")
 			return false

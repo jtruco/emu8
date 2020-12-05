@@ -1,3 +1,4 @@
+// Package ui contains user interface controllers
 package ui
 
 import "github.com/jtruco/emu8/emulator/device/video"
@@ -45,10 +46,10 @@ func (controller *VideoController) Refresh() {
 	}
 	controller.device.EndFrame()
 	screen := controller.device.Screen()
-	if screen.IsDirty() {
-		if controller.display != nil {
+	if controller.display != nil {
+		if screen.IsDirty() {
 			controller.display.Update(screen)
 		}
-		screen.SetDirty(false)
 	}
+	screen.SetDirty(false)
 }
