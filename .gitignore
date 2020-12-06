@@ -2,6 +2,8 @@
 *.exe
 *.exe~
 *.dll
+*.o
+*.a
 *.so
 *.dylib
 
@@ -10,3 +12,14 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# macOS special folders
+.DS_Store
+
+# IDEs
+/.idea
+/.vscode
+
+# Build & releases
+emu8
+emu8-*
