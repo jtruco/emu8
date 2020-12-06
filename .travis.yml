@@ -1,0 +1,14 @@
+os: linux
+dist: bionic
+
+language: go
+go:
+  - 1.15.x
+
+before_install:
+  - sudo apt-get -y install build-essential
+  - sudo apt-get -y install libsdl2-dev
+
+script:
+  - make deps
+  - make build
