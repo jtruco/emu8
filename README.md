@@ -21,8 +21,13 @@ There are plans to implement more 8-bit machines and models like : ZX80, ZX81, C
 
 To download and build the command line application you can use :
 ```
-go get github.com/jtruco/emu8
+git clone https://github.com/jtruco/emu8
+cd emu8
+
+make
 ```
+
+The included Makefile builds the default SDL application.
 
 See the [requirements](#requirements) section for additional build and dependency instructions.
 
