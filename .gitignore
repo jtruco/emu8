@@ -21,5 +21,10 @@
 /.vscode
 
 # Build & releases
-emu8
-emu8-*
+__debug_bin
+/emu8
+/emu8-*
+
+# Snaps & Tape files
+/snaps
+/tapes
