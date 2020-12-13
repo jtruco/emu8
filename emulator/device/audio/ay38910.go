@@ -1,8 +1,6 @@
 package audio
 
 import (
-	"math"
-
 	"github.com/jtruco/emu8/emulator/device"
 )
 
@@ -13,9 +11,10 @@ import (
 
 // AY38910 constants
 const (
-	AY38910Nreg         = 0x10   // 16 registers
-	AY38910VolumeLevels = 0x10   // 16 volume levels
-	AY38910VolumeRange  = 0x7fff // 32767
+	AY38910Nreg        = 0x10                      // 16 registers
+	AY38910Nlevels     = 0x10                      // 16 volume levels
+	AY38910Nchannels   = 0x03                      // 3 channels
+	AY38910VolumeRange = 0x7fff / AY38910Nchannels // 32767 / N channels
 )
 
 // AY38910 models
@@ -54,11 +53,15 @@ const (
 )
 
 // AY38910 register data
-var (
-	ay38910Masks = [AY38910Nreg]byte{
-		0xFF, 0x0F, 0xFF, 0x0F, 0xFF, 0x0F, 0x1F, 0xFF,
-		0x1F, 0x1F, 0x1F, 0xFF, 0xFF, 0x0F, 0xFF, 0xFF}
-)
+var ay38910Masks = [AY38910Nreg]byte{
+	0xFF, 0x0F, 0xFF, 0x0F, 0xFF, 0x0F, 0x1F, 0xFF,
+	0x1F, 0x1F, 0x1F, 0xFF, 0xFF, 0x0F, 0xFF, 0xFF}
+
+var ay38910VolumeLevels = [AY38910Nlevels]float32{
+	0.0, 0.00999465934234, 0.0144502937362, 0.0210574502174,
+	0.0307011520562, 0.0455481803616, 0.0644998855573, 0.107362478065,
+	0.126588845655, 0.20498970016, 0.292210269322, 0.372838941024,
+	0.492530708782, 0.635324635691, 0.805584802014, 1.0}
 
 // -----------------------------------------------------------------------------
 // AY38910
@@ -73,8 +76,8 @@ type AY38910 struct {
 	control   byte
 	inPortA   bool
 	inPortB   bool
-	counter   int
-	nsample   int
+	counter   byte
+	nsample   float32
 	// registers
 	ChannelAFrequencyLow  byte
 	ChannelAFrequencyHigh byte
@@ -129,13 +132,13 @@ func NewAY38910(config *Config) *AY38910 {
 		&ay.DataPortB}
 	ay.channelA.envelope = &ay.envelope
 	ay.channelA.noise = &ay.noise
-	ay.channelA.initLevels(float64(config.Rate) * 2 / 3)
+	ay.channelA.initLevels(config.Rate)
 	ay.channelB.envelope = &ay.envelope
 	ay.channelB.noise = &ay.noise
-	ay.channelB.initLevels(float64(config.Rate) * 1 / 3)
+	ay.channelB.initLevels(config.Rate)
 	ay.channelC.envelope = &ay.envelope
 	ay.channelC.noise = &ay.noise
-	ay.channelC.initLevels(float64(config.Rate) * 2 / 3)
+	ay.channelC.initLevels(config.Rate)
 	return ay
 }
 
@@ -303,21 +306,22 @@ func (ay *AY38910) OnClock() {
 	if ay.counter&0x07 != 0 {
 		return
 	}
+	// update noise every 8 clocks (125 Khz)
+	ay.noise.onClock()
+	// update tone every 8 clocks (125 Khz)
+	ay.channelA.onClock()
+	ay.channelB.onClock()
+	ay.channelC.onClock()
 	// update envelope every 16 clocks
 	if ay.counter&0xff == 0 {
 		ay.envelope.onClock()
 	}
-	// update tone every 8 clocks (125 Khz)
-	ay.noise.onClock()
-	ay.channelA.onClock()
-	ay.channelB.onClock()
-	ay.channelC.onClock()
+	ay.counter = 0
 	// create audio sample
-	left := ay.channelC.level + ay.channelB.level
-	right := ay.channelA.level + ay.channelB.level
-	index := int(float32(ay.nsample) * ay.config.Rate)
-	ay.buffer.AddSample(index, left, right)
-	ay.nsample++
+	mix := ay.channelA.level + ay.channelB.level + ay.channelC.level
+	index := int(ay.nsample)
+	ay.buffer.AddSample(index, mix, mix)
+	ay.nsample += ay.config.Rate
 }
 
 // -----------------------------------------------------------------------------
@@ -328,30 +332,27 @@ func (ay *AY38910) OnClock() {
 type AY38910Channel struct {
 	volume       uint8
 	period       uint16
-	output       uint8
+	output       bool
 	counter      uint16
 	level        uint16
 	toneEnabled  bool
 	noiseEnabled bool
 	useEnvelope  bool
-	levels       [AY38910VolumeLevels]uint16
+	levels       [AY38910Nlevels]uint16
 	envelope     *AY38910Envelope
 	noise        *AY38910Noise
 }
 
-func (c *AY38910Channel) initLevels(factor float64) {
-	// level = max / sqrt(2)^(15-nn)
-	factor /= 2 // mono output
-	for l := 0; l < AY38910VolumeLevels; l++ {
-		val := float64(AY38910VolumeRange) / math.Pow(math.Sqrt(2), float64(AY38910VolumeLevels-1-l))
-		c.levels[l] = uint16(val * factor)
+func (c *AY38910Channel) initLevels(factor float32) {
+	for l := 0; l < AY38910Nlevels; l++ {
+		c.levels[l] = uint16(ay38910VolumeLevels[l] * AY38910VolumeRange * factor)
 	}
 }
 
 func (c *AY38910Channel) reset() {
 	c.volume = 0
 	c.period = 1
-	c.output = 0
+	c.output = false
 	c.counter = 0
 	c.toneEnabled = false
 	c.noiseEnabled = false
@@ -372,20 +373,18 @@ func (c *AY38910Channel) setPeriod(high, low uint8) {
 func (c *AY38910Channel) onClock() {
 	c.counter++
 	if c.counter == c.period {
-		c.output ^= 0xff
+		c.output = !c.output
 		c.counter = 0
 	}
-	var volume uint8
-	if c.useEnvelope {
-		volume = c.envelope.volume
+	enable := (c.toneEnabled && c.output) || (c.noiseEnabled && c.noise.output)
+	if enable {
+		if c.useEnvelope {
+			c.level = c.levels[c.envelope.volume]
+		} else {
+			c.level = c.levels[c.volume]
+		}
 	} else {
-		volume = c.volume
-	}
-	output := (c.noiseEnabled && c.noise.output != 0) || (c.toneEnabled && c.output != 0)
-	if output {
-		c.level = c.levels[volume]
-	} else {
-		c.level = -c.levels[volume]
+		c.level = 0
 	}
 }
 
@@ -393,40 +392,43 @@ func (c *AY38910Channel) onClock() {
 // AY38910 - Envelope
 // -----------------------------------------------------------------------------
 
-var (
-	ay38910Shapes = [][]uint8{
-		{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0}, // 0x00
-		{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0}, // 0x01
-		{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0}, // 0x02
-		{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0}, // 0x03
-		//
-		{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0}, // 0x04
-		{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0}, // 0x05
-		{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0}, // 0x06
-		{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0}, // 0x07
-		//
-		{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0}, // 0x08
-		{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0}, // 0x09
-		//
-		{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, // 0x0a
-		{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15},                                                   // 0x0b
-		//
-		{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15}, // 0x0c
-		{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15}, // 0x0d
-		//
-		{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0}, // 0x0e
-		{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0},                                                    // 0x0f
-	}
-)
+var ay38910Shapes = [][]uint8{
+	/* 0 0 X X */
+	{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	/* 0 1 X X */
+	{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	/* 1 0 0 0 */
+	{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0},
+	/* 1 0 0 1 */
+	{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	/* 1 0 1 0 */
+	{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
+	/* 1 0 1 1 */
+	{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15},
+	/* 1 1 0 0 */
+	{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
+	/* 1 1 0 1 */
+	{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15},
+	/* 1 1 1 0 */
+	{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0},
+	/* 1 1 1 1 */
+	{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+}
 
 // AY38910Envelope audio envelope
 type AY38910Envelope struct {
-	volume     uint8
-	period     uint16
-	counter    uint16
-	shouldHold bool
-	shape      []uint8
-	shapePos   int
+	volume  uint8
+	period  uint16
+	counter uint16
+	shape   []uint8
+	hold    bool
+	pos     int
 }
 
 func (e *AY38910Envelope) reset() {
@@ -441,28 +443,22 @@ func (e *AY38910Envelope) setPeriod(high, low uint8) {
 }
 
 func (e *AY38910Envelope) setShape(shape uint8) {
-	e.shapePos = 0
 	e.shape = ay38910Shapes[shape]
-	e.volume = e.shape[0]
-	if shape < 0x08 {
-		e.shouldHold = true
-	} else {
-		e.shouldHold = (shape & 0x01) != 0
-	}
+	e.pos = 0
+	e.hold = (shape&0x08 == 0) || (shape&0x01 != 0)
 }
 
 func (e *AY38910Envelope) onClock() {
 	e.counter++
 	if e.counter == e.period {
 		e.counter = 0
-		e.volume = e.shape[e.shapePos]
-		e.shapePos++
-		if e.shapePos == len(e.shape) {
-			if e.shouldHold {
-				e.shapePos--
-			} else {
-				e.shapePos = 0
+		e.volume = e.shape[e.pos]
+		if e.pos == 0x1f {
+			if !e.hold {
+				e.pos = 0
 			}
+		} else {
+			e.pos++
 		}
 	}
 }
@@ -473,29 +469,34 @@ func (e *AY38910Envelope) onClock() {
 
 // AY38910Noise audio noise
 type AY38910Noise struct {
-	output  uint8
-	period  uint8
-	counter uint8
-	rng     int
+	output   bool
+	period   uint8
+	counter  uint8
+	prescale bool
+	rng      uint32
 }
 
 func (n *AY38910Noise) reset() {
-	n.output = 0xff
-	n.counter = 0
+	n.output = false
 	n.period = 0
-	n.rng = 1
+	n.counter = 0
+	n.prescale = false
+	n.rng = 0x01
 }
 
 func (n *AY38910Noise) onClock() {
 	n.counter++
 	if n.counter == n.period {
 		n.counter = 0
-		if ((n.rng + 1) & 0x02) != 0 {
-			n.output ^= 0xff
+		n.prescale = !n.prescale
+		if !n.prescale {
+			// https://github.com/mamedev/mame/blob/master/src/devices/sound/ay8910.cpp
+			// The Random Number Generator of the 8910 is a 17-bit shift
+			// register. The input to the shift register is bit0 XOR bit3
+			// (bit0 is the output). This was verified on AY-3-8910 and YM2149 chips.
+			n.rng ^= (((n.rng & 1) ^ ((n.rng >> 3) & 1)) << 17)
+			n.rng >>= 1
 		}
-		if (n.rng & 0x01) != 0 {
-			n.rng ^= 0x24000
-		}
-		n.rng >>= 1
+		n.output = (n.rng & 0x01) != 0
 	}
 }
