@@ -2,15 +2,12 @@ package sdl
 
 import (
 	"log"
-	"time"
 
 	"github.com/jtruco/emu8/emulator"
 	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/veandco/go-sdl2/sdl"
 )
-
-const loopSleep = 20 * time.Millisecond // 50 Hz
 
 // App is the SDL application
 type App struct {
@@ -75,23 +72,9 @@ func (app *App) Run() {
 	// event loop
 	app.running = true
 	for app.running {
-		count := 0
-		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-			count++
-			switch e := event.(type) {
-			case *sdl.QuitEvent:
-				app.running = false
-			case *sdl.KeyboardEvent:
-				app.processKeyboard(e)
-			case *sdl.JoyAxisEvent:
-				app.processJoyAxis(e)
-			case *sdl.JoyButtonEvent:
-				app.processJoyButton(e)
-			}
-		}
-		if count == 0 {
-			time.Sleep(loopSleep)
-		}
+		app.pollEvents()
+		app.emulator.Emulate()
+		app.emulator.Sync()
 	}
 	app.emulator.Stop()
 }
@@ -99,6 +82,22 @@ func (app *App) Run() {
 // End the SDL App
 func (app *App) End() {
 	sdl.Quit()
+}
+
+// poll SDL event queue
+func (app *App) pollEvents() {
+	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
+		switch e := event.(type) {
+		case *sdl.QuitEvent:
+			app.running = false
+		case *sdl.KeyboardEvent:
+			app.processKeyboard(e)
+		case *sdl.JoyAxisEvent:
+			app.processJoyAxis(e)
+		case *sdl.JoyButtonEvent:
+			app.processJoyButton(e)
+		}
+	}
 }
 
 func (app *App) processKeyboard(e *sdl.KeyboardEvent) {

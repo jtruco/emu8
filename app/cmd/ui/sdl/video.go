@@ -69,36 +69,6 @@ func (video *Video) ToggleFullscreen() {
 	video.initSDLVideo()
 }
 
-func (video *Video) initScreenRects() {
-	screen := video.device.Screen()
-	viewport := screen.View()
-	screen.SetDirty(true)
-	// create regions cache
-	rects := screen.Rects()
-	l := len(rects)
-	video.srcRects = make([]sdl.Rect, l+1)
-	video.dstRects = make([]sdl.Rect, l+1)
-	for i, r := range rects {
-		rect := r.Intersect(&viewport) // only in view
-		video.srcRects[i] = sdl.Rect{
-			X: int32(rect.X), Y: int32(rect.Y),
-			W: int32(rect.W), H: int32(rect.H)}
-		video.dstRects[i] = sdl.Rect{
-			X: int32(float32(rect.X-viewport.X) * video.scaleX),
-			Y: int32(float32(rect.Y-viewport.Y) * video.scaleY),
-			W: int32(float32(rect.W) * video.scaleX),
-			H: int32(float32(rect.H) * video.scaleY)}
-	}
-	// viewport
-	video.srcRects[l] = sdl.Rect{
-		X: int32(viewport.X), Y: int32(viewport.Y),
-		W: int32(viewport.W), H: int32(viewport.H)}
-	video.dstRects[l] = sdl.Rect{
-		X: 0, Y: 0,
-		W: int32(float32(viewport.W) * video.scaleX),
-		H: int32(float32(viewport.H) * video.scaleY)}
-}
-
 func (video *Video) initSDLVideo() bool {
 	video._sync.Lock()
 	defer video._sync.Unlock()
@@ -163,8 +133,38 @@ func (video *Video) createEmulatorSurface() bool {
 		log.Println("Error creating emulator surface : " + err.Error())
 		return false
 	}
-	surface.SetBlendMode(sdl.BLENDMODE_NONE)
+	// surface.SetBlendMode(sdl.BLENDMODE_NONE)
 	video.surface = surface
-	video.buffer = make([]sdl.Rect, len(screen.Rects()))
 	return true
+}
+
+func (video *Video) initScreenRects() {
+	screen := video.device.Screen()
+	viewport := screen.View()
+	screen.SetDirty(true)
+	// create regions cache
+	rects := screen.Rects()
+	l := len(rects)
+	video.buffer = make([]sdl.Rect, l)
+	video.srcRects = make([]sdl.Rect, l+1)
+	video.dstRects = make([]sdl.Rect, l+1)
+	for i, r := range rects {
+		rect := r.Intersect(&viewport) // only in view
+		video.srcRects[i] = sdl.Rect{
+			X: int32(rect.X), Y: int32(rect.Y),
+			W: int32(rect.W), H: int32(rect.H)}
+		video.dstRects[i] = sdl.Rect{
+			X: int32(float32(rect.X-viewport.X) * video.scaleX),
+			Y: int32(float32(rect.Y-viewport.Y) * video.scaleY),
+			W: int32(float32(rect.W) * video.scaleX),
+			H: int32(float32(rect.H) * video.scaleY)}
+	}
+	// viewport
+	video.srcRects[l] = sdl.Rect{
+		X: int32(viewport.X), Y: int32(viewport.Y),
+		W: int32(viewport.W), H: int32(viewport.H)}
+	video.dstRects[l] = sdl.Rect{
+		X: 0, Y: 0,
+		W: int32(float32(viewport.W) * video.scaleX),
+		H: int32(float32(viewport.H) * video.scaleY)}
 }
