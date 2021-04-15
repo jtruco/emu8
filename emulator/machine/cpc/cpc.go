@@ -22,6 +22,11 @@ import (
 // Amstrad CPC
 // -----------------------------------------------------------------------------
 
+// Amstrad CPC models
+const (
+	AmstradCPC464 = iota
+)
+
 // Default Amstrad CPC
 const (
 	cpcFPS          = 50              // 50 Hz ( 50.08 Hz )
@@ -108,9 +113,6 @@ func New(model int) machine.Machine {
 	cpc.components.Add(cpc.joystick)
 	return cpc
 }
-
-// Register cpc machine
-func init() { machine.Register(machine.AmstradCPC, New) }
 
 // Device interface
 // -----------------------------------------------------------------------------

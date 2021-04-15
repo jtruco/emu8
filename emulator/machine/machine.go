@@ -2,7 +2,6 @@
 package machine
 
 import (
-	"errors"
 	"time"
 
 	"github.com/jtruco/emu8/emulator/controller"
@@ -49,37 +48,4 @@ type Config struct {
 func (conf *Config) SetFPS(FPS float32) {
 	conf.FPS = FPS
 	conf.FrameTime = time.Duration(1e9 / FPS)
-}
-
-// -----------------------------------------------------------------------------
-// Machine Factory
-// -----------------------------------------------------------------------------
-
-// Factory is a machine constructor function
-type Factory func(int) Machine
-
-// Registered machine factories
-var factories = map[int]Factory{}
-
-// Register registers a machine
-func Register(id int, factory Factory) {
-	factories[id] = factory
-}
-
-// Create returns a machine from a model name
-func Create(model string) (Machine, error) {
-	return CreateFromModel(GetModel(model))
-}
-
-// CreateFromModel returns a machine from a model id
-func CreateFromModel(model int) (Machine, error) {
-	id := GetMachineFromModel(model)
-	if id == UnknownMachine {
-		return nil, errors.New("Machine : unknown machine model")
-	}
-	factory := factories[id]
-	if factory == nil {
-		return nil, errors.New("Machine : unsupported machine model")
-	}
-	return factory(model), nil
 }

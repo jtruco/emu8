@@ -20,6 +20,12 @@ import (
 // ZX Spectrum
 // -----------------------------------------------------------------------------
 
+// ZX Spectrum model constants
+const (
+	ZXSpectrum16K = iota
+	ZXSpectrum48K
+)
+
 // Default ZX Spectrum constants
 const (
 	zxFPS        = 50    // 50 Hz (50.08 Hz)
@@ -64,7 +70,7 @@ func New(model int) machine.Machine {
 	spectrum.config.FrameTStates = zxTStates
 	spectrum.config.SetFPS(zxFPS)
 	// memory mapping
-	if spectrum.config.Model == machine.ZXSpectrum16k {
+	if spectrum.config.Model == ZXSpectrum16K {
 		spectrum.memory = memory.New(memory.Size32K, 2)
 		spectrum.memory.SetMap(0, memory.NewROM(0x0000, memory.Size16K))
 		spectrum.memory.SetMap(1, memory.NewRAM(0x4000, memory.Size16K))
@@ -102,9 +108,6 @@ func New(model int) machine.Machine {
 
 	return spectrum
 }
-
-// Register spectrum machine
-func init() { machine.Register(machine.ZXSpectrum, New) }
 
 // Device interface
 
@@ -290,7 +293,7 @@ func (spectrum *Spectrum) SaveState() *format.Snapshot {
 	snap.Border = spectrum.tv.border
 	// Memory banks (16k, 48k)
 	copy(snap.Memory[0x0000:], spectrum.memory.Bank(1).Data())
-	if spectrum.config.Model == machine.ZXSpectrum48k {
+	if spectrum.config.Model == ZXSpectrum48K {
 		copy(snap.Memory[0x4000:], spectrum.memory.Bank(2).Data())
 		copy(snap.Memory[0x8000:], spectrum.memory.Bank(3).Data())
 	}
