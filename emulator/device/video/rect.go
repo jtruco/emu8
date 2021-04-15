@@ -31,7 +31,11 @@ func (r *Rect) Intersect(o *Rect) Rect {
 	if (o.X + o.W) < c {
 		c = (o.X + o.W)
 	}
-	result.W = c - result.X
+	if c > result.X {
+		result.W = c - result.X
+	} else {
+		result.W = 0
+	}
 	// Y1
 	c = r.Y
 	if o.Y > c {
@@ -43,7 +47,11 @@ func (r *Rect) Intersect(o *Rect) Rect {
 	if (o.Y + o.H) < c {
 		c = (o.Y + o.H)
 	}
-	result.H = c - result.Y
+	if c > result.Y {
+		result.H = c - result.Y
+	} else {
+		result.H = 0
+	}
 	//
 	return result
 }
