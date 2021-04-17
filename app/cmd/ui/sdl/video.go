@@ -66,7 +66,8 @@ func (video *Video) Update(screen *video.Screen) {
 // ToggleFullscreen enable / disable fullscreen mode
 func (video *Video) ToggleFullscreen() {
 	video.fullscreen = !video.fullscreen
-	video.initSDLVideo()
+	// FIXME : fullscreen not working (disabled)
+	// video.initSDLVideo()
 }
 
 func (video *Video) initSDLVideo() bool {
@@ -99,9 +100,10 @@ func (video *Video) createSDLWindow() bool {
 	if err != nil {
 		log.Println("Error initializing SDL window : " + err.Error())
 	}
-	if video.fullscreen {
-		window.SetFullscreen(sdl.WINDOW_FULLSCREEN)
-	}
+	// FIXME : fullscreen not working (disabled)
+	// if video.fullscreen {
+	// 	window.SetFullscreen(sdl.WINDOW_FULLSCREEN)
+	// }
 	window.Show()
 	surface, err := window.GetSurface()
 	if err != nil {

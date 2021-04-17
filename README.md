@@ -77,6 +77,7 @@ To select another machine model use :
 Once the emulator is running you can control it with the following keys :
 - Esc : Exits the application.
 - F2 : Takes a snapshot of the machine state and saves it.
+- F4 : Toggle audio mute.
 - F5 : Resets the machine to its initial state.
 - F6 : Pauses and Resumes the machine emulation.
 - F7 : Plays and Stops the tape.

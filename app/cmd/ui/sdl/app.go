@@ -112,7 +112,6 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 		// Snaps
 		case sdl.K_F2:
 			app.emulator.TakeSnapshot()
-
 		// Emulator
 		case sdl.K_F5:
 			app.emulator.Reset()
@@ -136,6 +135,8 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 		case sdl.K_F8:
 			app.control.Tape().Drive().Rewind()
 		// UI
+		case sdl.K_F4:
+			app.audio.config.Mute = !app.audio.config.Mute
 		case sdl.K_F11:
 			app.video.ToggleFullscreen()
 		default:
