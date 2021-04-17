@@ -1,13 +1,13 @@
-// Package z80 a Zyxel Z80 CPU emulator
+// Package z80 a Zilog Z80 CPU emulator
 package z80
 
 import "github.com/jtruco/emu8/emulator/device"
 
 // -----------------------------------------------------------------------------
-// Z80 - Zyxel Z80 CPU
+// Z80 - Zilog Z80 CPU
 // -----------------------------------------------------------------------------
 
-// Z80 the Zyxel Z80 CPU
+// Z80 the Zilog Z80 CPU
 type Z80 struct {
 	State                       // Z80 State
 	clock    device.Clock       // Clock device
