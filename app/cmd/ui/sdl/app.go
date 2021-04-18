@@ -81,6 +81,8 @@ func (app *App) Run() {
 
 // End the SDL App
 func (app *App) End() {
+	app.audio.Close()
+	app.video.Destroy()
 	sdl.Quit()
 }
 

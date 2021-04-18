@@ -37,6 +37,11 @@ func (audio *Audio) Init() bool {
 	return true
 }
 
+// Close closes audio resources
+func (audio *Audio) Close() {
+	sdl.CloseAudio()
+}
+
 // Play plays the audio buffer
 func (audio *Audio) Play(buffer *audio.Buffer) {
 	if !audio.config.Mute {
