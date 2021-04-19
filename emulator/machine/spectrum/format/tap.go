@@ -45,7 +45,6 @@ func (block *TapBlock) Data() []byte {
 // Tap implements the a tape format .TAP
 type Tap struct {
 	info        tape.Info    // Tape information
-	data        []byte       // Data buffer
 	blocks      []tape.Block // Block array
 	pilotPulses int          // Pilot pulses
 	bitMask     byte         // Current bit mask
@@ -87,11 +86,11 @@ func (tap *Tap) Load(data []byte) bool {
 		block.Length = length
 		block.data = data[offset : offset+length]
 		if block.Type == tapBlockHeader {
-			block.header.tapType = data[1]
-			block.header.filename = string(data[2:12])
-			block.header.length = readWord(data, 12)
-			block.header.par1 = readWord(data, 14)
-			block.header.par2 = readWord(data, 16)
+			block.header.tapType = block.data[1]
+			block.header.filename = readString(block.data, 2, 10)
+			block.header.length = readWord(block.data, 12)
+			block.header.par1 = readWord(block.data, 14)
+			block.header.par2 = readWord(block.data, 16)
 		}
 		tap.blocks = append(tap.blocks, block)
 		offset += length

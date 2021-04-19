@@ -72,3 +72,17 @@ func readIntN(data []byte, pos int, len int) int {
 	}
 	return int(value)
 }
+
+// readString reads valid characters to string
+func readString(data []byte, pos int, len int) string {
+	bytes := make([]byte, len)
+	for i := 0; i < len; i++ {
+		char := data[pos+i]
+		if char > 31 || char < 128 {
+			bytes[i] = char
+		} else {
+			bytes[i] = '?'
+		}
+	}
+	return string(bytes)
+}
