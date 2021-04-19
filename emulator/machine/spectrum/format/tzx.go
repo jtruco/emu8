@@ -326,6 +326,19 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		}
 		control.State = tapeStatePilotNc
 		control.BlockIndex++
+		// log : standar data block
+		if data[5] == 0 {
+			switch data[6] {
+			case 0:
+				log.Println("Tape (TZX) : Program header block:", readString(data, 7, 10))
+			case 3:
+				log.Println("Tape (TZX) : Bytes header block:", readString(data, 7, 10))
+			default:
+				log.Println("Tape (TZX) : Standard header block")
+			}
+		} else {
+			log.Println("Tape (TZX) : Standard data block:", tzx.blockLength, "bytes")
+		}
 
 	case 0x11:
 		tzx.pilotTiming = readInt(data, control.BlockPos+1)
@@ -340,6 +353,8 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		control.BlockPos += 19
 		control.State = tapeStatePilotNc
 		control.BlockIndex++
+		// log : turbo data block
+		log.Println("Tape (TZX) : Turbo data block:", tzx.blockLength, "bytes")
 
 	case 0x12: // Pure Tone Block
 		tzx.pilotTiming = readInt(data, control.BlockPos+1)
