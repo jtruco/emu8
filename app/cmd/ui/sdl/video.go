@@ -13,8 +13,8 @@ import (
 // Video is the SDL video UI
 type Video struct {
 	_sync    sync.Mutex          // Sync object
-	config   *config.VideoConfig // Video configuration
 	device   video.Video         // Machine video device
+	config   *config.VideoConfig // Video configuration
 	window   *sdl.Window         // Main window
 	renderer *sdl.Renderer       // Window renderer
 	surface  *sdl.Surface        // Emulator screen surface
@@ -45,6 +45,7 @@ func (video *Video) Init(device video.Video) bool {
 		return false
 	}
 	video.createRegions()
+	video.updateScreen()
 	return true
 }
 
@@ -64,7 +65,7 @@ func (video *Video) ToggleFullscreen() {
 	defer video._sync.Unlock()
 
 	video.config.FullScreen = !video.config.FullScreen
-	// FIXME implement fullscreen
+	video.updateScreen()
 }
 
 // Update updates screen changes to video display
@@ -101,17 +102,18 @@ func (video *Video) sdlCreateWindow() bool {
 		W: int32(float32(screen.View().W) * float32(video.config.Scale) * screen.ScaleX()),
 		H: int32(float32(screen.View().H) * float32(video.config.Scale) * screen.ScaleY())}
 	video.window, err = sdl.CreateWindow(
-		config.DefaultAppTitle, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
+		config.Get().AppTitle, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
 		video.wRect.W, video.wRect.H,
 		sdl.WINDOW_SHOWN)
 	if err != nil {
 		log.Println("Error initializing SDL window : " + err.Error())
 	}
 	// renderer
-	video.renderer, err = sdl.CreateRenderer(video.window, -1, 0)
+	video.renderer, err = sdl.CreateRenderer(video.window, -1, sdl.RENDERER_ACCELERATED)
 	if err != nil {
 		log.Println("Errror initializing window Renderer : " + err.Error())
 	}
+	video.renderer.SetLogicalSize(video.wRect.W, video.wRect.H)
 	info, _ := video.renderer.GetInfo()
 	video.hwAccel = info.Flags&sdl.RENDERER_ACCELERATED != 0
 	return true
@@ -132,6 +134,19 @@ func (video *Video) sdlCreateSurface() bool {
 		return false
 	}
 	return true
+}
+
+// updateScreen update screen state
+func (video *Video) updateScreen() {
+	// check fullscreen mode
+	if video.config.FullScreen {
+		video.window.SetFullscreen(sdl.WINDOW_FULLSCREEN_DESKTOP)
+	} else {
+		video.window.SetFullscreen(0)
+	}
+	video.renderer.Clear()
+	// force screen refresh
+	video.device.Screen().SetDirty(true)
 }
 
 // render regions
