@@ -34,7 +34,7 @@ emu8:
 # cross compilation (windows)
 
 GO_CGO_OPTS = CGO_ENABLED="1" CGO_LDFLAGS="-lmingw32 -lSDL2" CGO_CFLAGS="-D_REENTRANT"
-GO_WIN_386 = GOOS="windows" GOARCH="386" CC="/usr/bin/i686-w64-mingw32-gcc" $(GO_CGO_OPTS)
+GO_WIN_386 = GOOS="windows" GOARCH="386" GO386="sse2" CC="/usr/bin/i686-w64-mingw32-gcc" $(GO_CGO_OPTS)
 GO_WIN_AMD64 = GOOS="windows" GOARCH="amd64" CC="/usr/bin/x86_64-w64-mingw32-gcc" $(GO_CGO_OPTS)
 
 .PHONY: cross emu8-win-386 emu8-win-amd64
