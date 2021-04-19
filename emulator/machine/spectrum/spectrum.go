@@ -253,6 +253,8 @@ func (spectrum *Spectrum) LoadFile(filename string) {
 		if loaded {
 			tape.Info().Name = info.Name
 			spectrum.tape.Insert(tape)
+		} else {
+			log.Println("Spectrum : Error loading tape file")
 		}
 	}
 }
@@ -264,9 +266,9 @@ func (spectrum *Spectrum) TakeSnapshot() {
 	name := spectrum.controller.FileManager().NewName("speccy", formatSNA)
 	err := spectrum.controller.FileManager().SaveFile(name, vfs.FormatSnap, data)
 	if err == nil {
-		log.Println("Spectrum : Snapshot saved: ", name)
+		log.Println("Spectrum : Snapshot saved:", name)
 	} else {
-		log.Println("Spectrum : Error saving snapshot: ", name)
+		log.Println("Spectrum : Error saving snapshot:", name)
 	}
 }
 

@@ -39,18 +39,18 @@ func New(machine machine.Machine) *Emulator {
 // Emulator factory
 
 // GetDefault returns the configured emulator
-func GetDefault() *Emulator {
+func GetDefault() (*Emulator, error) {
 	return FromModel(config.Get().MachineModel)
 }
 
 // FromModel returns an emulator for a machine model name
-func FromModel(model string) *Emulator {
+func FromModel(model string) (*Emulator, error) {
 	machine, err := machine.Create(model)
 	if err != nil {
 		log.Println(err.Error())
-		return nil
+		return nil, err
 	}
-	return New(machine)
+	return New(machine), nil
 }
 
 // Machine controller
@@ -160,11 +160,15 @@ func (emulator *Emulator) emulationLoop() {
 	emulator.wg.Add(1)
 	defer emulator.wg.Done()
 
+	log.Println("Emulator : emulation loop started")
+
 	// emulation loop
 	for emulator.running {
 		emulator.emulateFrame()
 		emulator.Sync()
 	}
+
+	log.Println("Emulator : emulation loop terminated")
 }
 
 // emulateFrame emulates the frame

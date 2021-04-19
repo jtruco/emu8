@@ -54,7 +54,7 @@ func (drive *Drive) Insert(tape Tape) {
 	drive.tape = tape
 	drive.control.NumBlocks = len(tape.Blocks())
 	drive.Reset()
-	log.Println("Tape : Tape inserted ...", tape.Info().Name)
+	log.Println("Tape : Tape inserted:", tape.Info().Name)
 }
 
 // Eject ejects the tape from drive
@@ -62,7 +62,7 @@ func (drive *Drive) Eject() {
 	drive.tape = nil
 	drive.control.NumBlocks = 0
 	drive.Reset()
-	log.Println("Tape : Tape ejected.")
+	log.Println("Tape : Tape ejected")
 }
 
 // Play starts tape playback
@@ -71,7 +71,7 @@ func (drive *Drive) Play() {
 		return
 	}
 	drive.control.Playing = true
-	log.Println("Tape : Tape playback started.")
+	log.Println("Tape : Tape playback started")
 }
 
 // Stop stops tape playback
@@ -86,7 +86,7 @@ func (drive *Drive) Stop() {
 // Rewind rewinds the tape to start
 func (drive *Drive) Rewind() {
 	drive.Reset()
-	log.Println("Tape : Tape rewinded.")
+	log.Println("Tape : Tape rewinded")
 }
 
 // Playback emulates the loaded tape
@@ -109,10 +109,10 @@ func (drive *Drive) Playback() {
 	// control end of tape playback
 	if !drive.IsPlaying() {
 		if drive.control.EndOfTape() {
-			log.Println("Tape : End of Tape.")
+			log.Println("Tape : End of tape")
 			drive.Rewind()
 		} else {
-			log.Println("Tape : Playback stopped.")
+			log.Println("Tape : Playback stopped")
 		}
 	}
 }

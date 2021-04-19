@@ -32,14 +32,15 @@ func NewApp() *App {
 func (app *App) Init(emu *emulator.Emulator) bool {
 	// init sdl
 	if err := sdl.Init(sdl.INIT_VIDEO | sdl.INIT_AUDIO | sdl.INIT_JOYSTICK); err != nil {
-		log.Println("Error initializing SDL : " + err.Error())
+		log.Println("SDL : Error initializing SDL:", err.Error())
 		return false
 	}
+	log.Print("SDL : Initialized")
 	// open sdl joystick (only one supported)
 	if sdl.NumJoysticks() > 0 {
 		joystick := sdl.JoystickOpen(0)
 		if joystick != nil {
-			log.Println("Joystick found ...", sdl.JoystickNameForIndex(0))
+			log.Println("SDL : Joystick found:", sdl.JoystickNameForIndex(0))
 		}
 	}
 	// init emulator
@@ -50,10 +51,12 @@ func (app *App) Init(emu *emulator.Emulator) bool {
 	app.control = control
 	// init SDL video output
 	if !app.video.Init(control.Video().Device()) {
+		app.End()
 		return false
 	}
 	// init SDL audio
 	if !app.audio.Init() {
+		app.End()
 		return false
 	}
 	return true
@@ -81,9 +84,14 @@ func (app *App) Run() {
 
 // End the SDL App
 func (app *App) End() {
-	app.audio.Close()
-	app.video.Destroy()
+	if app.audio != nil {
+		app.audio.Close()
+	}
+	if app.video != nil {
+		app.video.Destroy()
+	}
 	sdl.Quit()
+	log.Print("App : Terminated !")
 }
 
 // poll SDL event queue
@@ -125,20 +133,40 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 			}
 		case sdl.K_F10:
 			app.running = false // Exit app
+			log.Print("App : Exiting app")
 		// Tape Drive
 		case sdl.K_F7:
 			if app.control.Tape().HasDrive() {
-				if app.control.Tape().Drive().IsPlaying() {
-					app.control.Tape().Drive().Stop()
+				if app.control.Tape().Drive().HasTape() {
+					if app.control.Tape().Drive().IsPlaying() {
+						app.control.Tape().Drive().Stop()
+					} else {
+						app.control.Tape().Drive().Play()
+					}
 				} else {
-					app.control.Tape().Drive().Play()
+					log.Println("App : There is no tape loaded !")
 				}
+			} else {
+				log.Println("App : Machine has no tape drive !")
 			}
 		case sdl.K_F8:
-			app.control.Tape().Drive().Rewind()
+			if app.control.Tape().HasDrive() {
+				if app.control.Tape().Drive().HasTape() {
+					app.control.Tape().Drive().Rewind()
+				} else {
+					log.Println("App : There is no tape loaded !")
+				}
+			} else {
+				log.Println("App : Machine has no tape drive !")
+			}
 		// UI
 		case sdl.K_F4:
 			app.audio.config.Mute = !app.audio.config.Mute
+			if app.audio.config.Mute {
+				log.Println("App : Audio is muted")
+			} else {
+				log.Println("App : Audio is enabled")
+			}
 		case sdl.K_F11:
 			app.video.ToggleFullscreen()
 		default:

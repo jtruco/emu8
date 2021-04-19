@@ -14,6 +14,7 @@ import (
 const (
 	tzxHeaderSignature = "ZXTape!"
 	tzxStartEar        = tape.LevelLow
+	tzxLogAllBlocks    = false
 )
 
 // TZX states
@@ -87,11 +88,11 @@ func (tzx *Tzx) Blocks() []tape.Block {
 func (tzx *Tzx) Load(data []byte) bool {
 	tapeLength := len(data)
 	if tapeLength == 0 {
-		log.Print("TZX : Invalid format. 0-length data.")
+		log.Print("Tape (TZX) : Invalid format: 0-length data")
 		return false
 	}
 	if string(data[0:7]) != tzxHeaderSignature {
-		log.Print("TZX : Invalid TZX header signature.")
+		log.Print("Tape (TZX) : Invalid TZX header signature")
 		return false
 	}
 	index := 0
@@ -153,7 +154,7 @@ func (tzx *Tzx) Load(data []byte) bool {
 		case 'Z': // Glue Block
 			length = 10
 		default:
-			log.Printf("TZX : Unknown ID block %x \n", block.Type)
+			log.Printf("Tape (TZX) : Unknown block ID 0x%x", block.Type)
 			return false
 		}
 		block.Length = length
@@ -180,7 +181,9 @@ func (tzx *Tzx) Play(control *tape.Control) {
 			control.Block = tzx.blocks[control.BlockIndex]
 			control.BlockPos = 0
 			tzx.parseHeader(control)
-			// log.Printf("TZX : Playing block #%d . Type : %x", control.BlockIndex, control.Block.Info().Type)
+			if tzxLogAllBlocks {
+				log.Printf("Tape (TZX) : Playing block #%d - 0x%x", control.BlockIndex, control.Block.Info().Type)
+			}
 		}
 
 	case tapeStatePilot:
@@ -425,7 +428,7 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		control.BlockIndex++
 
 	default:
-		log.Printf("TZX : Playing block #%d . Unsupported type : %x", control.BlockIndex, id)
+		log.Printf("Tape (TZX) : Error at block #%d: Unsupported type: 0x%x", control.BlockIndex, id)
 		control.BlockIndex++
 	}
 }

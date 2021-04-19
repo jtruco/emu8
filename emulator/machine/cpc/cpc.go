@@ -300,6 +300,8 @@ func (cpc *AmstradCPC) LoadFile(filename string) {
 		if loaded {
 			tape.Info().Name = info.Name
 			cpc.tape.Insert(tape)
+		} else {
+			log.Println("CPC : Error loading tape file")
 		}
 	}
 }
@@ -311,9 +313,9 @@ func (cpc *AmstradCPC) TakeSnapshot() {
 	name := cpc.controller.FileManager().NewName("cpc", cpcFormatSNA)
 	err := cpc.controller.FileManager().SaveFile(name, vfs.FormatSnap, data)
 	if err == nil {
-		log.Println("CPC : Snapshot saved: ", name)
+		log.Println("CPC : Snapshot saved:", name)
 	} else {
-		log.Println("CPC : Error saving snapshot: ", name)
+		log.Println("CPC : Error saving snapshot:", name)
 	}
 }
 

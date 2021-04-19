@@ -39,6 +39,7 @@ type Machine interface {
 // Config machine configuration
 type Config struct {
 	Model        int           // Machine model
+	Name         string        // Model name
 	FPS          float32       // Frames per second
 	FrameTime    time.Duration // Duration of a frame
 	FrameTStates int           // TStates per frame

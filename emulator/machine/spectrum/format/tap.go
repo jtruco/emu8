@@ -73,7 +73,7 @@ func (tap *Tap) Blocks() []tape.Block {
 func (tap *Tap) Load(data []byte) bool {
 	tapeLength := len(data)
 	if tapeLength == 0 {
-		log.Print("TAP : Invalid format. 0-length data.")
+		log.Print("Tape (TAP) : Invalid format: 0-length data")
 		return false
 	}
 	index := 0
@@ -115,7 +115,13 @@ func (tap *Tap) Play(control *tape.Control) {
 		control.Ear = tape.LevelLow
 		control.Timeout = tapeTimingPilot
 		control.State = tapeStatePilot
-		// log.Println("TAP : Load block ", control.Block.(*TapBlock).header.filename)
+		// log tape block
+		tapblock := control.Block.(*TapBlock)
+		if tapblock.Type == tapBlockHeader {
+			log.Println("Tape (TAP) : Header block:", tapblock.header.filename)
+		} else {
+			log.Println("Tape (TAP) : Data block:", tapblock.Length, "bytes")
+		}
 
 	case tapeStatePilot:
 		control.Ear ^= tape.LevelMask

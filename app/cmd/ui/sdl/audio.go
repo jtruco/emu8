@@ -29,16 +29,18 @@ func (audio *Audio) Init() bool {
 	want.Samples = 1024
 	err := sdl.OpenAudio(&want, &spec)
 	if err != nil {
-		log.Println("Error initializing SDL audio : " + err.Error())
+		log.Println("SDL : Error initializing SDL audio:", err.Error())
 		return false
 
 	}
 	sdl.PauseAudio(false)
+	log.Println("SDL : Audio initialized:", want.Freq, "Hz")
 	return true
 }
 
 // Close closes audio resources
 func (audio *Audio) Close() {
+	log.Println("SDL : Closing audio resources")
 	sdl.CloseAudio()
 }
 

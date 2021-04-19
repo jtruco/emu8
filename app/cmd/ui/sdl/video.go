@@ -54,6 +54,7 @@ func (video *Video) Destroy() {
 	video._sync.Lock()
 	defer video._sync.Unlock()
 
+	log.Println("SDL : Freeing video resources")
 	video.surface.Free()
 	video.renderer.Destroy()
 	video.window.Destroy()
@@ -106,16 +107,17 @@ func (video *Video) sdlCreateWindow() bool {
 		video.wRect.W, video.wRect.H,
 		sdl.WINDOW_SHOWN)
 	if err != nil {
-		log.Println("Error initializing SDL window : " + err.Error())
+		log.Println("SDL : Error creating Window:", err.Error())
 	}
 	// renderer
 	video.renderer, err = sdl.CreateRenderer(video.window, -1, sdl.RENDERER_ACCELERATED)
 	if err != nil {
-		log.Println("Errror initializing window Renderer : " + err.Error())
+		log.Println("SDL : Errror creating Renderer:", err.Error())
 	}
 	video.renderer.SetLogicalSize(video.wRect.W, video.wRect.H)
 	info, _ := video.renderer.GetInfo()
 	video.hwAccel = info.Flags&sdl.RENDERER_ACCELERATED != 0
+	log.Println("SDL : Renderer is:", info.Name)
 	return true
 }
 
@@ -130,7 +132,7 @@ func (video *Video) sdlCreateSurface() bool {
 		X: int32(screen.View().X), Y: int32(screen.View().Y),
 		W: int32(screen.View().W), H: int32(screen.View().H)}
 	if err != nil {
-		log.Println("Error creating emulator surface : " + err.Error())
+		log.Println("Error creating emulator surface:", err.Error())
 		return false
 	}
 	return true
@@ -141,8 +143,10 @@ func (video *Video) updateScreen() {
 	// check fullscreen mode
 	if video.config.FullScreen {
 		video.window.SetFullscreen(sdl.WINDOW_FULLSCREEN_DESKTOP)
+		log.Println("SDL : Screen state is: fullscreen")
 	} else {
 		video.window.SetFullscreen(0)
+		log.Println("SDL : Screen state is: windowed")
 	}
 	video.renderer.Clear()
 	// force screen refresh
