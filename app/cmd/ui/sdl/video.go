@@ -143,9 +143,11 @@ func (video *Video) updateScreen() {
 	// check fullscreen mode
 	if video.config.FullScreen {
 		video.window.SetFullscreen(sdl.WINDOW_FULLSCREEN_DESKTOP)
+		sdl.ShowCursor(sdl.DISABLE)
 		log.Println("SDL : Screen state is: fullscreen")
 	} else {
 		video.window.SetFullscreen(0)
+		sdl.ShowCursor(sdl.ENABLE)
 		log.Println("SDL : Screen state is: windowed")
 	}
 	video.renderer.Clear()
