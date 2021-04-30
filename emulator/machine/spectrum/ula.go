@@ -4,7 +4,12 @@ package spectrum
 // ULA constants & vars
 // -----------------------------------------------------------------------------
 
-const ulaInDefault = 0xff
+// ULA issue constants
+const (
+	ulaInDefault  = 0xff
+	ulaIssueMask  = 0x18 // ISSUE 2
+	ulaIssueMask3 = 0x10 // ISSUE 3+
+)
 
 // Audio
 
@@ -129,7 +134,7 @@ func (ula *ULA) Write(address uint16, data byte) {
 		ula.spectrum.beeper.SetLevel(tstate, beeper)
 		// default read
 		ula.lastRead = ulaInDefault
-		if (data & 0x18) == 0 { // ISSUE 2
+		if (data & ulaIssueMask) == 0 {
 			ula.lastRead ^= 0x40
 		}
 	}
