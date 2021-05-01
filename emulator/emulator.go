@@ -25,6 +25,7 @@ type Emulator struct {
 	frame      time.Duration         // Frame duration
 	sleep      time.Duration         // Sleep duration
 	current    time.Time             // Current time
+	lost       bool                  // Lost frame
 }
 
 // New creates a machine emulator
@@ -106,9 +107,15 @@ func (emulator *Emulator) Emulate() {
 
 // Sync synchronizes next frame loop
 func (emulator *Emulator) Sync() {
-	time.Sleep(emulator.sleep) // sleep until next frame
 	emulator.sleep += emulator.frame - time.Since(emulator.current)
 	emulator.current = time.Now()
+	if emulator.sleep > 0 {
+		emulator.lost = false
+		time.Sleep(emulator.sleep) // sleep until next frame
+	} else {
+		emulator.lost = true // lost frame
+		emulator.sleep = 0   // reset sleep control
+	}
 }
 
 // Start the emulation
