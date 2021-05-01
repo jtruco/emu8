@@ -10,6 +10,7 @@ var beeperDefaultMap = []uint16{0, 0x80} // default beeper levels (0 - 1)
 type Beeper struct {
 	config   *Config  // Audio config
 	buffer   *Buffer  // Audio buffer
+	filter   Filter   // Audio filter
 	levelMap []uint16 // Beeper samples level mapping
 	level    int      // Current level
 	tstate   int      // Current tstate
@@ -20,29 +21,13 @@ func NewBeeper(config *Config) *Beeper {
 	beeper := new(Beeper)
 	beeper.config = config
 	beeper.buffer = NewBuffer(config.Samples)
+	beeper.filter = NewSmaFilter(4) // window = 4
 	beeper.levelMap = beeperDefaultMap
 	return beeper
 }
 
 // Config the audio device
 func (beeper *Beeper) Config() *Config { return beeper.config }
-
-// AddSamples add beeper samples at tstates interval
-func (beeper *Beeper) AddSamples(from, to, level int) {
-	sample := beeper.levelMap[level]
-	if sample != 0 {
-		start := int(float32(from) * beeper.config.Rate)
-		end := int(float32(to) * beeper.config.Rate)
-		beeper.buffer.AddSamples(start, end, sample, sample)
-	}
-}
-
-// SetLevel set beeper level at tstate
-func (beeper *Beeper) SetLevel(tstate, level int) {
-	beeper.AddSamples(beeper.tstate, tstate, beeper.level)
-	beeper.tstate = tstate
-	beeper.level = level
-}
 
 // Map gets the sample level mapping
 func (beeper *Beeper) Map() []uint16 { return beeper.levelMap }
@@ -77,4 +62,24 @@ func (beeper *Beeper) Buffer() *Buffer {
 func (beeper *Beeper) EndFrame() {
 	beeper.SetLevel(beeper.config.TStates, beeper.level)
 	beeper.tstate = 0
+}
+
+// Beeper emulation
+
+// SetLevel set beeper level at tstate
+func (beeper *Beeper) SetLevel(tstate, level int) {
+	beeper.addSamples(beeper.tstate, tstate, beeper.level)
+	beeper.tstate = tstate
+	beeper.level = level
+}
+
+// addSamples add beeper samples at tstates interval
+func (beeper *Beeper) addSamples(from, to, level int) {
+	sample := beeper.levelMap[level]
+	start := int(float32(from) * beeper.config.Rate)
+	end := int(float32(to) * beeper.config.Rate)
+	for i := start; i < end; i++ {
+		filtered := beeper.filter.Add(sample)
+		beeper.buffer.AddSample(i, filtered, filtered)
+	}
 }

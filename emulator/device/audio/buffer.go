@@ -61,14 +61,6 @@ func (buffer *Buffer) AddSample(index int, left uint16, right uint16) {
 	buffer.samples[index].Right += right
 }
 
-// AddSamples adds samples at interval
-func (buffer *Buffer) AddSamples(start, end int, left uint16, right uint16) {
-	for i := start; i < end; i++ {
-		buffer.samples[i].Left += left
-		buffer.samples[i].Right += right
-	}
-}
-
 // Audio data buffer
 
 // Data gets the audio data buffer. SDL AUDIO_U16LSB format.

@@ -18,7 +18,7 @@ const (
  * (Now scaled up for 16-bit.)
  */
 const (
-	amplRate   = 1
+	amplRate   = 2
 	amplBeeper = (50 * 256) >> amplRate
 	amplTape   = (2 * 256) >> amplRate
 	amplAyTone = (24 * 256) >> amplRate
