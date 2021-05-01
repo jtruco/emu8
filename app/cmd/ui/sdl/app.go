@@ -15,7 +15,7 @@ type App struct {
 	video    *Video
 	audio    *Audio
 	emulator *emulator.Emulator
-	control  controller.Controller
+	control  *controller.Controller
 	running  bool
 }
 

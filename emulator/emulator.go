@@ -17,15 +17,15 @@ import (
 
 // Emulator is the emulator main controller
 type Emulator struct {
-	machine    machine.Machine       // The hosted machine
-	controller controller.Controller // The emulator controller
-	running    bool                  // Indicates emulation is running
-	async      bool                  // Async emulation goroutine
-	wg         sync.WaitGroup        // Sync control
-	frame      time.Duration         // Frame duration
-	sleep      time.Duration         // Sleep duration
-	current    time.Time             // Current time
-	lost       bool                  // Lost frame
+	machine    machine.Machine        // The hosted machine
+	controller *controller.Controller // The emulator controller
+	running    bool                   // Indicates emulation is running
+	async      bool                   // Async emulation goroutine
+	wg         sync.WaitGroup         // Sync control
+	frame      time.Duration          // Frame duration
+	sleep      time.Duration          // Sleep duration
+	current    time.Time              // Current time
+	lost       bool                   // Lost frame
 }
 
 // New creates a machine emulator
@@ -57,7 +57,7 @@ func FromModel(model string) (*Emulator, error) {
 // Machine controller
 
 // Controller gets the emulator controller
-func (emulator *Emulator) Controller() controller.Controller {
+func (emulator *Emulator) Controller() *controller.Controller {
 	return emulator.controller
 }
 

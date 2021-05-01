@@ -23,7 +23,7 @@ type Machine interface {
 	// Components the machine components
 	Components() *device.Components
 	// SetController connects the machine to the controller
-	SetController(controller.Controller)
+	SetController(*controller.Controller)
 	// BeginFrame begin emulation frame tasks
 	BeginFrame()
 	// Emulate one machine step

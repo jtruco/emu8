@@ -11,29 +11,9 @@ import (
 // Emulator Controller
 // -----------------------------------------------------------------------------
 
-// Controller the controller interface
-type Controller interface {
-	// FileManager returns the file manager
-	FileManager() *vfs.FileManager
-	// Video returns the video controller
-	Video() *ui.VideoController
-	// Audio returns the audio controller
-	Audio() *ui.AudioController
-	// Keyboard returns the keyboard controller
-	Keyboard() *io.KeyboardController
-	// Joystick returns the joystick controller
-	Joystick() *io.JoystickController
-	// Tape returns the tape controller
-	Tape() *io.TapeController
-	// Scan process input events
-	Scan()
-	// Refresh refresh UI and output events
-	Refresh()
-}
-
-// EmulatorController is the emulator controller implementation.
-type EmulatorController struct {
-	fmanager *vfs.FileManager       // The files manager
+// Controller is the emulator controller
+type Controller struct {
+	file     *vfs.FileManager       // The file manager
 	video    *ui.VideoController    // The video controller
 	audio    *ui.AudioController    // The audio controller
 	keyboard *io.KeyboardController // The keyboard controlller
@@ -42,9 +22,9 @@ type EmulatorController struct {
 }
 
 // New returns a new emulator controller.
-func New() *EmulatorController {
-	controller := new(EmulatorController)
-	controller.fmanager = vfs.NewFileManager()
+func New() *Controller {
+	controller := new(Controller)
+	controller.file = vfs.NewFileManager()
 	controller.video = ui.NewVideoController()
 	controller.audio = ui.NewAudioController()
 	controller.keyboard = io.NewKeyboardController()
@@ -54,46 +34,46 @@ func New() *EmulatorController {
 }
 
 // FileManager returns the file manager
-func (controller *EmulatorController) FileManager() *vfs.FileManager {
-	return controller.fmanager
+func (controller *Controller) FileManager() *vfs.FileManager {
+	return controller.file
 }
 
 // Video the video controller
-func (controller *EmulatorController) Video() *ui.VideoController {
+func (controller *Controller) Video() *ui.VideoController {
 	return controller.video
 }
 
 // Audio the audio controller
-func (controller *EmulatorController) Audio() *ui.AudioController {
+func (controller *Controller) Audio() *ui.AudioController {
 	return controller.audio
 }
 
 // Keyboard the keyboard controller
-func (controller *EmulatorController) Keyboard() *io.KeyboardController {
+func (controller *Controller) Keyboard() *io.KeyboardController {
 	return controller.keyboard
 }
 
 // Joystick the keyboard controller
-func (controller *EmulatorController) Joystick() *io.JoystickController {
+func (controller *Controller) Joystick() *io.JoystickController {
 	return controller.joystick
 }
 
 // Tape the tape controller
-func (controller *EmulatorController) Tape() *io.TapeController {
+func (controller *Controller) Tape() *io.TapeController {
 	return controller.tape
 }
 
 // Emulation control
 
 // Scan flushes input events
-func (controller *EmulatorController) Scan() {
+func (controller *Controller) Scan() {
 	// Keyboard & Joystick events
 	controller.keyboard.Flush()
 	controller.joystick.Flush()
 }
 
 // Refresh refresh UI and output events
-func (controller *EmulatorController) Refresh() {
+func (controller *Controller) Refresh() {
 	// Video & Audio refresh
 	controller.audio.Flush()
 	controller.video.Refresh()

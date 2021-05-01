@@ -49,18 +49,18 @@ var (
 
 // Spectrum the ZX Spectrum
 type Spectrum struct {
-	config     machine.Config        // Machine information
-	controller controller.Controller // The emulator controller
-	components *device.Components    // Machine device components
-	clock      *device.ClockDevice   // The system clock
-	cpu        *z80.Z80              // The Zilog Z80A CPU
-	memory     *memory.Memory        // The machine memory
-	ula        *ULA                  // The spectrum ULA
-	tv         *TvVideo              // The spectrum TV video output
-	beeper     *audio.Beeper         // The spectrum Beeper
-	keyboard   *Keyboard             // The spectrum Keyboard
-	tape       *tape.Drive           // The spectrum Tape drive
-	joystick   *Joystick             // The spectrum Joystick
+	config     machine.Config         // Machine information
+	control    *controller.Controller // The emulator controller
+	components *device.Components     // Machine device components
+	clock      *device.ClockDevice    // The system clock
+	cpu        *z80.Z80               // The Zilog Z80A CPU
+	memory     *memory.Memory         // The machine memory
+	ula        *ULA                   // The spectrum ULA
+	tv         *TvVideo               // The spectrum TV video output
+	beeper     *audio.Beeper          // The spectrum Beeper
+	keyboard   *Keyboard              // The spectrum Keyboard
+	tape       *tape.Drive            // The spectrum Tape drive
+	joystick   *Joystick              // The spectrum Joystick
 }
 
 // New returns a new ZX Spectrum
@@ -130,7 +130,7 @@ func (spectrum *Spectrum) Reset() {
 // initSpectrum commont init tasks
 func (spectrum *Spectrum) initSpectrum() {
 	// load ROM at bank 0
-	data, err := spectrum.controller.FileManager().LoadROM(zxRomName)
+	data, err := spectrum.control.FileManager().LoadROM(zxRomName)
 	if err != nil {
 		return
 	}
@@ -161,7 +161,7 @@ func (spectrum *Spectrum) Components() *device.Components {
 }
 
 // SetController connect controllers & components
-func (spectrum *Spectrum) SetController(control controller.Controller) {
+func (spectrum *Spectrum) SetController(control *controller.Controller) {
 	control.Video().SetDevice(spectrum.tv)
 	control.Audio().SetDevice(spectrum.beeper)
 	control.Keyboard().AddReceiver(spectrum.keyboard, zxKeyboardMap)
@@ -169,7 +169,7 @@ func (spectrum *Spectrum) SetController(control controller.Controller) {
 	control.FileManager().RegisterFormat(vfs.FormatTape, tapeFormats)
 	control.Tape().SetDrive(spectrum.tape)
 	control.Joystick().AddReceiver(spectrum.joystick, 0)
-	spectrum.controller = control
+	spectrum.control = control
 }
 
 // VideoMemory gets the video memory bank
@@ -213,12 +213,12 @@ func (spectrum *Spectrum) onInterruptAck() bool {
 
 // LoadFile loads a file into machine
 func (spectrum *Spectrum) LoadFile(filename string) {
-	info := spectrum.controller.FileManager().CreateFileInfo(filename)
+	info := spectrum.control.FileManager().CreateFileInfo(filename)
 	if info.Format == vfs.FormatUnknown {
 		log.Println("Spectrum : Not supported format:", info.Ext)
 		return
 	}
-	err := spectrum.controller.FileManager().LoadFile(info)
+	err := spectrum.control.FileManager().LoadFile(info)
 	if err != nil {
 		log.Println("Spectrum : Error loading file:", info.Name)
 		return
@@ -263,8 +263,8 @@ func (spectrum *Spectrum) LoadFile(filename string) {
 func (spectrum *Spectrum) TakeSnapshot() {
 	snap := spectrum.SaveState()
 	data := snap.SaveSNA()
-	name := spectrum.controller.FileManager().NewName("speccy", formatSNA)
-	err := spectrum.controller.FileManager().SaveFile(name, vfs.FormatSnap, data)
+	name := spectrum.control.FileManager().NewName("speccy", formatSNA)
+	err := spectrum.control.FileManager().SaveFile(name, vfs.FormatSnap, data)
 	if err == nil {
 		log.Println("Spectrum : Snapshot saved:", name)
 	} else {

@@ -52,22 +52,22 @@ var (
 
 // AmstradCPC the Amstrad CPC 464
 type AmstradCPC struct {
-	config     machine.Config        // Machine information
-	controller controller.Controller // The emulator controller
-	components *device.Components    // Machine device components
-	clock      *device.ClockDevice   // The system clock
-	cpu        *z80.Z80              // The Zilog Z80A CPU
-	memory     *memory.Memory        // The machine memory
-	lowerRom   *memory.BankMap       // The lower rom
-	upperRom   *memory.BankMap       // The upper rom
-	gatearray  *GateArray            // The Gate-Array
-	crtc       *video.MC6845         // The Cathode Ray Tube Controller
-	psg        *audio.AY38910        // The Programmable Sound Generator
-	ppi        *Ppi                  // The Parallel Peripheral Interface
-	video      *VduVideo             // The VDU video
-	keyboard   *Keyboard             // The matrix keyboard
-	tape       *tape.Drive           // The tape drive
-	joystick   *Joystick             // The CPC Joystick
+	config     machine.Config         // Machine information
+	control    *controller.Controller // The emulator controller
+	components *device.Components     // Machine device components
+	clock      *device.ClockDevice    // The system clock
+	cpu        *z80.Z80               // The Zilog Z80A CPU
+	memory     *memory.Memory         // The machine memory
+	lowerRom   *memory.BankMap        // The lower rom
+	upperRom   *memory.BankMap        // The upper rom
+	gatearray  *GateArray             // The Gate-Array
+	crtc       *video.MC6845          // The Cathode Ray Tube Controller
+	psg        *audio.AY38910         // The Programmable Sound Generator
+	ppi        *Ppi                   // The Parallel Peripheral Interface
+	video      *VduVideo              // The VDU video
+	keyboard   *Keyboard              // The matrix keyboard
+	tape       *tape.Drive            // The tape drive
+	joystick   *Joystick              // The CPC Joystick
 }
 
 // New returns a new Amstrad CPC
@@ -139,13 +139,13 @@ func (cpc *AmstradCPC) initAmstrad() {
 	case "fr":
 		romname = cpcOsRomNameFR
 	}
-	data, err := cpc.controller.FileManager().LoadROM(romname)
+	data, err := cpc.control.FileManager().LoadROM(romname)
 	if err != nil {
 		return
 	}
 	cpc.lowerRom.Bank().Load(0, data[:0x4000]) // lower rom
 	// load upper rom (basic)
-	data, err = cpc.controller.FileManager().LoadROM(cpcBasicRomName)
+	data, err = cpc.control.FileManager().LoadROM(cpcBasicRomName)
 	if err != nil {
 		return
 	}
@@ -178,7 +178,7 @@ func (cpc *AmstradCPC) Components() *device.Components {
 }
 
 // SetController connect UI controllers & device components
-func (cpc *AmstradCPC) SetController(control controller.Controller) {
+func (cpc *AmstradCPC) SetController(control *controller.Controller) {
 	control.Video().SetDevice(cpc.video)
 	control.Audio().SetDevice(cpc.psg)
 	control.Keyboard().AddReceiver(cpc.keyboard, cpcKeyboardMap)
@@ -186,7 +186,7 @@ func (cpc *AmstradCPC) SetController(control controller.Controller) {
 	control.FileManager().RegisterFormat(vfs.FormatTape, cpcTapeFormats)
 	control.Tape().SetDrive(cpc.tape)
 	control.Joystick().AddReceiver(cpc.joystick, 0)
-	cpc.controller = control
+	cpc.control = control
 }
 
 // Emulation control
@@ -265,12 +265,12 @@ func (cpc *AmstradCPC) onPsgReadPortA() byte {
 
 // LoadFile loads a file into machine
 func (cpc *AmstradCPC) LoadFile(filename string) {
-	info := cpc.controller.FileManager().CreateFileInfo(filename)
+	info := cpc.control.FileManager().CreateFileInfo(filename)
 	if info.Format == vfs.FormatUnknown {
 		log.Println("CPC : Not supported format:", info.Ext)
 		return
 	}
-	err := cpc.controller.FileManager().LoadFile(info)
+	err := cpc.control.FileManager().LoadFile(info)
 	if err != nil {
 		log.Println("CPC : Error loading file:", info.Name)
 		return
@@ -310,8 +310,8 @@ func (cpc *AmstradCPC) LoadFile(filename string) {
 func (cpc *AmstradCPC) TakeSnapshot() {
 	snap := cpc.SaveState()
 	data := snap.SaveSNA()
-	name := cpc.controller.FileManager().NewName("cpc", cpcFormatSNA)
-	err := cpc.controller.FileManager().SaveFile(name, vfs.FormatSnap, data)
+	name := cpc.control.FileManager().NewName("cpc", cpcFormatSNA)
+	err := cpc.control.FileManager().SaveFile(name, vfs.FormatSnap, data)
 	if err == nil {
 		log.Println("CPC : Snapshot saved:", name)
 	} else {
