@@ -42,6 +42,19 @@ func (keyboard *Keyboard) ProcessKey(key keyboard.Key, pressed bool) {
 	}
 }
 
+// GetState gets keyboard state at scan address
+func (keyboard *Keyboard) GetState(scan byte) byte {
+	var result byte = 0xff
+	mask := byte(1)
+	for row := 0; row < 8; row++ {
+		if (scan & mask) != 0 { // scan row
+			result &= keyboard.rowstates[row]
+		}
+		mask <<= 1
+	}
+	return result
+}
+
 // -----------------------------------------------------------------------------
 // ZX Spectrum Keys, States & Mapping
 // -----------------------------------------------------------------------------

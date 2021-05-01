@@ -97,13 +97,7 @@ func (ula *ULA) Read(address uint16) byte {
 		result = ula.lastRead
 		// Read keyboard state
 		scan := byte(address>>8) ^ 0xff
-		mask := byte(1)
-		for row := 0; row < 8; row++ {
-			if (scan & mask) != 0 { // scan row
-				result &= ula.spectrum.keyboard.rowstates[row]
-			}
-			mask <<= 1
-		}
+		result &= ula.spectrum.keyboard.GetState(scan)
 		// Read tape state
 		if ula.spectrum.tape.IsPlaying() && ula.spectrum.tape.EarHigh() {
 			result &^= 0x40
