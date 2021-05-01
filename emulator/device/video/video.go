@@ -15,9 +15,3 @@ type Video interface {
 	// The video screen
 	Screen() *Screen
 }
-
-// Display is the video screen display
-type Display interface {
-	// Update updates screen changes to video display
-	Update(screen *Screen)
-}

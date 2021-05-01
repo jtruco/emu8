@@ -7,10 +7,15 @@ import "github.com/jtruco/emu8/emulator/device/video"
 // Video Controller
 // -----------------------------------------------------------------------------
 
+// Display is the video screen display
+type Display interface {
+	Update(screen *video.Screen) // Update updates screen changes to video display
+}
+
 // VideoController is the video controller
 type VideoController struct {
-	device  video.Video   // The video device
-	display video.Display // The video display
+	device  video.Video // The video device
+	display Display     // The video display
 }
 
 // NewVideoController creates a new video controller
@@ -20,7 +25,7 @@ func NewVideoController() *VideoController {
 }
 
 // Display the video display
-func (controller *VideoController) Display() video.Display {
+func (controller *VideoController) Display() Display {
 	return controller.display
 }
 
@@ -30,7 +35,7 @@ func (controller *VideoController) Device() video.Video {
 }
 
 // SetDisplay sets video display
-func (controller *VideoController) SetDisplay(display video.Display) {
+func (controller *VideoController) SetDisplay(display Display) {
 	controller.display = display
 }
 

@@ -18,11 +18,6 @@ type Audio interface {
 	EndFrame()       // EndFrame audio frame is finished and buffer is ready
 }
 
-// Player is the audio buffer player
-type Player interface {
-	Play(buffer *Buffer) // Play plays audio buffer
-}
-
 // Config is the device audio configuration
 type Config struct {
 	Frequency int     // Audio frequency

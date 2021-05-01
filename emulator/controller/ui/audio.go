@@ -6,10 +6,15 @@ import "github.com/jtruco/emu8/emulator/device/audio"
 // Audio Controller
 // -----------------------------------------------------------------------------
 
+// Player is the audio buffer player
+type Player interface {
+	Play(buffer *audio.Buffer) // Play plays audio buffer
+}
+
 // AudioController is the audio controller
 type AudioController struct {
-	device audio.Audio  // The audio device
-	player audio.Player // The audio player
+	device audio.Audio // The audio device
+	player Player      // The audio player
 }
 
 // NewAudioController creates a new video controller
@@ -24,7 +29,7 @@ func (controller *AudioController) Device() audio.Audio {
 }
 
 // Player the audio player
-func (controller *AudioController) Player() audio.Player {
+func (controller *AudioController) Player() Player {
 	return controller.player
 }
 
@@ -34,7 +39,7 @@ func (controller *AudioController) SetDevice(device audio.Audio) {
 }
 
 // SetPlayer sets audio player
-func (controller *AudioController) SetPlayer(player audio.Player) {
+func (controller *AudioController) SetPlayer(player Player) {
 	controller.player = player
 }
 
