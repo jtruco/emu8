@@ -13,15 +13,12 @@ const (
 
 // Audio
 
-/* assume all three tone channels together match the beeper volume (ish).
- * Must be <=127 for all channels; 50+2+(24*3) = 124.
- * (Now scaled up for 16-bit.)
- */
+// Beeper + Tape + 3 * AY = 122
 const (
-	amplRate   = 2
-	amplBeeper = (50 * 256) >> amplRate
-	amplTape   = (2 * 256) >> amplRate
-	amplAyTone = (24 * 256) >> amplRate
+	amplRate   = 7 // uint16
+	amplBeeper = 48 << amplRate
+	amplTape   = 2 << amplRate
+	amplAyTone = 24 << amplRate
 )
 
 var beeperMap = []uint16{0, amplTape, amplBeeper, (amplBeeper + amplTape)}
@@ -120,9 +117,9 @@ func (ula *ULA) Write(address uint16, data byte) {
 		beeper := int(data&0x18) >> 3
 		if ula.spectrum.tape.IsPlaying() {
 			if ula.spectrum.tape.EarHigh() {
-				beeper |= 2
+				beeper |= 1
 			} else {
-				beeper &^= 2
+				beeper &^= 1
 			}
 		}
 		ula.spectrum.beeper.SetLevel(tstate, beeper)
