@@ -25,6 +25,7 @@ const (
 
 // Joystick emulation
 type Joystick struct {
+	id       byte // ID
 	model    byte // Joystick model
 	kempston byte // Kempston state
 }
@@ -44,6 +45,9 @@ func (joy *Joystick) Init() { joy.Reset() }
 
 // Reset resets the device
 func (joy *Joystick) Reset() { joy.kempston = 0x00 }
+
+// ID returns the joystick ID
+func (joy *Joystick) ID() byte { return joy.id }
 
 // SetAxis sets axis value
 func (joy *Joystick) SetAxis(axis byte, value byte) {

@@ -168,7 +168,7 @@ func (spectrum *Spectrum) SetController(control *controller.Controller) {
 	control.FileManager().RegisterFormat(vfs.FormatSnap, snapFormats)
 	control.FileManager().RegisterFormat(vfs.FormatTape, tapeFormats)
 	control.Tape().SetDrive(spectrum.tape)
-	control.Joystick().AddReceiver(spectrum.joystick, 0)
+	control.Joystick().AddReceiver(spectrum.joystick)
 	spectrum.control = control
 }
 

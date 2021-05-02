@@ -16,6 +16,7 @@ const (
 // Joystick device
 type Joystick interface {
 	device.Device                      // Is a device
+	ID() byte                          // Joystick ID
 	SetAxis(axis byte, value byte)     // Sets axis value
 	SetButton(button byte, state byte) // Sets button state
 }

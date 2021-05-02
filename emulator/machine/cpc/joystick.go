@@ -6,6 +6,7 @@ package cpc
 
 // Joystick emulation
 type Joystick struct {
+	id       byte
 	keyboard *Keyboard
 }
 
@@ -21,6 +22,9 @@ func (joy *Joystick) Init() { joy.Reset() }
 
 // Reset resets the device
 func (joy *Joystick) Reset() {}
+
+// ID returns the joystick ID
+func (joy *Joystick) ID() byte { return joy.id }
 
 // SetAxis sets axis value
 func (joy *Joystick) SetAxis(axis byte, value byte) {

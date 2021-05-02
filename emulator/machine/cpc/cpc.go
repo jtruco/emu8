@@ -185,7 +185,7 @@ func (cpc *AmstradCPC) SetController(control *controller.Controller) {
 	control.FileManager().RegisterFormat(vfs.FormatSnap, cpcSnapFormats)
 	control.FileManager().RegisterFormat(vfs.FormatTape, cpcTapeFormats)
 	control.Tape().SetDrive(cpc.tape)
-	control.Joystick().AddReceiver(cpc.joystick, 0)
+	control.Joystick().AddReceiver(cpc.joystick)
 	cpc.control = control
 }
 

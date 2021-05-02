@@ -28,8 +28,8 @@ func NewJoystickController() *JoystickController {
 // Receivers
 
 // AddReceiver adds a joystick receiver to the controller at associated ID
-func (controller *JoystickController) AddReceiver(receiver joystick.Joystick, id byte) {
-	controller.receivers[id] = receiver
+func (controller *JoystickController) AddReceiver(receiver joystick.Joystick) {
+	controller.receivers[receiver.ID()] = receiver
 }
 
 // RemoveReceiver removes the joystick receiver associated
