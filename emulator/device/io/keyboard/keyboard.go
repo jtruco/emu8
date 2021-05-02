@@ -21,6 +21,7 @@ type Keyboard interface {
 
 // Receiver is a component that process keyboard events
 type Receiver interface {
+	KeyMap() KeyMap                   // Keyboard map
 	ProcessKey(key Key, pressed bool) // Sets key state
 }
 

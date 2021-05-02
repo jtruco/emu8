@@ -30,6 +30,9 @@ func (keyboard *Keyboard) Reset() { keyboard.Init() }
 
 // Keyboard
 
+// KeyMap returns the default keyboard mapping
+func (keyboard *Keyboard) KeyMap() keyboard.KeyMap { return zxKeyboardMap }
+
 // ProcessKey processes the ZX keyboard events
 func (keyboard *Keyboard) ProcessKey(key keyboard.Key, pressed bool) {
 	state, ok := keyStates[key]

@@ -35,8 +35,8 @@ func NewKeyboardController() *KeyboardController {
 // Receivers
 
 // AddReceiver adds a keyboard events Receiver to the controller and associated keymap
-func (controller *KeyboardController) AddReceiver(receiver keyboard.Receiver, keymap keyboard.KeyMap) {
-	controller.receivers[receiver] = keymap
+func (controller *KeyboardController) AddReceiver(receiver keyboard.Receiver) {
+	controller.receivers[receiver] = receiver.KeyMap()
 }
 
 // RemoveReceiver removes the Receiver

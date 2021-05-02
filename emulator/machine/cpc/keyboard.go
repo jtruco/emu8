@@ -43,6 +43,9 @@ func (keyboard *Keyboard) Reset() { keyboard.Init() }
 
 // Keyboard
 
+// KeyMap returns the default keyboard mapping
+func (keyboard *Keyboard) KeyMap() keyboard.KeyMap { return cpcKeyboardMap }
+
 // ProcessKey processes CPC keyboard matrix
 func (keyboard *Keyboard) ProcessKey(key keyboard.Key, pressed bool) {
 	row := key >> 4

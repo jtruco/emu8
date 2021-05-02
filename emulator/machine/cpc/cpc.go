@@ -181,7 +181,7 @@ func (cpc *AmstradCPC) Components() *device.Components {
 func (cpc *AmstradCPC) SetController(control *controller.Controller) {
 	control.Video().SetDevice(cpc.video)
 	control.Audio().SetDevice(cpc.psg)
-	control.Keyboard().AddReceiver(cpc.keyboard, cpcKeyboardMap)
+	control.Keyboard().AddReceiver(cpc.keyboard)
 	control.FileManager().RegisterFormat(vfs.FormatSnap, cpcSnapFormats)
 	control.FileManager().RegisterFormat(vfs.FormatTape, cpcTapeFormats)
 	control.Tape().SetDrive(cpc.tape)
