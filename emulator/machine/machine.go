@@ -6,7 +6,6 @@ import (
 
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/emulator/device"
-	"github.com/jtruco/emu8/emulator/device/cpu"
 )
 
 // -----------------------------------------------------------------------------
@@ -18,12 +17,12 @@ type Machine interface {
 	device.Device // Is a device
 	// Config gets the machine configuration
 	Config() *Config
-	// CPU the machine main CPU
-	CPU() cpu.CPU
+	// Clock the machine main clock
+	Clock() device.Clock
 	// Components the machine components
 	Components() *device.Components
-	// SetController connects the machine to the controller
-	SetController(*controller.Controller)
+	// InitControl connects the machine to the emulator controller
+	InitControl(*controller.Controller)
 	// BeginFrame begin emulation frame tasks
 	BeginFrame()
 	// Emulate one machine step

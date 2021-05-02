@@ -177,8 +177,8 @@ func (cpc *AmstradCPC) Components() *device.Components {
 	return cpc.components
 }
 
-// SetController connect UI controllers & device components
-func (cpc *AmstradCPC) SetController(control *controller.Controller) {
+// InitControl connect UI controllers & device components
+func (cpc *AmstradCPC) InitControl(control *controller.Controller) {
 	control.Video().SetDevice(cpc.video)
 	control.Audio().SetDevice(cpc.psg)
 	control.Keyboard().AddReceiver(cpc.keyboard)

@@ -160,8 +160,8 @@ func (spectrum *Spectrum) Components() *device.Components {
 	return spectrum.components
 }
 
-// SetController connect controllers & components
-func (spectrum *Spectrum) SetController(control *controller.Controller) {
+// InitControl connect controllers & components
+func (spectrum *Spectrum) InitControl(control *controller.Controller) {
 	control.Video().SetDevice(spectrum.tv)
 	control.Audio().SetDevice(spectrum.beeper)
 	control.Keyboard().AddReceiver(spectrum.keyboard)

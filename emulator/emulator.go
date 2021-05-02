@@ -33,7 +33,7 @@ func New(machine machine.Machine) *Emulator {
 	emulator := new(Emulator)
 	emulator.machine = machine
 	emulator.controller = controller.New()
-	emulator.machine.SetController(emulator.controller)
+	emulator.machine.InitControl(emulator.controller)
 	return emulator
 }
 
@@ -181,7 +181,7 @@ func (emulator *Emulator) emulationLoop() {
 // emulateFrame emulates the frame
 func (emulator *Emulator) emulateFrame() {
 	machine := emulator.machine
-	clock := machine.CPU().Clock()
+	clock := machine.Clock()
 	config := machine.Config()
 
 	// pre-frame actions
