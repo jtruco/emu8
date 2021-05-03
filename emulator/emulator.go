@@ -17,23 +17,23 @@ import (
 
 // Emulator is the emulator main controller
 type Emulator struct {
-	machine    machine.Machine        // The hosted machine
-	controller *controller.Controller // The emulator controller
-	running    bool                   // Indicates emulation is running
-	async      bool                   // Async emulation goroutine
-	wg         sync.WaitGroup         // Sync control
-	frame      time.Duration          // Frame duration
-	sleep      time.Duration          // Sleep duration
-	current    time.Time              // Current time
-	lost       bool                   // Lost frame
+	machine machine.Machine        // The hosted machine
+	control *controller.Controller // The emulator controller
+	running bool                   // Indicates emulation is running
+	async   bool                   // Async emulation goroutine
+	wg      sync.WaitGroup         // Sync control
+	frame   time.Duration          // Frame duration
+	sleep   time.Duration          // Sleep duration
+	current time.Time              // Current time
+	lost    bool                   // Lost frame
 }
 
 // New creates a machine emulator
 func New(machine machine.Machine) *Emulator {
 	emulator := new(Emulator)
 	emulator.machine = machine
-	emulator.controller = controller.New()
-	emulator.machine.InitControl(emulator.controller)
+	emulator.control = controller.New()
+	emulator.machine.InitControl(emulator.control)
 	return emulator
 }
 
@@ -58,7 +58,7 @@ func FromModel(model string) (*Emulator, error) {
 
 // Controller gets the emulator controller
 func (emulator *Emulator) Controller() *controller.Controller {
-	return emulator.controller
+	return emulator.control
 }
 
 // Machine gets the hosted machine
@@ -185,7 +185,7 @@ func (emulator *Emulator) emulateFrame() {
 	config := machine.Config()
 
 	// pre-frame actions
-	emulator.controller.Scan()
+	emulator.control.Scan()
 
 	// frame emulation loop
 	machine.BeginFrame()
@@ -195,6 +195,6 @@ func (emulator *Emulator) emulateFrame() {
 	machine.EndFrame()
 
 	// post-frame actions
-	emulator.controller.Refresh()
+	emulator.control.Refresh()
 	clock.Restart(config.FrameTStates)
 }
