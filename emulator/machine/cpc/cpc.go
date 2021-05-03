@@ -99,7 +99,7 @@ func New(model int) machine.Machine {
 	cpc.tape = tape.New(cpc.clock)
 	cpc.joystick = NewJoystick(cpc.keyboard)
 	// register all components
-	cpc.components = device.NewComponents(11)
+	cpc.components = device.NewComponents()
 	cpc.components.Add(cpc.clock)
 	cpc.components.Add(cpc.cpu)
 	cpc.components.Add(cpc.memory)

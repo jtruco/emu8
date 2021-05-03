@@ -4,49 +4,46 @@ package device
 // Device components
 // -----------------------------------------------------------------------------
 
+const componentsCapacity = 10
+
 // Components is a set of Devices
 type Components struct {
 	devices []Device // devices list
-	size    int      // number of devices
-	index   int      // current device count index
 }
 
 // NewComponents creates a collection
-func NewComponents(size int) *Components {
+func NewComponents() *Components {
 	collection := new(Components)
-	collection.devices = make([]Device, size)
-	collection.size = size
+	collection.devices = make([]Device, 0, componentsCapacity)
 	return collection
 }
 
 // Add adds device at current index
-func (collection *Components) Add(device Device) {
-	collection.Set(collection.index, device)
-	collection.index++
+func (c *Components) Add(device Device) {
+	c.devices = append(c.devices, device)
 }
 
 // Get gets device at index
-func (collection *Components) Get(index int) Device {
-	return collection.devices[index]
-}
+func (c *Components) Get(index int) Device { return c.devices[index] }
 
 // Set sets device at index
-func (collection *Components) Set(index int, device Device) {
-	collection.devices[index] = device
-}
+func (c *Components) Set(index int, device Device) { c.devices[index] = device }
+
+// Len device collection length
+func (c *Components) Len() int { return len(c.devices) }
 
 // Device interface
 
 // Init initializes all devices
-func (collection *Components) Init() {
-	for _, device := range collection.devices {
+func (c *Components) Init() {
+	for _, device := range c.devices {
 		device.Init()
 	}
 }
 
 // Reset resets all devices
-func (collection *Components) Reset() {
-	for _, device := range collection.devices {
+func (c *Components) Reset() {
+	for _, device := range c.devices {
 		device.Reset()
 	}
 }

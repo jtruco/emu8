@@ -95,7 +95,7 @@ func New(model int) machine.Machine {
 	spectrum.tape = tape.New(spectrum.clock)
 	spectrum.joystick = NewJoystick()
 	// register all components
-	spectrum.components = device.NewComponents(9)
+	spectrum.components = device.NewComponents()
 	spectrum.components.Add(spectrum.clock)
 	spectrum.components.Add(spectrum.memory)
 	spectrum.components.Add(spectrum.ula)
