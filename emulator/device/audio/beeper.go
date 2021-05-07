@@ -21,7 +21,7 @@ func NewBeeper(config *Config) *Beeper {
 	beeper := new(Beeper)
 	beeper.config = config
 	beeper.buffer = NewBuffer(config.Samples)
-	beeper.filter = NewSmaFilter(4) // window = 4
+	beeper.filter = NewSmaFilter(2) // window = 4
 	beeper.levelMap = beeperDefaultMap
 	return beeper
 }
