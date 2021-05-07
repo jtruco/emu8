@@ -320,7 +320,7 @@ func (ay *AY38910) OnClock() {
 	// create audio sample
 	mix := ay.channelA.level + ay.channelB.level + ay.channelC.level
 	index := int(ay.nsample)
-	ay.buffer.AddSample(index, mix, mix)
+	ay.buffer.AddMono(index, mix)
 	ay.nsample += ay.config.Rate
 }
 

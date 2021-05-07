@@ -55,6 +55,12 @@ func (buffer *Buffer) SetSample(index int, sample Sample) {
 	buffer.samples[index].Right = sample.Right
 }
 
+// AddSample adds a mono sample at index
+func (buffer *Buffer) AddMono(index int, level uint16) {
+	buffer.samples[index].Left += level
+	buffer.samples[index].Right += level
+}
+
 // AddSample adds a sample at index
 func (buffer *Buffer) AddSample(index int, left uint16, right uint16) {
 	buffer.samples[index].Left += left
