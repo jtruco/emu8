@@ -10,7 +10,8 @@ type Sample = uint16
 // Buffer is a 16bit audio doble buffer : samples and audio data
 type Buffer struct {
 	samples []Sample // sample data u16 format
-	data    []byte   // data buffer. Format : SDL AUDIO_U16LSB
+	filter  Filter
+	data    []byte // data buffer. Format : SDL AUDIO_U16LSB
 }
 
 // NewBuffer creates a new buffer of Freq and FPS
@@ -36,20 +37,29 @@ func (buffer *Buffer) Reset() {
 	}
 }
 
+// Filter returns the curren audio filter
+func (buffer *Buffer) Filter() Filter { return buffer.filter }
+
+// SetFilter sets the audio filter
+func (buffer *Buffer) SetFilter(filter Filter) { buffer.filter = filter }
+
 // Sample operations
 
-// GetSample gets sample at index
+// GetSample gets audio sample at index
 func (buffer *Buffer) GetSample(index int) Sample {
 	return buffer.samples[index]
 }
 
-// SetSample sets sample at index
+// SetSample sets the audio sample at index
 func (buffer *Buffer) SetSample(index int, sample Sample) {
 	buffer.samples[index] = sample
 }
 
-// AddSample adds a sample at index
+// AddSample adds (and apply filter) an audio sample at buffer
 func (buffer *Buffer) AddSample(index int, sample Sample) {
+	if buffer.filter != nil {
+		sample = buffer.filter.Add(sample)
+	}
 	buffer.samples[index] += sample
 }
 

@@ -113,6 +113,7 @@ func NewAY38910(config *Config) *AY38910 {
 	ay := new(AY38910)
 	ay.config = config
 	ay.buffer = NewBuffer(config.Samples)
+	ay.buffer.SetFilter(NewSmaFilter(3)) // window = 8
 	ay.registers = [AY38910Nreg]*byte{
 		&ay.ChannelAFrequencyLow,
 		&ay.ChannelAFrequencyHigh,

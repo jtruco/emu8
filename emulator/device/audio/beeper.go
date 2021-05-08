@@ -10,7 +10,6 @@ var beeperDefaultMap = []uint16{0, 0x80} // default beeper levels (0 - 1)
 type Beeper struct {
 	config   *Config  // Audio config
 	buffer   *Buffer  // Audio buffer
-	filter   Filter   // Audio filter
 	levelMap []uint16 // Beeper samples level mapping
 	level    int      // Current level
 	tstate   int      // Current tstate
@@ -21,7 +20,7 @@ func NewBeeper(config *Config) *Beeper {
 	beeper := new(Beeper)
 	beeper.config = config
 	beeper.buffer = NewBuffer(config.Samples)
-	beeper.filter = NewSmaFilter(2) // window = 4
+	beeper.buffer.SetFilter(NewSmaFilter(2)) // window = 4
 	beeper.levelMap = beeperDefaultMap
 	return beeper
 }
@@ -79,7 +78,6 @@ func (beeper *Beeper) addSamples(from, to, level int) {
 	start := int(float32(from) * beeper.config.Rate)
 	end := int(float32(to) * beeper.config.Rate)
 	for i := start; i < end; i++ {
-		filtered := beeper.filter.Add(sample)
-		beeper.buffer.AddSample(i, filtered)
+		beeper.buffer.AddSample(i, sample)
 	}
 }

@@ -1,11 +1,19 @@
 package audio
 
+// -----------------------------------------------------------------------------
+// Filter - Audio filter
+// -----------------------------------------------------------------------------
+
 // Filter is an audio filter
 type Filter interface {
-	Add(uint16) uint16 // Add adds new value and returns the current filtered value.
-	Value() uint16     // Value returns the current filterd value
+	Add(Sample) Sample // Add adds new sample and returns the current filtered sample.
+	Value() Sample     // Value returns the current filterd sample value
 	Reset()            // Reset resets the filter data
 }
+
+// -----------------------------------------------------------------------------
+// SMA - Simple Moving Average filter
+// -----------------------------------------------------------------------------
 
 // SmaFilter is the simple moving average filter
 type SmaFilter struct {
@@ -36,10 +44,10 @@ func (f *SmaFilter) Reset() {
 }
 
 // Value returns the current filterd value
-func (f *SmaFilter) Value() uint16 { return f.value }
+func (f *SmaFilter) Value() Sample { return f.value }
 
 // Add adds new value and returns the current filtered value.
-func (f *SmaFilter) Add(value uint16) uint16 {
+func (f *SmaFilter) Add(value Sample) Sample {
 	f.i = (f.i + 1) & f.mask
 	f.sum += uint(value) - uint(f.values[f.i])
 	f.values[f.i] = value
