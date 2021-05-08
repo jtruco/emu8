@@ -4,13 +4,8 @@ package audio
 // Buffer - Stereo samples buffer
 // -----------------------------------------------------------------------------
 
-const sampleSize = 0x04 // 2 bps * 2 channels
-
-// Sample is a stereo sample
-type Sample struct {
-	Left  uint16
-	Right uint16
-}
+// Sample is a mono 16bit audio sample
+type Sample = uint16
 
 // Buffer is a 16bit audio doble buffer : samples and audio data
 type Buffer struct {
@@ -22,7 +17,7 @@ type Buffer struct {
 func NewBuffer(size int) *Buffer {
 	buffer := new(Buffer)
 	buffer.samples = make([]Sample, size)
-	buffer.data = make([]byte, size*sampleSize)
+	buffer.data = make([]byte, size*2) // 2bps mono
 	return buffer
 }
 
@@ -37,8 +32,7 @@ func (buffer *Buffer) Size() int { return len(buffer.samples) }
 // Reset the samples buffer
 func (buffer *Buffer) Reset() {
 	for i := range buffer.samples {
-		buffer.samples[i].Left = 0
-		buffer.samples[i].Right = 0
+		buffer.samples[i] = 0
 	}
 }
 
@@ -51,20 +45,12 @@ func (buffer *Buffer) GetSample(index int) Sample {
 
 // SetSample sets sample at index
 func (buffer *Buffer) SetSample(index int, sample Sample) {
-	buffer.samples[index].Left = sample.Left
-	buffer.samples[index].Right = sample.Right
-}
-
-// AddSample adds a mono sample at index
-func (buffer *Buffer) AddMono(index int, level uint16) {
-	buffer.samples[index].Left += level
-	buffer.samples[index].Right += level
+	buffer.samples[index] = sample
 }
 
 // AddSample adds a sample at index
-func (buffer *Buffer) AddSample(index int, left uint16, right uint16) {
-	buffer.samples[index].Left += left
-	buffer.samples[index].Right += right
+func (buffer *Buffer) AddSample(index int, sample Sample) {
+	buffer.samples[index] += sample
 }
 
 // Audio data buffer
@@ -76,14 +62,10 @@ func (buffer *Buffer) Data() []byte {
 
 // BuildData builds the output audio buffer
 func (buffer *Buffer) BuildData() {
+	// 16bit mono audio buffer
 	for i, j := 0, 0; i < buffer.Size(); i++ {
 		sample := buffer.samples[i]
-		high, low := uint8(sample.Left>>8), uint8(sample.Left&0xff)
-		buffer.data[j] = low
-		j++
-		buffer.data[j] = high
-		j++
-		high, low = uint8(sample.Right>>8), uint8(sample.Right&0xff)
+		high, low := uint8(sample>>8), uint8(sample&0xff)
 		buffer.data[j] = low
 		j++
 		buffer.data[j] = high

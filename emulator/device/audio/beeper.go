@@ -80,6 +80,6 @@ func (beeper *Beeper) addSamples(from, to, level int) {
 	end := int(float32(to) * beeper.config.Rate)
 	for i := start; i < end; i++ {
 		filtered := beeper.filter.Add(sample)
-		beeper.buffer.AddMono(i, filtered)
+		beeper.buffer.AddSample(i, filtered)
 	}
 }
