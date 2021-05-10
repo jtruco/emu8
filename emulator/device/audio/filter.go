@@ -15,18 +15,23 @@ type Filter interface {
 // SMA - Simple Moving Average filter
 // -----------------------------------------------------------------------------
 
+const _SmaFilterMaxN = 15
+
 // SmaFilter is the simple moving average filter
 type SmaFilter struct {
-	values []uint16
-	value  uint16
-	n, i   byte
-	mask   byte
-	sum    uint
+	values  []uint16
+	value   uint16
+	n       byte
+	mask, i uint16
+	sum     uint
 }
 
-// NewSmaFilter creates a SMA filter of 2^n steps
+// NewSmaFilter creates a SMA filter of 2^n steps (max 2^15 steps)
 func NewSmaFilter(n byte) *SmaFilter {
 	f := new(SmaFilter)
+	if n > _SmaFilterMaxN {
+		n = _SmaFilterMaxN
+	}
 	f.n = n
 	f.mask = 1<<n - 1
 	f.values = make([]uint16, 1<<n)
