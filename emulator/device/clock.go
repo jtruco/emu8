@@ -6,18 +6,12 @@ package device
 
 // Clock is the CPU clock
 type Clock interface {
-	// Add increases clock tstates by value
-	Add(value int)
-	// Inc increases clock tstates by one
-	Inc()
-	// Restart restarts clock to tstates
-	Restart(tstates int)
-	// SetTstates sets the clock tstate
-	SetTstates(tstate int)
-	// Tstates obtains the clock tstate
-	Tstates() int
-	// Total gets total tstates since last reset
-	Total() int64
+	Add(value int)         // Add increases clock tstates by value
+	Inc()                  // Inc increases clock tstates by one
+	Restart(tstates int)   // Restart restarts clock to tstates
+	SetTstates(tstate int) // SetTstates sets the clock tstate
+	Tstates() int          // Tstates obtains the clock tstate
+	Total() int64          // Total gets total tstates since last reset
 }
 
 // NewClock returns a Clock device

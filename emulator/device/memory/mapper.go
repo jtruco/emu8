@@ -6,12 +6,9 @@ package memory
 
 // Mapper memory bank mapper interface
 type Mapper interface {
-	// Init inits the mapper
-	Init(memory *Memory)
-	// SelectBank for Read access
-	SelectBank(address uint16) (*BankMap, uint16)
-	// SelectBank for Read/Write access
-	SelectBankWrite(address uint16) (*BankMap, uint16)
+	Init(memory *Memory)                               // Init inits the mapper
+	SelectBank(address uint16) (*BankMap, uint16)      // SelectBank for Read access
+	SelectBankWrite(address uint16) (*BankMap, uint16) // SelectBank for Read/Write access
 }
 
 // -----------------------------------------------------------------------------

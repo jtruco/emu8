@@ -1,3 +1,4 @@
+// package main contains the main console aplicacion
 package main
 
 import (

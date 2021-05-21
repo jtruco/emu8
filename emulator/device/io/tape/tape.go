@@ -7,14 +7,10 @@ package tape
 
 // Tape represents a tape file
 type Tape interface {
-	// Info gets the tape information
-	Info() *Info
-	// Blocks gets the tape blocks
-	Blocks() []Block
-	// Load tape data. Returns false on error.
-	Load(data []byte) bool
-	// Play tape
-	Play(control *Control)
+	Info() *Info           // Info gets the tape information
+	Blocks() []Block       // Blocks gets the tape blocks
+	Load(data []byte) bool // Load tape data. Returns false on error.
+	Play(control *Control) // Play tape
 }
 
 // BlockInfo tape block information

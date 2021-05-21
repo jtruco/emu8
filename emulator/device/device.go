@@ -7,10 +7,8 @@ package device
 
 // Device is the base device component
 type Device interface {
-	// Init initializes the device
-	Init()
-	// Reset resets the device
-	Reset()
+	Init()  // Init initializes the device
+	Reset() // Reset resets the device
 }
 
 // -----------------------------------------------------------------------------

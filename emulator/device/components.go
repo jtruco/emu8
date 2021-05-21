@@ -8,7 +8,7 @@ const componentsCapacity = 10
 
 // Components is a set of Devices
 type Components struct {
-	devices []Device // devices list
+	devices []Device // device slice
 }
 
 // NewComponents creates a collection

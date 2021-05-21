@@ -14,25 +14,16 @@ import (
 
 // Machine is a 8bit machine
 type Machine interface {
-	device.Device // Is a device
-	// Config gets the machine configuration
-	Config() *Config
-	// Clock the machine main clock
-	Clock() device.Clock
-	// Components the machine components
-	Components() *device.Components
-	// InitControl connects the machine to the emulator controller
-	InitControl(*controller.Controller)
-	// BeginFrame begin emulation frame tasks
-	BeginFrame()
-	// Emulate one machine step
-	Emulate()
-	// EndFrame end emulation frame tasks
-	EndFrame()
-	// LoadFile loads a file into machine
-	LoadFile(name string)
-	// TakeSnap takes and saves snapshop of the machine state
-	TakeSnapshot()
+	device.Device                       // Is a device
+	Config() *Config                    // Config gets the machine configuration
+	Clock() device.Clock                // Clock the machine main clock
+	Components() *device.Components     // Components the machine components
+	InitControl(*controller.Controller) // InitControl connects the machine to the emulator controller
+	Emulate()                           // Emulate one machine step
+	BeginFrame()                        // BeginFrame begin emulation frame tasks
+	EndFrame()                          // EndFrame end emulation frame tasks
+	LoadFile(name string)               // LoadFile loads a file into machine
+	TakeSnapshot()                      // TakeSnap takes and saves snapshop of the machine state
 }
 
 // Config machine configuration

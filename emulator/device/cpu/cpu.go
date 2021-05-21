@@ -9,10 +9,6 @@ import "github.com/jtruco/emu8/emulator/device"
 
 // CPU is the central processor unit
 type CPU interface {
-	// Clock gets the CPU Clock
-	Clock() device.Clock
-	// Init initializes the CPU
-	Init()
-	// Reset resets the CPU
-	Reset()
+	device.Device        // Is a device
+	Clock() device.Clock // Clock gets the CPU Clock
 }

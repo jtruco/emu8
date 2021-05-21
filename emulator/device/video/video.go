@@ -9,9 +9,7 @@ import "github.com/jtruco/emu8/emulator/device"
 
 // Video is a video device
 type Video interface {
-	device.Device // Is a device
-	// EndFrame updates screen video frame
-	EndFrame()
-	// The video screen
-	Screen() *Screen
+	device.Device    // Is a device
+	EndFrame()       // EndFrame updates screen video frame
+	Screen() *Screen // The video screen
 }
