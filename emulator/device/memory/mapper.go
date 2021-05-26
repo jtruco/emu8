@@ -62,7 +62,7 @@ type MaskMapper struct {
 }
 
 // NewMaskMapper creates a new mask mapper
-func NewMaskMapper(shift, mask uint16) Mapper { return &MaskMapper{Shift: shift, Mask: mask} }
+func NewMaskMapper(shift uint16) Mapper { return &MaskMapper{Shift: shift, Mask: 1<<shift - 1} }
 
 // Init inits the mapper
 func (mapper *MaskMapper) Init(memory *Memory) {
