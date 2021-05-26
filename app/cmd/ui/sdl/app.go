@@ -46,12 +46,11 @@ func (app *App) Init(emu *emulator.Emulator) bool {
 	}
 	// init emulator
 	app.emulator = emu
-	control := emu.Controller()
-	control.Video().SetDisplay(app.video)
-	control.Audio().SetPlayer(app.audio)
-	app.control = control
+	app.control = emu.Control()
+	app.control.Video().SetDisplay(app.video)
+	app.control.Audio().SetPlayer(app.audio)
 	// init SDL video output
-	if !app.video.Init(control.Video().Device()) {
+	if !app.video.Init(app.control.Video().Device()) {
 		app.End()
 		return false
 	}

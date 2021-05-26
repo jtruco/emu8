@@ -56,8 +56,8 @@ func FromModel(model string) (*Emulator, error) {
 
 // Machine controller
 
-// Controller gets the emulator controller
-func (emulator *Emulator) Controller() *controller.Controller {
+// Control gets the emulator controller
+func (emulator *Emulator) Control() *controller.Controller {
 	return emulator.control
 }
 
