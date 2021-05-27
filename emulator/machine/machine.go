@@ -28,15 +28,15 @@ type Machine interface {
 
 // Config machine configuration
 type Config struct {
-	Model        int           // Machine model
-	Name         string        // Model name
-	FPS          float32       // Frames per second
-	FrameTime    time.Duration // Duration of a frame
-	FrameTStates int           // TStates per frame
+	Name     string        // Machine model name
+	Model    int           // Machine model (internal)
+	FPS      int           // Frames per second
+	Duration time.Duration // Duration of a frame
+	TStates  int           // TStates per frame
 }
 
 // SetFPS sets FPS and FrameDuration
-func (conf *Config) SetFPS(FPS float32) {
+func (conf *Config) SetFPS(FPS int) {
 	conf.FPS = FPS
-	conf.FrameTime = time.Duration(1e9 / FPS)
+	conf.Duration = time.Duration(1e9 / FPS)
 }

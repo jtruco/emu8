@@ -13,32 +13,34 @@ var models = map[string]*Model{} // Registered models by ID
 
 // Description machine model description
 type Model struct {
-	Id       string         // Machine model Id
-	OtherIds []string       // Other models Id
-	Build    func() Machine // Build builds the machine model
+	Name  string         // Machine model
+	Ids   []string       // Model Ids
+	Build func() Machine // Build builds the machine model
 }
 
 // Register register a machine model
 func Register(model *Model) {
-	models[model.Id] = model
+	id := strings.ToLower(model.Name)
+	models[id] = model
 
 	// register other model IDs
-	for _, otherId := range model.OtherIds {
-		models[otherId] = model
+	for _, ids := range model.Ids {
+		id = strings.ToLower(ids)
+		models[id] = model
 	}
 }
 
 // RegisterModels register a machine model list
 func RegisterModels(models []Model) {
-	for _, model := range models {
-		Register(&model)
+	for i := 0; i < len(models); i++ {
+		Register(&models[i])
 	}
 }
 
-// FindModel finds a model by ID
-func FindModel(modelID string) *Model {
-	modelID = strings.ToLower(modelID)
-	model, ok := models[modelID]
+// FindModel finds a model by Id
+func FindModel(modelId string) *Model {
+	modelId = strings.ToLower(modelId)
+	model, ok := models[modelId]
 	if ok {
 		return model
 	}
@@ -46,10 +48,12 @@ func FindModel(modelID string) *Model {
 }
 
 // Create returns a machine from a model name
-func Create(modelID string) (Machine, error) {
-	model := FindModel(modelID)
+func Create(modelId string) (Machine, error) {
+	model := FindModel(modelId)
 	if model == nil {
 		return nil, errors.New("Machine : unknown machine model")
 	}
-	return model.Build(), nil
+	machine := model.Build()
+	machine.Config().Name = model.Name
+	return machine, nil
 }

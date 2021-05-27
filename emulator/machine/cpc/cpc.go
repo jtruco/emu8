@@ -74,7 +74,7 @@ type AmstradCPC struct {
 func New(model int) machine.Machine {
 	cpc := new(AmstradCPC)
 	cpc.config.Model = model
-	cpc.config.FrameTStates = cpcTStates
+	cpc.config.TStates = cpcTStates
 	cpc.config.SetFPS(cpcFPS)
 	// memory map
 	cpc.memory = memory.New(memory.Size64K, 6)

@@ -17,15 +17,15 @@ import (
 
 // Emulator is the emulator main controller
 type Emulator struct {
-	machine machine.Machine        // The hosted machine
-	control *controller.Controller // The emulator controller
-	running bool                   // Indicates emulation is running
-	async   bool                   // Async emulation goroutine
-	wg      sync.WaitGroup         // Sync control
-	frame   time.Duration          // Frame duration
-	sleep   time.Duration          // Sleep duration
-	current time.Time              // Current time
-	lost    bool                   // Lost frame
+	machine  machine.Machine        // The hosted machine
+	control  *controller.Controller // The emulator controller
+	running  bool                   // Indicates emulation is running
+	async    bool                   // Async emulation goroutine
+	wg       sync.WaitGroup         // Sync control
+	duration time.Duration          // Frame duration
+	sleep    time.Duration          // Sleep duration
+	current  time.Time              // Current time
+	lost     bool                   // Lost frame
 }
 
 // New creates a machine emulator
@@ -85,7 +85,7 @@ func (emulator *Emulator) SetAsync(async bool) {
 // Init the emulation
 func (emulator *Emulator) Init() {
 	emulator.machine.Init()
-	emulator.frame = emulator.machine.Config().FrameTime
+	emulator.duration = emulator.machine.Config().Duration
 }
 
 // Reset the emulation
@@ -107,7 +107,7 @@ func (emulator *Emulator) Emulate() {
 
 // Sync synchronizes next frame loop
 func (emulator *Emulator) Sync() {
-	emulator.sleep += emulator.frame - time.Since(emulator.current)
+	emulator.sleep += emulator.duration - time.Since(emulator.current)
 	emulator.current = time.Now()
 	if emulator.sleep > 0 {
 		emulator.lost = false
@@ -122,7 +122,7 @@ func (emulator *Emulator) Sync() {
 func (emulator *Emulator) Start() {
 	if !emulator.running {
 		emulator.running = true
-		emulator.sleep = emulator.frame
+		emulator.sleep = emulator.duration
 		emulator.current = time.Now()
 		if emulator.async {
 			go emulator.emulationLoop()
@@ -189,12 +189,12 @@ func (emulator *Emulator) emulateFrame() {
 
 	// frame emulation loop
 	machine.BeginFrame()
-	for clock.Tstates() < config.FrameTStates {
+	for clock.Tstates() < config.TStates {
 		machine.Emulate()
 	}
 	machine.EndFrame()
 
 	// post-frame actions
 	emulator.control.Refresh()
-	clock.Restart(config.FrameTStates)
+	clock.Restart(config.TStates)
 }

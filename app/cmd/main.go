@@ -15,7 +15,7 @@ func main() {
 	if err != nil {
 		log.Fatal("App : Could not initialize emulator")
 	}
-	log.Println("App : Emulator initialized for machine:", emu.Machine().Config().Model)
+	log.Println("App : Emulator for machine:", emu.Machine().Config().Name)
 
 	app := sdl.NewApp()
 	if !app.Init(emu) {

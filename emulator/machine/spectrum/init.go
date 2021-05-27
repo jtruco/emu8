@@ -4,9 +4,9 @@ import "github.com/jtruco/emu8/emulator/machine"
 
 // ZX Spectrum models
 var models = []machine.Model{
-	{Id: "zxspectrum16k", OtherIds: []string{"zx16k"},
+	{Name: "ZX Spectrum 16K", Ids: []string{"ZXSpectrum16K", "ZX16K"},
 		Build: func() machine.Machine { return New(ZXSpectrum16K) }},
-	{Id: "zxspectrum48k", OtherIds: []string{"speccy", "zx48k"},
+	{Name: "ZX Spectrum 48K", Ids: []string{"ZXSpectrum48K", "ZX48K", "Speccy"},
 		Build: func() machine.Machine { return New(ZXSpectrum48K) }},
 }
 

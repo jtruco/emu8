@@ -4,7 +4,7 @@ import "github.com/jtruco/emu8/emulator/machine"
 
 // Amstrad CPC models
 var models = []machine.Model{
-	{Id: "amstradcpc464", OtherIds: []string{"cpc464"},
+	{Name: "Amstrad CPC 464", Ids: []string{"AmstradCPC464", "CPC464"},
 		Build: func() machine.Machine { return New(AmstradCPC464) }},
 }
 

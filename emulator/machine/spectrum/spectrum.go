@@ -67,7 +67,7 @@ type Spectrum struct {
 func New(model int) machine.Machine {
 	spectrum := new(Spectrum)
 	spectrum.config.Model = model
-	spectrum.config.FrameTStates = zxTStates
+	spectrum.config.TStates = zxTStates
 	spectrum.config.SetFPS(zxFPS)
 	// memory mapping
 	if spectrum.config.Model == ZXSpectrum16K {
