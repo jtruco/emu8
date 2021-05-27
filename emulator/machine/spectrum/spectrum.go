@@ -281,7 +281,11 @@ func (spectrum *Spectrum) LoadState(snap *format.Snapshot) {
 	// Border
 	spectrum.tv.SetBorder(snap.Border)
 	// Memory
-	spectrum.memory.LoadRAM(0x4000, snap.Memory[0:0xC000])
+	if spectrum.config.Model == ZXSpectrum16K {
+		spectrum.memory.LoadRAM(0x4000, snap.Memory[0:0x4000])
+	} else {
+		spectrum.memory.LoadRAM(0x4000, snap.Memory[0:0xC000])
+	}
 }
 
 // SaveState save ZX Spectrum state
