@@ -136,29 +136,9 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 			log.Print("App : Exiting app")
 		// Tape Drive
 		case sdl.K_F7:
-			if app.control.Tape().HasDrive() {
-				if app.control.Tape().Drive().HasTape() {
-					if app.control.Tape().Drive().IsPlaying() {
-						app.control.Tape().Drive().Stop()
-					} else {
-						app.control.Tape().Drive().Play()
-					}
-				} else {
-					log.Println("App : There is no tape loaded !")
-				}
-			} else {
-				log.Println("App : Machine has no tape drive !")
-			}
+			app.control.Tape().TogglePlay()
 		case sdl.K_F8:
-			if app.control.Tape().HasDrive() {
-				if app.control.Tape().Drive().HasTape() {
-					app.control.Tape().Drive().Rewind()
-				} else {
-					log.Println("App : There is no tape loaded !")
-				}
-			} else {
-				log.Println("App : Machine has no tape drive !")
-			}
+			app.control.Tape().Rewind()
 		// UI
 		case sdl.K_F4:
 			app.audio.config.Mute = !app.audio.config.Mute
