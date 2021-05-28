@@ -4,7 +4,6 @@ package spectrum
 import (
 	"log"
 
-	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/emulator/controller/vfs"
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
@@ -49,26 +48,25 @@ var (
 
 // Spectrum the ZX Spectrum
 type Spectrum struct {
-	config     machine.Config         // Machine information
-	control    *controller.Controller // The emulator controller
-	components *device.Components     // Machine device components
-	clock      *device.ClockDevice    // The system clock
-	cpu        *z80.Z80               // The Zilog Z80A CPU
-	memory     *memory.Memory         // The machine memory
-	ula        *ULA                   // The spectrum ULA
-	tv         *TvVideo               // The spectrum TV video output
-	beeper     *audio.Beeper          // The spectrum Beeper
-	keyboard   *Keyboard              // The spectrum Keyboard
-	tape       *tape.Drive            // The spectrum Tape drive
-	joystick   *Joystick              // The spectrum Joystick
+	config     machine.Config      // Machine information
+	control    machine.Control     // The emulator controller
+	components *device.Components  // Machine device components
+	clock      *device.ClockDevice // The system clock
+	cpu        *z80.Z80            // The Zilog Z80A CPU
+	memory     *memory.Memory      // The machine memory
+	ula        *ULA                // The spectrum ULA
+	tv         *TvVideo            // The spectrum TV video output
+	beeper     *audio.Beeper       // The spectrum Beeper
+	keyboard   *Keyboard           // The spectrum Keyboard
+	tape       *tape.Drive         // The spectrum Tape drive
+	joystick   *Joystick           // The spectrum Joystick
 }
 
 // New returns a new ZX Spectrum
 func New(model int) machine.Machine {
 	spectrum := new(Spectrum)
 	spectrum.config.Model = model
-	spectrum.config.TStates = zxTStates
-	spectrum.config.SetFPS(zxFPS)
+	spectrum.config.SetTimings(zxTStates, zxFPS)
 	// memory mapping
 	if spectrum.config.Model == ZXSpectrum16K {
 		spectrum.memory = memory.New(memory.Size32K, 2)
@@ -161,14 +159,14 @@ func (spectrum *Spectrum) Components() *device.Components {
 }
 
 // InitControl connect controllers & components
-func (spectrum *Spectrum) InitControl(control *controller.Controller) {
-	control.Video().SetDevice(spectrum.tv)
-	control.Audio().SetDevice(spectrum.beeper)
-	control.Keyboard().AddReceiver(spectrum.keyboard)
+func (spectrum *Spectrum) InitControl(control machine.Control) {
+	control.BindVideo(spectrum.tv)
+	control.BindAudio(spectrum.beeper)
+	control.BindKeyboard(spectrum.keyboard)
+	control.BindJoystick(spectrum.joystick)
+	control.BindTapeDrive(spectrum.tape)
 	control.FileManager().RegisterFormat(vfs.FormatSnap, snapFormats)
 	control.FileManager().RegisterFormat(vfs.FormatTape, tapeFormats)
-	control.Tape().SetDrive(spectrum.tape)
-	control.Joystick().AddReceiver(spectrum.joystick)
 	spectrum.control = control
 }
 

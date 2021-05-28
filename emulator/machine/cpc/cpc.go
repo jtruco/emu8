@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/jtruco/emu8/emulator/config"
-	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/emulator/controller/vfs"
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
@@ -52,30 +51,29 @@ var (
 
 // AmstradCPC the Amstrad CPC 464
 type AmstradCPC struct {
-	config     machine.Config         // Machine information
-	control    *controller.Controller // The emulator controller
-	components *device.Components     // Machine device components
-	clock      *device.ClockDevice    // The system clock
-	cpu        *z80.Z80               // The Zilog Z80A CPU
-	memory     *memory.Memory         // The machine memory
-	lowerRom   *memory.BankMap        // The lower rom
-	upperRom   *memory.BankMap        // The upper rom
-	gatearray  *GateArray             // The Gate-Array
-	crtc       *video.MC6845          // The Cathode Ray Tube Controller
-	psg        *audio.AY38910         // The Programmable Sound Generator
-	ppi        *Ppi                   // The Parallel Peripheral Interface
-	video      *VduVideo              // The VDU video
-	keyboard   *Keyboard              // The matrix keyboard
-	tape       *tape.Drive            // The tape drive
-	joystick   *Joystick              // The CPC Joystick
+	config     machine.Config      // Machine information
+	control    machine.Control     // The emulator controller
+	components *device.Components  // Machine device components
+	clock      *device.ClockDevice // The system clock
+	cpu        *z80.Z80            // The Zilog Z80A CPU
+	memory     *memory.Memory      // The machine memory
+	lowerRom   *memory.BankMap     // The lower rom
+	upperRom   *memory.BankMap     // The upper rom
+	gatearray  *GateArray          // The Gate-Array
+	crtc       *video.MC6845       // The Cathode Ray Tube Controller
+	psg        *audio.AY38910      // The Programmable Sound Generator
+	ppi        *Ppi                // The Parallel Peripheral Interface
+	video      *VduVideo           // The VDU video
+	keyboard   *Keyboard           // The matrix keyboard
+	tape       *tape.Drive         // The tape drive
+	joystick   *Joystick           // The CPC Joystick
 }
 
 // New returns a new Amstrad CPC
 func New(model int) machine.Machine {
 	cpc := new(AmstradCPC)
 	cpc.config.Model = model
-	cpc.config.TStates = cpcTStates
-	cpc.config.SetFPS(cpcFPS)
+	cpc.config.SetTimings(cpcTStates, cpcFPS)
 	// memory map
 	cpc.memory = memory.New(memory.Size64K, 6)
 	cpc.memory.SetMap(0, memory.NewROM(0x0000, memory.Size16K)) // Lower ROM Bios
@@ -178,14 +176,14 @@ func (cpc *AmstradCPC) Components() *device.Components {
 }
 
 // InitControl connect UI controllers & device components
-func (cpc *AmstradCPC) InitControl(control *controller.Controller) {
-	control.Video().SetDevice(cpc.video)
-	control.Audio().SetDevice(cpc.psg)
-	control.Keyboard().AddReceiver(cpc.keyboard)
+func (cpc *AmstradCPC) InitControl(control machine.Control) {
+	control.BindVideo(cpc.video)
+	control.BindAudio(cpc.psg)
+	control.BindKeyboard(cpc.keyboard)
+	control.BindJoystick(cpc.joystick)
+	control.BindTapeDrive(cpc.tape)
 	control.FileManager().RegisterFormat(vfs.FormatSnap, cpcSnapFormats)
 	control.FileManager().RegisterFormat(vfs.FormatTape, cpcTapeFormats)
-	control.Tape().SetDrive(cpc.tape)
-	control.Joystick().AddReceiver(cpc.joystick)
 	cpc.control = control
 }
 

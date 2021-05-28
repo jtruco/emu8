@@ -5,6 +5,11 @@ import (
 	"github.com/jtruco/emu8/emulator/controller/io"
 	"github.com/jtruco/emu8/emulator/controller/ui"
 	"github.com/jtruco/emu8/emulator/controller/vfs"
+	"github.com/jtruco/emu8/emulator/device/audio"
+	"github.com/jtruco/emu8/emulator/device/io/joystick"
+	"github.com/jtruco/emu8/emulator/device/io/keyboard"
+	"github.com/jtruco/emu8/emulator/device/io/tape"
+	"github.com/jtruco/emu8/emulator/device/video"
 )
 
 // -----------------------------------------------------------------------------
@@ -33,10 +38,39 @@ func New() *Controller {
 	return controller
 }
 
+// Machine control
+
 // FileManager returns the file manager
 func (controller *Controller) FileManager() *vfs.FileManager {
 	return controller.file
 }
+
+// BindVideo sets the video device
+func (controller *Controller) BindVideo(device video.Video) {
+	controller.video.SetDevice(device)
+}
+
+// BindAudio sets the audio device
+func (controller *Controller) BindAudio(device audio.Audio) {
+	controller.audio.SetDevice(device)
+}
+
+// BindKeyboard adds a keyboard device
+func (controller *Controller) BindKeyboard(device keyboard.Keyboard) {
+	controller.keyboard.AddReceiver(device)
+}
+
+// BindJoystick adds a joystick device
+func (controller *Controller) BindJoystick(device joystick.Joystick) {
+	controller.joystick.AddReceiver(device)
+}
+
+// BindTapeDrive sets the tape drive
+func (controller *Controller) BindTapeDrive(drive *tape.Drive) {
+	controller.tape.SetDrive(drive)
+}
+
+// Controllers
 
 // Video the video controller
 func (controller *Controller) Video() *ui.VideoController {
