@@ -7,6 +7,8 @@ import "log"
 // Versions : 1..3. Only 48k mode suppported
 // -----------------------------------------------------------------------------
 
+const Z80 = "z80" // Z80 format extension
+
 const (
 	_Z80HeaderLength = 30
 	_Z80BankSize     = 0x4000

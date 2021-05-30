@@ -10,6 +10,8 @@ import (
 // TAP tape format
 // -----------------------------------------------------------------------------
 
+const TAP = "tap" // TAP format extension
+
 // TAP blocks types
 const (
 	tapBlockHeader = 0x00

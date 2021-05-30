@@ -10,6 +10,8 @@ import (
 // TZX tape format
 // -----------------------------------------------------------------------------
 
+const TZX = "tzx" // TZX format extension
+
 // TZX constants
 const (
 	tzxHeaderSignature = "ZXTape!"

@@ -9,7 +9,7 @@ import (
 const (
 	FormatUnknown = iota
 	FormatRom
-	FormatSnap
+	FormatSnapshot
 	FormatTape
 	FormatMax // limit count
 )
@@ -35,7 +35,7 @@ func NewFileManager() *FileManager {
 	manager := new(FileManager)
 	manager.vfs = GetFileSystem()
 	manager.formats = make(map[string]int)
-	manager.AddFormat(FormatRom, ExtRom)
+	manager.RegisterFormat(FormatRom, ExtRom)
 	return manager
 }
 
@@ -46,15 +46,15 @@ func (manager *FileManager) SetFileSystem(vfs FileSystem) {
 
 // Format management
 
-// AddFormat adds a file extension format
-func (manager *FileManager) AddFormat(format int, extension string) {
+// RegisterFormat adds a file extension format
+func (manager *FileManager) RegisterFormat(format int, extension string) {
 	manager.formats[extension] = format
 }
 
-// RegisterFormat adds a format and its extensions
-func (manager *FileManager) RegisterFormat(format int, extensions []string) {
+// RegisterFormats adds a format and its extensions
+func (manager *FileManager) RegisterFormats(format int, extensions []string) {
 	for _, ext := range extensions {
-		manager.AddFormat(format, ext)
+		manager.RegisterFormat(format, ext)
 	}
 }
 

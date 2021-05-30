@@ -15,9 +15,9 @@ import (
 
 // Default subpath constants
 const (
-	PathRom  = "roms"  // ROMs default subpath
-	PathSnap = "snaps" // Snapshots default subpath
-	PathTape = "tapes" // Tapes default subpath
+	PathRom      = "roms"  // ROMs default subpath
+	PathSnapshot = "snaps" // Snapshots default subpath
+	PathTape     = "tapes" // Tapes default subpath
 )
 
 // -----------------------------------------------------------------------------
@@ -36,7 +36,7 @@ func NewDesktopFileSystem(path string) *DesktopFileSystem {
 	fs.path = path
 	fs.subpaths[FormatUnknown] = path
 	fs.subpaths[FormatRom] = filepath.Join(path, PathRom)
-	fs.subpaths[FormatSnap] = filepath.Join(path, PathSnap)
+	fs.subpaths[FormatSnapshot] = filepath.Join(path, PathSnapshot)
 	fs.subpaths[FormatTape] = filepath.Join(path, PathTape)
 	return fs
 }

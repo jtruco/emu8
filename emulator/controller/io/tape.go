@@ -12,12 +12,14 @@ import (
 
 // TapeController is the audio controller
 type TapeController struct {
-	drive *tape.Drive // The tape drive device
+	drive *tape.Drive             // Tape drive device
+	tapes map[string]tape.Builder // Tape factory
 }
 
 // NewTapeController creates a new video controller
 func NewTapeController() *TapeController {
 	controller := new(TapeController)
+	controller.tapes = make(map[string]tape.Builder)
 	return controller
 }
 
@@ -29,6 +31,22 @@ func (controller *TapeController) Drive() *tape.Drive { return controller.drive 
 
 // SetDrive sets audio device
 func (controller *TapeController) SetDrive(drive *tape.Drive) { controller.drive = drive }
+
+// Tape factory
+
+func (controller *TapeController) RegisterTape(format string, builder tape.Builder) {
+	controller.tapes[format] = builder
+}
+
+func (controller *TapeController) CreateTape(format string) tape.Tape {
+	buildTape := controller.tapes[format]
+	if buildTape != nil {
+		return buildTape()
+	}
+	return nil
+}
+
+// Tape control
 
 // TogglePlay toggle tape play state
 func (controller *TapeController) TogglePlay() {

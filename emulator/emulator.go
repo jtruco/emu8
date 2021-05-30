@@ -32,8 +32,7 @@ type Emulator struct {
 func New(machine machine.Machine) *Emulator {
 	emulator := new(Emulator)
 	emulator.machine = machine
-	emulator.control = controller.New()
-	emulator.machine.InitControl(emulator.control)
+	emulator.control = controller.New(machine)
 	return emulator
 }
 
@@ -148,7 +147,7 @@ func (emulator *Emulator) LoadFile(name string) {
 		emulator.Stop()
 		defer emulator.Start()
 	}
-	emulator.machine.LoadFile(name)
+	emulator.control.LoadFile(name)
 }
 
 // TakeSnapshot takes and saves snapshop of the machine state
@@ -157,7 +156,7 @@ func (emulator *Emulator) TakeSnapshot() {
 		emulator.Stop()
 		defer emulator.Start()
 	}
-	emulator.machine.TakeSnapshot()
+	emulator.control.TakeSnapshot()
 }
 
 // Emulation

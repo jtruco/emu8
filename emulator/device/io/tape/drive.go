@@ -17,7 +17,7 @@ type Drive struct {
 	tape    Tape         // Loaded tape
 }
 
-// New creates a Tarive
+// New creates a new Tape Drive
 func New(clock device.Clock) *Drive {
 	drive := new(Drive)
 	drive.clock = clock

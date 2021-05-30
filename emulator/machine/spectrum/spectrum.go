@@ -4,7 +4,6 @@ package spectrum
 import (
 	"log"
 
-	"github.com/jtruco/emu8/emulator/controller/vfs"
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/jtruco/emu8/emulator/device/cpu"
@@ -31,19 +30,6 @@ const (
 	zxTStates    = 69888 // TStates per frame
 	zxIntTstates = 32    // ZX Spectrum 16k & 48k
 	zxRomName    = "zxspectrum.rom"
-)
-
-// ZX Spectrum formats
-const (
-	formatSNA = "sna"
-	formatZ80 = "z80"
-	formatTAP = "tap"
-	formatTZX = "tzx"
-)
-
-var (
-	snapFormats = []string{formatSNA, formatZ80}
-	tapeFormats = []string{formatTAP, formatTZX}
 )
 
 // Spectrum the ZX Spectrum
@@ -128,7 +114,7 @@ func (spectrum *Spectrum) Reset() {
 // initSpectrum commont init tasks
 func (spectrum *Spectrum) initSpectrum() {
 	// load ROM at bank 0
-	data, err := spectrum.control.FileManager().LoadROM(zxRomName)
+	data, err := spectrum.control.LoadROM(zxRomName)
 	if err != nil {
 		return
 	}
@@ -160,13 +146,17 @@ func (spectrum *Spectrum) Components() *device.Components {
 
 // InitControl connect controllers & components
 func (spectrum *Spectrum) InitControl(control machine.Control) {
+	// Bind devices
 	control.BindVideo(spectrum.tv)
 	control.BindAudio(spectrum.beeper)
 	control.BindKeyboard(spectrum.keyboard)
 	control.BindJoystick(spectrum.joystick)
 	control.BindTapeDrive(spectrum.tape)
-	control.FileManager().RegisterFormat(vfs.FormatSnap, snapFormats)
-	control.FileManager().RegisterFormat(vfs.FormatTape, tapeFormats)
+	// Register formats
+	control.RegisterSnapshot(format.SNA)
+	control.RegisterSnapshot(format.Z80)
+	control.RegisterTape(format.TAP, format.NewTap)
+	control.RegisterTape(format.TZX, format.NewTzx)
 	spectrum.control = control
 }
 
@@ -209,69 +199,30 @@ func (spectrum *Spectrum) onInterruptAck() bool {
 
 // Snapshots : load & save state
 
-// LoadFile loads a file into machine
-func (spectrum *Spectrum) LoadFile(filename string) {
-	info := spectrum.control.FileManager().CreateFileInfo(filename)
-	if info.Format == vfs.FormatUnknown {
-		log.Println("Spectrum : Not supported format:", info.Ext)
-		return
-	}
-	err := spectrum.control.FileManager().LoadFile(info)
-	if err != nil {
-		log.Println("Spectrum : Error loading file:", info.Name)
-		return
-	}
-	// load snapshop formats
-	if info.Format == vfs.FormatSnap {
-		var snap *format.Snapshot
-		switch info.Ext {
-		case formatSNA:
-			snap = format.LoadSNA(info.Data)
-		case formatZ80:
-			snap = format.LoadZ80(info.Data)
-		default:
-			log.Println("Spectrum : Not implemented snap format:", info.Ext)
-		}
-		if snap != nil {
-			spectrum.LoadState(snap)
-		}
-	} else if info.Format == vfs.FormatTape {
-		var tape tape.Tape
-		loaded := false
-		switch info.Ext {
-		case formatTAP:
-			tape = format.NewTap()
-			loaded = tape.Load(info.Data)
-		case formatTZX:
-			tape = format.NewTzx()
-			loaded = tape.Load(info.Data)
-		default:
-			log.Println("Spectrum : Not implemented tape format:", info.Ext)
-		}
-		if loaded {
-			tape.Info().Name = info.Name
-			spectrum.tape.Insert(tape)
-		} else {
-			log.Println("Spectrum : Error loading tape file")
-		}
-	}
-}
-
-// TakeSnapshot takes and saves snapshop of the machine state
-func (spectrum *Spectrum) TakeSnapshot() {
-	snap := spectrum.SaveState()
-	data := snap.SaveSNA()
-	name := spectrum.control.FileManager().NewName("speccy", formatSNA)
-	err := spectrum.control.FileManager().SaveFile(name, vfs.FormatSnap, data)
-	if err == nil {
-		log.Println("Spectrum : Snapshot saved:", name)
-	} else {
-		log.Println("Spectrum : Error saving snapshot:", name)
-	}
-}
-
 // LoadState loads a ZX Spectrum snapshot
-func (spectrum *Spectrum) LoadState(snap *format.Snapshot) {
+func (spectrum *Spectrum) LoadState(state machine.State) {
+	var snap *format.Snapshot
+	switch state.Format {
+	case format.SNA:
+		snap = format.LoadSNA(state.Data)
+	case format.Z80:
+		snap = format.LoadZ80(state.Data)
+	default:
+		log.Println("Spectrum : Not implemented snap format:", state.Format)
+	}
+	if snap != nil {
+		spectrum.loadSnapshot(snap)
+	}
+}
+
+// SaveState loads a ZX Spectrum snapshot
+func (spectrum *Spectrum) SaveState() machine.State {
+	return machine.State{
+		Format: format.SNA,
+		Data:   spectrum.saveSnapshot().SaveSNA()}
+}
+
+func (spectrum *Spectrum) loadSnapshot(snap *format.Snapshot) {
 	// CPU
 	spectrum.cpu.State.Copy(&snap.State)
 	// TStates
@@ -287,7 +238,7 @@ func (spectrum *Spectrum) LoadState(snap *format.Snapshot) {
 }
 
 // SaveState save ZX Spectrum state
-func (spectrum *Spectrum) SaveState() *format.Snapshot {
+func (spectrum *Spectrum) saveSnapshot() *format.Snapshot {
 	var snap = new(format.Snapshot)
 	// CPU
 	snap.State.Copy(&spectrum.cpu.State)

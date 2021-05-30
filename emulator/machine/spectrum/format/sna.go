@@ -6,6 +6,8 @@ import "log"
 // SNA format
 // -----------------------------------------------------------------------------
 
+const SNA = "sna" // SNA format extension
+
 const (
 	_SNAFileLength = 49179
 )

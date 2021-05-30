@@ -6,6 +6,8 @@ import "log"
 // CPC SNA format
 // -----------------------------------------------------------------------------
 
+const SNA = "sna" // SNA format extension
+
 const (
 	_SNAIdString = "MV - SNA"
 	_SNAMemDump  = 0x100

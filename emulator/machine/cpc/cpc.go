@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/jtruco/emu8/emulator/config"
-	"github.com/jtruco/emu8/emulator/controller/vfs"
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/jtruco/emu8/emulator/device/cpu"
@@ -36,17 +35,6 @@ const (
 	cpcOsRomNameFR  = "cpc464_os_fr.rom"
 	cpcBasicRomName = "cpc464_basic.rom"
 	cpcJumpers      = 0x1e
-)
-
-// Amstrad CPC formats
-const (
-	cpcFormatSNA = "sna"
-	cpcFormatCDT = "cdt"
-)
-
-var (
-	cpcSnapFormats = []string{cpcFormatSNA}
-	cpcTapeFormats = []string{cpcFormatCDT}
 )
 
 // AmstradCPC the Amstrad CPC 464
@@ -137,13 +125,13 @@ func (cpc *AmstradCPC) initAmstrad() {
 	case "fr":
 		romname = cpcOsRomNameFR
 	}
-	data, err := cpc.control.FileManager().LoadROM(romname)
+	data, err := cpc.control.LoadROM(romname)
 	if err != nil {
 		return
 	}
 	cpc.lowerRom.Bank().Load(0, data[:0x4000]) // lower rom
 	// load upper rom (basic)
-	data, err = cpc.control.FileManager().LoadROM(cpcBasicRomName)
+	data, err = cpc.control.LoadROM(cpcBasicRomName)
 	if err != nil {
 		return
 	}
@@ -177,13 +165,15 @@ func (cpc *AmstradCPC) Components() *device.Components {
 
 // InitControl connect UI controllers & device components
 func (cpc *AmstradCPC) InitControl(control machine.Control) {
+	// Bind devices
 	control.BindVideo(cpc.video)
 	control.BindAudio(cpc.psg)
 	control.BindKeyboard(cpc.keyboard)
 	control.BindJoystick(cpc.joystick)
 	control.BindTapeDrive(cpc.tape)
-	control.FileManager().RegisterFormat(vfs.FormatSnap, cpcSnapFormats)
-	control.FileManager().RegisterFormat(vfs.FormatTape, cpcTapeFormats)
+	// Register formats
+	control.RegisterSnapshot(format.SNA)
+	control.RegisterTape(format.CDT, format.NewCdt)
 	cpc.control = control
 }
 
@@ -261,64 +251,29 @@ func (cpc *AmstradCPC) onPsgReadPortA() byte {
 // Files : load & save state / tape
 // -----------------------------------------------------------------------------
 
-// LoadFile loads a file into machine
-func (cpc *AmstradCPC) LoadFile(filename string) {
-	info := cpc.control.FileManager().CreateFileInfo(filename)
-	if info.Format == vfs.FormatUnknown {
-		log.Println("CPC : Not supported format:", info.Ext)
-		return
+// LoadState loads a ZX Spectrum snapshot
+func (cpc *AmstradCPC) LoadState(state machine.State) {
+	var snap *format.Snapshot
+	switch state.Format {
+	case format.SNA:
+		snap = format.LoadSNA(state.Data)
+	default:
+		log.Println("CPC : Not implemented snap format:", state.Format)
 	}
-	err := cpc.control.FileManager().LoadFile(info)
-	if err != nil {
-		log.Println("CPC : Error loading file:", info.Name)
-		return
-	}
-	// load snapshop formats
-	if info.Format == vfs.FormatSnap {
-		var snap *format.Snapshot
-		switch info.Ext {
-		case cpcFormatSNA:
-			snap = format.LoadSNA(info.Data)
-		default:
-			log.Println("CPC : Not implemented snap format:", info.Ext)
-		}
-		if snap != nil {
-			cpc.LoadState(snap)
-		}
-	} else if info.Format == vfs.FormatTape {
-		var tape tape.Tape
-		loaded := false
-		switch info.Ext {
-		case cpcFormatCDT:
-			tape = format.NewCdt()
-			loaded = tape.Load(info.Data)
-		default:
-			log.Println("CPC : Not implemented tape format:", info.Ext)
-		}
-		if loaded {
-			tape.Info().Name = info.Name
-			cpc.tape.Insert(tape)
-		} else {
-			log.Println("CPC : Error loading tape file")
-		}
+	if snap != nil {
+		cpc.loadSnapshot(snap)
 	}
 }
 
-// TakeSnapshot takes and saves snapshop of the machine state
-func (cpc *AmstradCPC) TakeSnapshot() {
-	snap := cpc.SaveState()
-	data := snap.SaveSNA()
-	name := cpc.control.FileManager().NewName("cpc", cpcFormatSNA)
-	err := cpc.control.FileManager().SaveFile(name, vfs.FormatSnap, data)
-	if err == nil {
-		log.Println("CPC : Snapshot saved:", name)
-	} else {
-		log.Println("CPC : Error saving snapshot:", name)
-	}
+// SaveState loads a ZX Spectrum snapshot
+func (cpc *AmstradCPC) SaveState() machine.State {
+	return machine.State{
+		Format: format.SNA,
+		Data:   cpc.saveSnapshot().SaveSNA()}
 }
 
-// LoadState loads the Amstrad CPC snapshot
-func (cpc *AmstradCPC) LoadState(snap *format.Snapshot) {
+// loadState loads the Amstrad CPC snapshot
+func (cpc *AmstradCPC) loadSnapshot(snap *format.Snapshot) {
 	// CPU
 	cpc.cpu.State.Copy(&snap.State)
 	// Memory
@@ -342,8 +297,8 @@ func (cpc *AmstradCPC) LoadState(snap *format.Snapshot) {
 	}
 }
 
-// SaveState save Amstrad CPC state
-func (cpc *AmstradCPC) SaveState() *format.Snapshot {
+// saveState save Amstrad CPC state
+func (cpc *AmstradCPC) saveSnapshot() *format.Snapshot {
 	var snap = new(format.Snapshot)
 	// CPU
 	snap.State.Copy(&cpc.cpu.State)
