@@ -181,22 +181,19 @@ func (cpc *AmstradCPC) InitControl(control machine.Control) {
 // -----------------------------------------------------------------------------
 
 // BeginFrame begin emulation frame tasks
-func (cpc *AmstradCPC) BeginFrame() {
-	// nothing todo
-}
+func (cpc *AmstradCPC) BeginFrame() {} // nothing to do
 
 // Emulate one machine step
 func (cpc *AmstradCPC) Emulate() {
 	// Tape emulation
-	if cpc.tape.IsPlaying() {
-		cpc.tape.Playback()
-	}
+	cpc.tape.Playback()
 
 	// z80 cpu emulation
 	lapse := cpc.cpu.Execute()
-	fix := lapse & 0x03 // CPC 4T instruction round
+
+	// 4 tstate rounding fix
+	fix := (0x04 - lapse) & 0x03
 	if fix != 0 {
-		fix = 0x04 - lapse
 		cpc.clock.Add(fix)
 		lapse += fix
 	}
@@ -206,9 +203,7 @@ func (cpc *AmstradCPC) Emulate() {
 }
 
 // EndFrame end emulation frame tasks
-func (cpc *AmstradCPC) EndFrame() {
-	// nothing todo
-}
+func (cpc *AmstradCPC) EndFrame() {} // nothing to do
 
 // CPC IO bus
 // -----------------------------------------------------------------------------
