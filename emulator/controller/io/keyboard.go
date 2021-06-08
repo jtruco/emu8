@@ -82,10 +82,10 @@ func (controller *KeyboardController) emitEvent(e keyEvent) {
 	for receiver, keymap := range controller.receivers {
 		keys, ok := keymap[e.Keycode]
 		if ok {
+			pressed := e.EventType == keyboard.KeyDown
 			// For each key emit event to receiver
 			for _, key := range keys {
-				evt := keyboard.NewKeyEvent(e.EventType, key)
-				receiver.ProcessKey(evt.Key, evt.Pressed)
+				receiver.ProcessKey(key, pressed)
 			}
 		}
 	}

@@ -10,8 +10,8 @@ type Sample = uint16
 // Buffer is a 16bit audio doble buffer : samples and audio data
 type Buffer struct {
 	samples []Sample // sample data u16 format
-	filter  Filter   // audio sample filter
 	data    []byte   // data buffer. Format : SDL AUDIO_U16LSB
+	filter  Filter   // audio sample filter
 }
 
 // NewBuffer creates a new buffer of Freq and FPS

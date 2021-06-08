@@ -23,28 +23,28 @@ const (
 	_KempstonButton3 = byte(0x40)
 )
 
-// Joystick emulation
+// Joystick Kempston emulation
 type Joystick struct {
-	id       byte // ID
-	model    byte // Joystick model
-	kempston byte // Kempston state
+	id    byte // ID
+	model byte // Joystick model
+	state byte // Kempston state
 }
 
-// NewJoystick creates the spectrum joystick
+// NewJoystick creates a new Kempston Joystick
 func NewJoystick() *Joystick {
 	joy := new(Joystick)
 	joy.model = JoystickKempston
 	return joy
 }
 
-// GetKempston gets kempston status
-func (joy *Joystick) GetKempston() byte { return joy.kempston }
+// State gets kempston status
+func (joy *Joystick) State() byte { return joy.state }
 
 // Init initializes the device
 func (joy *Joystick) Init() { joy.Reset() }
 
 // Reset resets the device
-func (joy *Joystick) Reset() { joy.kempston = 0x00 }
+func (joy *Joystick) Reset() { joy.state = 0x00 }
 
 // ID returns the joystick ID
 func (joy *Joystick) ID() byte { return joy.id }
@@ -53,21 +53,21 @@ func (joy *Joystick) ID() byte { return joy.id }
 func (joy *Joystick) SetAxis(axis byte, value byte) {
 	if axis == 0 { // right / left
 		if value == 0 {
-			joy.kempston &= ^_KempstonRight
-			joy.kempston &= ^_KempstonLeft
+			joy.state &^= _KempstonRight
+			joy.state &^= _KempstonLeft
 		} else if value < 128 {
-			joy.kempston |= _KempstonRight
+			joy.state |= _KempstonRight
 		} else {
-			joy.kempston |= _KempstonLeft
+			joy.state |= _KempstonLeft
 		}
 	} else if axis == 1 { // down / up
 		if value == 0 {
-			joy.kempston &= ^_KempstonDown
-			joy.kempston &= ^_KempstonUp
+			joy.state &^= _KempstonDown
+			joy.state &^= _KempstonUp
 		} else if value < 128 {
-			joy.kempston |= _KempstonDown
+			joy.state |= _KempstonDown
 		} else {
-			joy.kempston |= _KempstonUp
+			joy.state |= _KempstonUp
 		}
 	}
 }
@@ -77,21 +77,21 @@ func (joy *Joystick) SetButton(button byte, state byte) {
 	switch button {
 	case 0:
 		if state > 0 {
-			joy.kempston |= _KempstonButton1
+			joy.state |= _KempstonButton1
 		} else {
-			joy.kempston &= ^_KempstonButton1
+			joy.state &^= _KempstonButton1
 		}
 	case 1:
 		if state > 0 {
-			joy.kempston |= _KempstonButton2
+			joy.state |= _KempstonButton2
 		} else {
-			joy.kempston &= ^_KempstonButton2
+			joy.state &^= _KempstonButton2
 		}
 	case 2:
 		if state > 0 {
-			joy.kempston |= _KempstonButton3
+			joy.state |= _KempstonButton3
 		} else {
-			joy.kempston &= ^_KempstonButton3
+			joy.state &^= _KempstonButton3
 		}
 	}
 }

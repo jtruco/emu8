@@ -50,7 +50,7 @@ func (keyboard *Keyboard) GetState(scan byte) byte {
 	var result byte = 0xff
 	mask := byte(1)
 	for row := 0; row < 8; row++ {
-		if (scan & mask) != 0 { // scan row
+		if (scan & mask) != 0 { // scan rows
 			result &= keyboard.rowstates[row]
 		}
 		mask <<= 1

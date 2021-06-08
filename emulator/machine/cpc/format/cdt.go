@@ -9,7 +9,8 @@ import (
 // CPC CDT tape format
 // -----------------------------------------------------------------------------
 
-const CDT = "cdt" // CDT format extension
+// CDT format extension
+const CDT = "cdt"
 
 // NewCdt creates a new CDT tape
 func NewCdt() tape.Tape {

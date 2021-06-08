@@ -22,6 +22,7 @@ type Emulator struct {
 	running  bool                   // Indicates emulation is running
 	async    bool                   // Async emulation goroutine
 	wg       sync.WaitGroup         // Sync control
+	tstates  int                    // Tstates per frame
 	duration time.Duration          // Frame duration
 	sleep    time.Duration          // Sleep duration
 	current  time.Time              // Current time
@@ -73,7 +74,7 @@ func (emulator *Emulator) IsRunning() bool { return emulator.running }
 // IsAsync async emulation is active
 func (emulator *Emulator) IsAsync() bool { return emulator.async }
 
-// IsAsync emulation loop is active
+// SetAsync sets async emulation
 func (emulator *Emulator) SetAsync(async bool) {
 	if emulator.running {
 		emulator.Stop()
@@ -84,6 +85,7 @@ func (emulator *Emulator) SetAsync(async bool) {
 // Init the emulation
 func (emulator *Emulator) Init() {
 	emulator.machine.Init()
+	emulator.tstates = emulator.machine.Config().TStates
 	emulator.duration = emulator.machine.Config().Duration
 }
 
@@ -179,21 +181,16 @@ func (emulator *Emulator) emulationLoop() {
 
 // emulateFrame emulates the frame
 func (emulator *Emulator) emulateFrame() {
-	machine := emulator.machine
-	clock := machine.Clock()
-	config := machine.Config()
+	clock := emulator.machine.Clock()
 
-	// pre-frame actions
 	emulator.control.Scan()
+	emulator.machine.BeginFrame()
 
-	// frame emulation loop
-	machine.BeginFrame()
-	for clock.Tstates() < config.TStates {
-		machine.Emulate()
+	clock.Restart(emulator.tstates)
+	for clock.Tstates() < emulator.tstates {
+		emulator.machine.Emulate()
 	}
-	machine.EndFrame()
 
-	// post-frame actions
+	emulator.machine.EndFrame()
 	emulator.control.Refresh()
-	clock.Restart(config.TStates)
 }

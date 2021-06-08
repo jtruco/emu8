@@ -55,18 +55,17 @@ func New(model int) machine.Machine {
 	spectrum.config.SetTimings(zxTStates, zxFPS)
 	// memory mapping
 	if spectrum.config.Model == ZXSpectrum16K {
-		spectrum.memory = memory.New(memory.Size32K, 2)
+		spectrum.memory = memory.New(2)
 		spectrum.memory.SetMap(0, memory.NewROM(0x0000, memory.Size16K))
 		spectrum.memory.SetMap(1, memory.NewRAM(0x4000, memory.Size16K))
 	} else {
-		spectrum.memory = memory.New(memory.Size64K, 4)
+		spectrum.memory = memory.New(4)
 		spectrum.memory.SetMap(0, memory.NewROM(0x0000, memory.Size16K))
 		spectrum.memory.SetMap(1, memory.NewRAM(0x4000, memory.Size16K))
 		spectrum.memory.SetMap(2, memory.NewRAM(0x8000, memory.Size16K))
 		spectrum.memory.SetMap(3, memory.NewRAM(0xC000, memory.Size16K))
 	}
-	mapper := memory.NewMaskMapper(14)
-	spectrum.memory.SetMapper(mapper)
+	spectrum.memory.SetMapper(memory.NewMaskMapper(14))
 	// build device components
 	spectrum.clock = device.NewClock()
 	spectrum.ula = NewULA(spectrum)
@@ -74,7 +73,7 @@ func New(model int) machine.Machine {
 	spectrum.cpu.OnIntAck = spectrum.onInterruptAck
 	spectrum.tv = NewTVVideo(spectrum)
 	spectrum.beeper = audio.NewBeeper(audio.NewConfig(zxFPS, zxTStates))
-	spectrum.beeper.SetMap(beeperMap)
+	spectrum.beeper.SetMap(zxBeeperMap)
 	spectrum.keyboard = NewKeyboard()
 	spectrum.tape = tape.New(spectrum.clock)
 	spectrum.joystick = NewJoystick()
@@ -176,11 +175,11 @@ func (spectrum *Spectrum) BeginFrame() {
 // Emulate one machine step
 func (spectrum *Spectrum) Emulate() {
 	// Tape emulation
-	if spectrum.tape.IsPlaying() {
-		spectrum.tape.Playback()
-	}
-	// Exetues a CPU instruction
+	spectrum.tape.Playback()
+
+	// Executes a CPU instruction
 	spectrum.cpu.Execute()
+
 	// Maskable interrupt request length
 	if spectrum.cpu.IntRq && spectrum.clock.Tstates() >= zxIntTstates {
 		spectrum.cpu.InterruptRequest(false)
@@ -188,9 +187,7 @@ func (spectrum *Spectrum) Emulate() {
 }
 
 // EndFrame end emulation frame tasks
-func (spectrum *Spectrum) EndFrame() {
-	// nothing to do
-}
+func (spectrum *Spectrum) EndFrame() {} // nothing to do
 
 // onInterruptAck
 func (spectrum *Spectrum) onInterruptAck() bool {
@@ -215,21 +212,11 @@ func (spectrum *Spectrum) LoadState(state machine.State) {
 	}
 }
 
-// SaveState loads a ZX Spectrum snapshot
-func (spectrum *Spectrum) SaveState() machine.State {
-	return machine.State{
-		Format: format.SNA,
-		Data:   spectrum.saveSnapshot().SaveSNA()}
-}
-
 func (spectrum *Spectrum) loadSnapshot(snap *format.Snapshot) {
-	// CPU
-	spectrum.cpu.State.Copy(&snap.State)
-	// TStates
-	spectrum.clock.SetTstates(snap.Tstates)
-	// Border
-	spectrum.tv.SetBorder(snap.Border)
-	// Memory
+	spectrum.cpu.State.Copy(&snap.State)    // CPU
+	spectrum.clock.SetTstates(snap.Tstates) // TStates
+	spectrum.tv.SetBorder(snap.Border)      // Border
+	// Memory banks (16k, 48k)
 	if spectrum.config.Model == ZXSpectrum16K {
 		spectrum.memory.LoadRAM(0x4000, snap.Memory[0:0x4000])
 	} else {
@@ -237,20 +224,23 @@ func (spectrum *Spectrum) loadSnapshot(snap *format.Snapshot) {
 	}
 }
 
-// SaveState save ZX Spectrum state
+// SaveState loads a ZX Spectrum snapshot
+func (spectrum *Spectrum) SaveState() machine.State {
+	return machine.State{
+		Format: format.SNA,
+		Data:   spectrum.saveSnapshot().SaveSNA()}
+}
+
 func (spectrum *Spectrum) saveSnapshot() *format.Snapshot {
 	var snap = new(format.Snapshot)
-	// CPU
-	snap.State.Copy(&spectrum.cpu.State)
-	// Clock
-	snap.Tstates = spectrum.clock.Tstates()
-	// Border
-	snap.Border = spectrum.tv.border
+	snap.State.Copy(&spectrum.cpu.State)    // CPU
+	snap.Tstates = spectrum.clock.Tstates() // Clock
+	snap.Border = spectrum.tv.border        // Border
 	// Memory banks (16k, 48k)
-	copy(snap.Memory[0x0000:], spectrum.memory.Bank(1).Data())
+	spectrum.memory.Bank(1).Save(snap.Memory[0x0000:])
 	if spectrum.config.Model == ZXSpectrum48K {
-		copy(snap.Memory[0x4000:], spectrum.memory.Bank(2).Data())
-		copy(snap.Memory[0x8000:], spectrum.memory.Bank(3).Data())
+		spectrum.memory.Bank(2).Save(snap.Memory[0x4000:])
+		spectrum.memory.Bank(3).Save(snap.Memory[0x8000:])
 	}
 	return snap
 }

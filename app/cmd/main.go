@@ -13,7 +13,7 @@ func main() {
 	// initialize emulator
 	emu, err := emulator.GetDefault()
 	if err != nil {
-		log.Fatal("App : Could not initialize emulator")
+		log.Fatal("App : Could not initialize emulator", err.Error())
 	}
 	log.Println("App : Emulator for machine:", emu.Machine().Config().Name)
 

@@ -63,7 +63,7 @@ func New(model int) machine.Machine {
 	cpc.config.Model = model
 	cpc.config.SetTimings(cpcTStates, cpcFPS)
 	// memory map
-	cpc.memory = memory.New(memory.Size64K, 6)
+	cpc.memory = memory.New(6)
 	cpc.memory.SetMap(0, memory.NewROM(0x0000, memory.Size16K)) // Lower ROM Bios
 	cpc.memory.SetMap(1, memory.NewRAM(0x0000, memory.Size16K))
 	cpc.memory.SetMap(2, memory.NewRAM(0x4000, memory.Size16K))
@@ -260,14 +260,6 @@ func (cpc *AmstradCPC) LoadState(state machine.State) {
 	}
 }
 
-// SaveState loads a ZX Spectrum snapshot
-func (cpc *AmstradCPC) SaveState() machine.State {
-	return machine.State{
-		Format: format.SNA,
-		Data:   cpc.saveSnapshot().SaveSNA()}
-}
-
-// loadState loads the Amstrad CPC snapshot
 func (cpc *AmstradCPC) loadSnapshot(snap *format.Snapshot) {
 	// CPU
 	cpc.cpu.State.Copy(&snap.State)
@@ -292,16 +284,22 @@ func (cpc *AmstradCPC) loadSnapshot(snap *format.Snapshot) {
 	}
 }
 
-// saveState save Amstrad CPC state
+// SaveState loads a ZX Spectrum snapshot
+func (cpc *AmstradCPC) SaveState() machine.State {
+	return machine.State{
+		Format: format.SNA,
+		Data:   cpc.saveSnapshot().SaveSNA()}
+}
+
 func (cpc *AmstradCPC) saveSnapshot() *format.Snapshot {
 	var snap = new(format.Snapshot)
 	// CPU
 	snap.State.Copy(&cpc.cpu.State)
 	// Memory banks (64k)
-	copy(snap.Memory[0x0000:], cpc.memory.Bank(1).Data())
-	copy(snap.Memory[0x4000:], cpc.memory.Bank(2).Data())
-	copy(snap.Memory[0x8000:], cpc.memory.Bank(3).Data())
-	copy(snap.Memory[0xC000:], cpc.memory.Bank(5).Data())
+	cpc.memory.Bank(1).Save(snap.Memory[0x0000:])
+	cpc.memory.Bank(2).Save(snap.Memory[0x4000:])
+	cpc.memory.Bank(3).Save(snap.Memory[0x8000:])
+	cpc.memory.Bank(5).Save(snap.Memory[0xC000:])
 	// GateArray
 	snap.GaSelectedPen = cpc.gatearray.Pen()
 	palette := cpc.gatearray.Palette()

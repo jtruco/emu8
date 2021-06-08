@@ -7,7 +7,7 @@ package audio
 // Filter is an audio filter
 type Filter interface {
 	Add(Sample) Sample // Add adds new sample and returns the current filtered sample.
-	Value() Sample     // Value returns the current filterd sample value
+	Value() Sample     // Value returns the current filtered sample value
 	Reset()            // Reset resets the filter data
 }
 
@@ -48,7 +48,7 @@ func (f *SmaFilter) Reset() {
 	f.i = 0
 }
 
-// Value returns the current filterd value
+// Value returns the current filtered value
 func (f *SmaFilter) Value() Sample { return f.value }
 
 // Add adds new value and returns the current filtered value.

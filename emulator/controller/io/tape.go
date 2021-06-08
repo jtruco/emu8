@@ -3,6 +3,7 @@ package io
 import (
 	"log"
 
+	"github.com/jtruco/emu8/emulator/controller/vfs"
 	"github.com/jtruco/emu8/emulator/device/io/tape"
 )
 
@@ -34,10 +35,12 @@ func (controller *TapeController) SetDrive(drive *tape.Drive) { controller.drive
 
 // Tape factory
 
+// RegisterTape registers a tape format and builder
 func (controller *TapeController) RegisterTape(format string, builder tape.Builder) {
 	controller.tapes[format] = builder
 }
 
+// CreateTape builds a tape from its format string
 func (controller *TapeController) CreateTape(format string) tape.Tape {
 	buildTape := controller.tapes[format]
 	if buildTape != nil {
@@ -47,6 +50,22 @@ func (controller *TapeController) CreateTape(format string) tape.Tape {
 }
 
 // Tape control
+
+// Load loads the Tape from file data
+func (controller *TapeController) Load(info *vfs.FileInfo) {
+	tape := controller.CreateTape(info.Ext)
+	if tape != nil {
+		loaded := tape.Load(info.Data)
+		if loaded {
+			tape.Info().Name = info.Name
+			controller.Drive().Insert(tape)
+		} else {
+			log.Println("Emulator : Error loading tape file")
+		}
+	} else {
+		log.Println("Emulator : Not implemented tape format : ", info.Ext)
+	}
+}
 
 // TogglePlay toggle tape play state
 func (controller *TapeController) TogglePlay() {
@@ -73,9 +92,8 @@ func (controller *TapeController) controlTape() bool {
 	if controller.HasDrive() {
 		if controller.Drive().HasTape() {
 			return true
-		} else {
-			log.Println("Emulator : There is no tape loaded !")
 		}
+		log.Println("Emulator : There is no tape loaded !")
 	} else {
 		log.Println("Emulator : Machine has no tape drive !")
 	}

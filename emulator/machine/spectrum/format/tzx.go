@@ -10,7 +10,8 @@ import (
 // TZX tape format
 // -----------------------------------------------------------------------------
 
-const TZX = "tzx" // TZX format extension
+// TZX format extension
+const TZX = "tzx"
 
 // TZX constants
 const (

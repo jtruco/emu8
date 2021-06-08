@@ -6,6 +6,7 @@ package device
 
 // Clock is the CPU clock
 type Clock interface {
+	Device                 // Is a device
 	Add(value int)         // Add increases clock tstates by value
 	Inc()                  // Inc increases clock tstates by one
 	Restart(tstates int)   // Restart restarts clock to tstates

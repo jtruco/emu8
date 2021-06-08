@@ -36,6 +36,11 @@ func (bank *Bank) Load(address uint16, data []byte) {
 	copy(bank.data[address:], data[:])
 }
 
+// Save saves bank data to slice at address
+func (bank *Bank) Save(data []byte) {
+	copy(data[:], bank.data[:])
+}
+
 // Device interface
 
 // Init initializes bank data

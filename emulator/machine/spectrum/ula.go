@@ -21,7 +21,7 @@ const (
 	amplAyTone = 24 << amplRate
 )
 
-var beeperMap = []uint16{0, amplTape, amplBeeper, (amplBeeper + amplTape)}
+var zxBeeperMap = []uint16{0, amplTape, amplBeeper, (amplBeeper + amplTape)}
 
 // Contention table
 
@@ -89,7 +89,7 @@ func (ula *ULA) Reset() {
 func (ula *ULA) Read(address uint16) byte {
 	var result byte = 0xff
 	ula.preIO(address)
-	ula.postIO(address)
+	defer ula.postIO(address)
 	if (address & 0x0001) == 0x00 { // ULA selected
 		result = ula.lastRead
 		// Read keyboard state
@@ -100,8 +100,8 @@ func (ula *ULA) Read(address uint16) byte {
 			result &^= 0x40
 		}
 	}
-	if (address & 0x00e0) == 0 { // Kempston
-		result &= ula.spectrum.joystick.GetKempston()
+	if (address & 0x00e0) == 0 { // Kempston selected
+		result &= ula.spectrum.joystick.State()
 	}
 	return result
 }
@@ -109,18 +109,15 @@ func (ula *ULA) Read(address uint16) byte {
 // Write bus at address
 func (ula *ULA) Write(address uint16, data byte) {
 	ula.preIO(address)
+	defer ula.postIO(address)
 	if (address & 0x0001) == 0 { // ULA selected
 		// border
 		ula.spectrum.tv.SetBorder(data & 0x07)
 		// beeper & tape output : EAR(bit 4) and MIC(bit 3) output
 		tstate := ula.spectrum.clock.Tstates()
 		beeper := int(data&0x18) >> 3
-		if ula.spectrum.tape.IsPlaying() {
-			if ula.spectrum.tape.EarHigh() {
-				beeper |= 1
-			} else {
-				beeper &^= 1
-			}
+		if ula.spectrum.tape.IsPlaying() && ula.spectrum.tape.EarHigh() {
+			beeper &^= 0x1 // Loud tape sound
 		}
 		ula.spectrum.beeper.SetLevel(tstate, beeper)
 		// default read
@@ -129,7 +126,6 @@ func (ula *ULA) Write(address uint16, data byte) {
 			ula.lastRead ^= 0x40
 		}
 	}
-	ula.postIO(address)
 }
 
 // preIO contention

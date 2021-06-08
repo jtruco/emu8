@@ -11,7 +11,7 @@ import (
 
 var models = map[string]*Model{} // Registered models by ID
 
-// Description machine model description
+// Model contains a machine model description
 type Model struct {
 	Name  string         // Machine model
 	Ids   []string       // Model Ids

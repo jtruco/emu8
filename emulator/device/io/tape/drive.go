@@ -71,7 +71,7 @@ func (drive *Drive) Play() {
 		return
 	}
 	drive.control.Playing = true
-	log.Println("Tape : Tape playback started")
+	log.Println("Tape : Playback started")
 }
 
 // Stop stops tape playback
@@ -80,7 +80,7 @@ func (drive *Drive) Stop() {
 		return
 	}
 	drive.control.Playing = false
-	log.Println("Tape : Stop tape playback.")
+	log.Println("Tape : Playback stopped")
 }
 
 // Rewind rewinds the tape to start
@@ -96,13 +96,12 @@ func (drive *Drive) Playback() {
 	}
 	// control state timeout
 	ellapse := int(drive.clock.Total() - drive.control.Tstate)
-	drive.control.Tstate = drive.clock.Total()
-	drive.control.Timeout -= ellapse
-	if drive.control.Timeout > 0 {
+	if drive.control.Timeout > ellapse {
 		return
 	}
-	drive.control.Timeout = 0
+	drive.control.Tstate = drive.clock.Total()
 	// next state
+	drive.control.Timeout = 0
 	for drive.IsPlaying() && drive.control.Timeout == 0 {
 		drive.tape.Play(&drive.control)
 	}
@@ -112,7 +111,7 @@ func (drive *Drive) Playback() {
 			log.Println("Tape : End of tape")
 			drive.Rewind()
 		} else {
-			log.Println("Tape : Playback stopped")
+			log.Println("Tape : End of playback")
 		}
 	}
 }

@@ -21,13 +21,13 @@ import (
 
 // Controller is the emulator controller
 type Controller struct {
-	machine  machine.Machine        // The controlled machine
+	machine  machine.Machine        // The machine
 	file     *vfs.FileManager       // The file manager
 	video    *ui.VideoController    // The video controller
 	audio    *ui.AudioController    // The audio controller
-	keyboard *io.KeyboardController // The keyboard controlller
-	joystick *io.JoystickController // The joystick controlller
-	tape     *io.TapeController     // The tape controlller
+	keyboard *io.KeyboardController // The keyboard controller
+	joystick *io.JoystickController // The joystick controller
+	tape     *io.TapeController     // The tape controller
 }
 
 // New returns a new emulator controller.
@@ -71,7 +71,7 @@ func (controller *Controller) BindTapeDrive(drive *tape.Drive) {
 	controller.tape.SetDrive(drive)
 }
 
-// RegisterSnapshot adds a snapshot format
+// LoadROM loads a ROM file
 func (controller *Controller) LoadROM(romname string) ([]byte, error) {
 	return controller.file.LoadROM(romname)
 }
@@ -154,24 +154,13 @@ func (controller *Controller) LoadFile(filename string) {
 		controller.machine.LoadState(
 			machine.State{Format: info.Ext, Data: info.Data})
 	case vfs.FormatTape:
-		tape := controller.tape.CreateTape(info.Ext)
-		if tape != nil {
-			loaded := tape.Load(info.Data)
-			if loaded {
-				tape.Info().Name = info.Name
-				controller.tape.Drive().Insert(tape)
-			} else {
-				log.Println("Emulator : Error loading tape file")
-			}
-		} else {
-			log.Println("Emulator : Not implemented tape format : ", info.Ext)
-		}
+		controller.tape.Load(info)
 	default:
 		log.Println("Emulator : Unknown format:", info.Format)
 	}
 }
 
-// LoadFile loads file into machine
+// TakeSnapshot saves a snapshot file from machine state
 func (controller *Controller) TakeSnapshot() {
 	state := controller.machine.SaveState()
 	name := controller.file.NewName("snap", state.Format)

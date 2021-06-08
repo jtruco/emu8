@@ -28,15 +28,13 @@ const (
 
 // Memory is a memory structure of banks and an address mapper
 type Memory struct {
-	size   int        // Memory address size
 	banks  []*BankMap // Memory banks structure
 	mapper Mapper     // Memory address mapper
 }
 
 // New creates a new memory device with a size and a number banks
-func New(size int, banks int) *Memory {
+func New(banks int) *Memory {
 	memory := new(Memory)
-	memory.size = size
 	memory.banks = make([]*BankMap, banks)
 	memory.SetMapper(NewDefaultMapper())
 	return memory
@@ -73,7 +71,7 @@ func (memory *Memory) Read(address uint16) byte {
 
 // Write writes a byte to the memory
 func (memory *Memory) Write(address uint16, data byte) {
-	bank, bankAddr := memory.mapper.SelectBankWrite(address)
+	bank, bankAddr := memory.mapper.SelectBankRW(address)
 	if bank != nil {
 		bank.bus.Write(bankAddr, data)
 	}
@@ -115,7 +113,7 @@ func (memory *Memory) LoadRAM(address uint16, data []byte) {
 	offset, last := 0, 0
 	for offset < length {
 		bankaddr := address + uint16(offset)
-		bmap, rel := memory.mapper.SelectBankWrite(bankaddr)
+		bmap, rel := memory.mapper.SelectBankRW(bankaddr)
 		last = offset + bmap.bank.Size()
 		bmap.bank.Load(rel, data[offset:last])
 		offset = last

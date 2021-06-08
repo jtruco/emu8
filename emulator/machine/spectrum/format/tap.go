@@ -10,7 +10,8 @@ import (
 // TAP tape format
 // -----------------------------------------------------------------------------
 
-const TAP = "tap" // TAP format extension
+// TAP format extension
+const TAP = "tap"
 
 // TAP blocks types
 const (
@@ -114,7 +115,7 @@ func (tap *Tap) Play(control *tape.Control) {
 			tap.pilotPulses = tapeDataPulses
 		}
 		control.Ear = tape.LevelLow
-		control.Timeout = tapeTimingPilot
+		control.Timeout = 0
 		control.State = tapeStatePilot
 		// log tape block
 		tapblock := control.Block.(*TapBlock)

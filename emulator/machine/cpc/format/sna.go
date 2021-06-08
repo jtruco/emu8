@@ -6,7 +6,8 @@ import "log"
 // CPC SNA format
 // -----------------------------------------------------------------------------
 
-const SNA = "sna" // SNA format extension
+// SNA format extension
+const SNA = "sna"
 
 const (
 	_SNAIdString = "MV - SNA"

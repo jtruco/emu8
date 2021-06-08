@@ -6,9 +6,9 @@ package memory
 
 // Mapper memory bank mapper interface
 type Mapper interface {
-	Init(memory *Memory)                               // Init inits the mapper
-	SelectBank(address uint16) (*BankMap, uint16)      // SelectBank for Read access
-	SelectBankWrite(address uint16) (*BankMap, uint16) // SelectBank for Read/Write access
+	Init(memory *Memory)                            // Init inits the mapper
+	SelectBank(address uint16) (*BankMap, uint16)   // SelectBank for Read access
+	SelectBankRW(address uint16) (*BankMap, uint16) // SelectBank for Read/Write access
 }
 
 // -----------------------------------------------------------------------------
@@ -33,8 +33,8 @@ func (mapper *DefaultMapper) SelectBank(address uint16) (*BankMap, uint16) {
 	return mapper.selectInternal(address, false)
 }
 
-// SelectBankWrite selects the first active bank mapped at address for write
-func (mapper *DefaultMapper) SelectBankWrite(address uint16) (*BankMap, uint16) {
+// SelectBankRW selects the first active bank mapped at address for write
+func (mapper *DefaultMapper) SelectBankRW(address uint16) (*BankMap, uint16) {
 	return mapper.selectInternal(address, true)
 }
 
@@ -78,7 +78,7 @@ func (mapper *MaskMapper) SelectBank(address uint16) (*BankMap, uint16) {
 	return nil, 0
 }
 
-// SelectBankWrite selects write bank mapped at address
-func (mapper *MaskMapper) SelectBankWrite(address uint16) (*BankMap, uint16) {
+// SelectBankRW selects write bank mapped at address
+func (mapper *MaskMapper) SelectBankRW(address uint16) (*BankMap, uint16) {
 	return mapper.SelectBank(address)
 }

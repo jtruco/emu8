@@ -1,4 +1,4 @@
-// package sdl is the libSDLv2 user interface implementation
+// Package sdl is the libSDLv2 user interface implementation
 package sdl
 
 import (

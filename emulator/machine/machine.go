@@ -60,7 +60,7 @@ func (config *Config) SetTimings(tstates, fps int) {
 	config.Duration = time.Duration(1e9 / fps)
 }
 
-// Sate contains the serialized machine state
+// State contains the serialized machine state
 type State struct {
 	Format string // Format extensión
 	Data   []byte // Serialized data

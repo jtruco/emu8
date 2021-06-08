@@ -5,7 +5,8 @@ package tape
 // Tape components
 // -----------------------------------------------------------------------------
 
-type Builder = func() Tape // Builder is a Tape constructor
+// Builder is a Tape constructor
+type Builder = func() Tape
 
 // Tape represents a tape file
 type Tape interface {
