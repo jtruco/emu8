@@ -6,7 +6,7 @@ const (
 )
 
 // -----------------------------------------------------------------------------
-// Composite
+// Composite - Composite bus device
 // -----------------------------------------------------------------------------
 
 // Composite is a mapped composited bus
@@ -51,17 +51,19 @@ func (composite *Composite) SetMap(index int, m *Map) { composite.maps[index] = 
 
 // Init initializes the memory
 func (composite *Composite) Init() {
-	for _, m := range composite.Maps() {
+	for _, m := range composite.maps {
 		if m != nil {
-			m.Init()
+			m.device.Init()
+			m.active = m.activeInit
 		}
 	}
 }
 
 // Reset resets the memory data at initial state
 func (composite *Composite) Reset() {
-	for _, m := range composite.Maps() {
-		m.Reset()
+	for _, m := range composite.maps {
+		m.device.Reset()
+		m.active = m.activeInit
 	}
 }
 
@@ -71,7 +73,14 @@ func (composite *Composite) Reset() {
 func (composite *Composite) Read(address uint16) byte {
 	m, maddr := composite.mapper.Select(address)
 	if m != nil {
-		return m.Device().Read(maddr)
+		if m.OnAccess != nil {
+			m.OnAccess(EventRead, maddr)
+		}
+		data := m.device.Read(maddr)
+		if m.OnPostAccess != nil {
+			m.OnPostAccess(EventAfterRead, maddr)
+		}
+		return data
 	}
 	return _DefaultData
 }
@@ -80,7 +89,13 @@ func (composite *Composite) Read(address uint16) byte {
 func (composite *Composite) Write(address uint16, data byte) {
 	m, maddr := composite.mapper.SelectWrite(address)
 	if m != nil {
-		m.Device().Write(maddr, data)
+		if m.OnAccess != nil {
+			m.OnAccess(EventWrite, maddr)
+		}
+		m.device.Write(maddr, data)
+		if m.OnPostAccess != nil {
+			m.OnPostAccess(EventAfterWrite, maddr)
+		}
 	}
 	// default : no write
 }

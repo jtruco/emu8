@@ -43,9 +43,9 @@ func (mapper *DefaultMapper) SelectWrite(address uint16) (*Map, uint16) {
 // selectInternal internal map selection
 func (mapper *DefaultMapper) selectInternal(address uint16, write bool) (*Map, uint16) {
 	for _, m := range mapper.maps {
-		if m != nil && m.active && (!write || m.readonly != write) {
-			if address >= m.address && address <= m.endaddress {
-				return m, address - m.address
+		if m != nil && m.active && (!write || m.readOnly != write) {
+			if address >= m.startAddress && address <= m.endAddress {
+				return m, address - m.startAddress
 			}
 		}
 	}
