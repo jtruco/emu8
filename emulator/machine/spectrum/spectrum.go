@@ -6,6 +6,7 @@ import (
 
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
+	"github.com/jtruco/emu8/emulator/device/bus"
 	"github.com/jtruco/emu8/emulator/device/cpu"
 	"github.com/jtruco/emu8/emulator/device/cpu/z80"
 	"github.com/jtruco/emu8/emulator/device/io/tape"
@@ -65,7 +66,7 @@ func New(model int) machine.Machine {
 		spectrum.memory.SetMap(2, memory.NewRAM(0x8000, memory.Size16K))
 		spectrum.memory.SetMap(3, memory.NewRAM(0xC000, memory.Size16K))
 	}
-	spectrum.memory.SetMapper(memory.NewMaskMapper(14))
+	spectrum.memory.SetMapper(bus.NewMaskMapper(14))
 	// build device components
 	spectrum.clock = device.NewClock()
 	spectrum.ula = NewULA(spectrum)

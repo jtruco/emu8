@@ -56,10 +56,10 @@ func (ga *GateArray) Config() byte {
 	var data byte = 0x80
 	// mode / rom selection / interrupts
 	data |= (ga.mode & 0x03)
-	if !ga.cpc.lowerRom.Active() {
+	if !ga.cpc.memory.Map(cpcLowerROM).Active() {
 		data |= 0x04
 	}
-	if !ga.cpc.upperRom.Active() {
+	if !ga.cpc.memory.Map(cpcUpperROM).Active() {
 		data |= 0x08
 	}
 	if ga.cpc.cpu.IntRq {
@@ -113,8 +113,8 @@ func (ga *GateArray) Write(data byte) {
 		// mode
 		ga.SetMode(data & 0x03)
 		// rom selection
-		ga.cpc.lowerRom.SetActive(data&0x04 == 0)
-		ga.cpc.upperRom.SetActive(data&0x08 == 0)
+		ga.cpc.memory.Map(cpcLowerROM).SetActive(data&0x04 == 0)
+		ga.cpc.memory.Map(cpcUpperROM).SetActive(data&0x08 == 0)
 		// interrupts
 		if (data & 0x10) != 0 {
 			// clear pending interrupts

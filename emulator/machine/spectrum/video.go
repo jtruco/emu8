@@ -2,6 +2,7 @@ package spectrum
 
 import (
 	"github.com/jtruco/emu8/emulator/device"
+	"github.com/jtruco/emu8/emulator/device/bus"
 	"github.com/jtruco/emu8/emulator/device/video"
 )
 
@@ -82,7 +83,7 @@ func NewTVVideo(spectrum *Spectrum) *TvVideo {
 
 // onVideoPostAccess on write in video memory
 func (tv *TvVideo) onVideoPostAccess(code int, address uint16) {
-	if code == device.EventBusAfterWrite {
+	if code == bus.EventAfterWrite {
 		if tv.accurate && address < tvVideoSize {
 			tv.DoScanlines()
 		}

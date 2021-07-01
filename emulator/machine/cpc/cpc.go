@@ -35,6 +35,8 @@ const (
 	cpcOsRomNameFR  = "cpc464_os_fr.rom"
 	cpcBasicRomName = "cpc464_basic.rom"
 	cpcJumpers      = 0x1e
+	cpcLowerROM     = 0
+	cpcUpperROM     = 4
 )
 
 // AmstradCPC the Amstrad CPC 464
@@ -45,8 +47,6 @@ type AmstradCPC struct {
 	clock      *device.ClockDevice // The system clock
 	cpu        *z80.Z80            // The Zilog Z80A CPU
 	memory     *memory.Memory      // The machine memory
-	lowerRom   *memory.BankMap     // The lower rom
-	upperRom   *memory.BankMap     // The upper rom
 	gatearray  *GateArray          // The Gate-Array
 	crtc       *video.MC6845       // The Cathode Ray Tube Controller
 	psg        *audio.AY38910      // The Programmable Sound Generator
@@ -70,8 +70,6 @@ func New(model int) machine.Machine {
 	cpc.memory.SetMap(3, memory.NewRAM(0x8000, memory.Size16K))
 	cpc.memory.SetMap(4, memory.NewROM(0xC000, memory.Size16K)) // Upper ROM Basic
 	cpc.memory.SetMap(5, memory.NewRAM(0xC000, memory.Size16K))
-	cpc.lowerRom = cpc.memory.Map(0)
-	cpc.upperRom = cpc.memory.Map(4)
 	// devices
 	cpc.clock = device.NewClock()
 	cpc.cpu = z80.New(cpc.clock, cpc.memory, cpc)
@@ -129,13 +127,13 @@ func (cpc *AmstradCPC) initAmstrad() {
 	if err != nil {
 		return
 	}
-	cpc.lowerRom.Bank().Load(0, data[:0x4000]) // lower rom
+	cpc.memory.Bank(cpcLowerROM).Load(0, data[:0x4000]) // lower rom
 	// load upper rom (basic)
 	data, err = cpc.control.LoadROM(cpcBasicRomName)
 	if err != nil {
 		return
 	}
-	cpc.upperRom.Bank().Load(0, data[:0x4000]) // upper rom
+	cpc.memory.Bank(cpcUpperROM).Load(0, data[:0x4000]) // upper rom
 	// devices
 	cpc.ppi.jumpers = cpcJumpers
 }

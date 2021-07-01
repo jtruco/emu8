@@ -1,6 +1,6 @@
 package memory
 
-import "github.com/jtruco/emu8/emulator/device"
+import "github.com/jtruco/emu8/emulator/device/bus"
 
 // -----------------------------------------------------------------------------
 // Memory bank device
@@ -8,14 +8,14 @@ import "github.com/jtruco/emu8/emulator/device"
 
 // Bank is a memory bank
 type Bank struct {
-	data         []byte             // The bank bytes
-	readonly     bool               // Is a r/w or ro bank
-	OnAccess     device.BusCallback // On bus access callback
-	OnPostAccess device.BusCallback // On bus post access callback
+	data         []byte       // The bank bytes
+	readonly     bool         // Is a r/w or ro bank
+	OnAccess     bus.Callback // On bus access callback
+	OnPostAccess bus.Callback // On bus post access callback
 }
 
 // NewBank creates a new memory bank
-func NewBank(size int, readonly bool) *Bank {
+func NewBank(size uint16, readonly bool) *Bank {
 	bank := new(Bank)
 	bank.data = make([]byte, size)
 	bank.readonly = readonly
@@ -29,7 +29,7 @@ func (bank *Bank) Data() []byte { return bank.data }
 func (bank *Bank) ReadOnly() bool { return bank.readonly }
 
 // Size return bank size
-func (bank *Bank) Size() int { return len(bank.data) }
+func (bank *Bank) Size() uint16 { return uint16(len(bank.data)) }
 
 // Load loads data at address
 func (bank *Bank) Load(address uint16, data []byte) {
@@ -61,7 +61,7 @@ func (bank *Bank) Reset() {
 func (bank *Bank) Read(address uint16) byte {
 	// on access
 	if bank.OnAccess != nil {
-		bank.OnAccess(device.EventBusRead, address)
+		bank.OnAccess(bus.EventRead, address)
 	}
 
 	// memory read
@@ -69,7 +69,7 @@ func (bank *Bank) Read(address uint16) byte {
 
 	// on post access
 	if bank.OnPostAccess != nil {
-		bank.OnPostAccess(device.EventBusAfterRead, address)
+		bank.OnPostAccess(bus.EventAfterRead, address)
 	}
 
 	return data
@@ -79,7 +79,7 @@ func (bank *Bank) Read(address uint16) byte {
 func (bank *Bank) Write(address uint16, data byte) {
 	// on access
 	if bank.OnAccess != nil {
-		bank.OnAccess(device.EventBusWrite, address)
+		bank.OnAccess(bus.EventWrite, address)
 	}
 
 	// memory read
@@ -89,6 +89,6 @@ func (bank *Bank) Write(address uint16, data byte) {
 
 	// on post access
 	if bank.OnPostAccess != nil {
-		bank.OnPostAccess(device.EventBusAfterWrite, address)
+		bank.OnPostAccess(bus.EventAfterWrite, address)
 	}
 }

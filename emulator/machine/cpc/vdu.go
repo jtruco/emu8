@@ -61,10 +61,10 @@ func NewVduVideo(cpc *AmstradCPC) *VduVideo {
 	vdu.gatearray = cpc.gatearray
 	vdu.crtc = cpc.crtc
 	vdu.ram = make([][]byte, 4)
-	vdu.ram[0] = cpc.memory.Map(1).Bank().Data()
-	vdu.ram[1] = cpc.memory.Map(2).Bank().Data()
-	vdu.ram[2] = cpc.memory.Map(3).Bank().Data()
-	vdu.ram[3] = cpc.memory.Map(5).Bank().Data()
+	vdu.ram[0] = cpc.memory.Bank(1).Data()
+	vdu.ram[1] = cpc.memory.Bank(2).Data()
+	vdu.ram[2] = cpc.memory.Bank(3).Data()
+	vdu.ram[3] = cpc.memory.Bank(5).Data()
 	return vdu
 }
 

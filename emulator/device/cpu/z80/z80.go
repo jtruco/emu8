@@ -1,7 +1,10 @@
 // Package z80 a Zilog Z80 CPU emulator
 package z80
 
-import "github.com/jtruco/emu8/emulator/device"
+import (
+	"github.com/jtruco/emu8/emulator/device"
+	"github.com/jtruco/emu8/emulator/device/bus"
+)
 
 // -----------------------------------------------------------------------------
 // Z80 - Zilog Z80 CPU
@@ -11,13 +14,13 @@ import "github.com/jtruco/emu8/emulator/device"
 type Z80 struct {
 	State                       // Z80 State
 	clock    device.Clock       // Clock device
-	mem      device.Bus         // Memory data bus
-	io       device.Bus         // I/O data bus
+	mem      bus.Bus            // Memory data bus
+	io       bus.Bus            // I/O data bus
 	OnIntAck device.AckCallback // INT / NMI ack callback
 }
 
 // New creates a new Z80
-func New(clock device.Clock, mem, io device.Bus) *Z80 {
+func New(clock device.Clock, mem, io bus.Bus) *Z80 {
 	z80 := new(Z80)
 	z80.clock = clock
 	z80.mem = mem
@@ -32,12 +35,12 @@ func (z80 *Z80) Clock() device.Clock {
 }
 
 // Memory gets the Cpu Memory bus
-func (z80 *Z80) Memory() device.Bus {
+func (z80 *Z80) Memory() bus.Bus {
 	return z80.mem
 }
 
 // IO gets the Cpu IO bus
-func (z80 *Z80) IO() device.Bus {
+func (z80 *Z80) IO() bus.Bus {
 	return z80.io
 }
 

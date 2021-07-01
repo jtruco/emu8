@@ -1,6 +1,8 @@
 // Package memory defines memory components
 package memory
 
+import "github.com/jtruco/emu8/emulator/device/bus"
+
 // Common memory sizes
 const (
 	Size00K  = 0x0000
@@ -17,105 +19,60 @@ const (
 	Size64K  = 0x10000
 )
 
-// Defaults
-const (
-	DataDefault byte = 0
-)
+// -----------------------------------------------------------------------------
+// Memory banks mapping
+// -----------------------------------------------------------------------------
+
+// NewRAM creates a RAM bank mapping
+func NewRAM(address uint16, size uint16) *bus.Map {
+	return NewMemoryBank(address, size, true, false)
+}
+
+// NewROM creates a ROM bank mapping
+func NewROM(address uint16, size uint16) *bus.Map {
+	return NewMemoryBank(address, size, true, true)
+}
+
+// NewMemoryBank creates a new memory bank mapping
+func NewMemoryBank(address, size uint16, active, readonly bool) *bus.Map {
+	bank := NewBank(size, readonly)
+	bankmap := bus.NewMap(bank, address, size, active, readonly)
+	return bankmap
+}
 
 // -----------------------------------------------------------------------------
 // Memory device bus
 // -----------------------------------------------------------------------------
 
-// Memory is a memory structure of banks and an address mapper
+// Memory is a composite bus device of mapped banks
 type Memory struct {
-	banks  []*BankMap // Memory banks structure
-	mapper Mapper     // Memory address mapper
+	bus.Composite
 }
 
 // New creates a new memory device with a size and a number banks
 func New(banks int) *Memory {
 	memory := new(Memory)
-	memory.banks = make([]*BankMap, banks)
-	memory.SetMapper(NewDefaultMapper())
+	memory.Build(banks)
 	return memory
 }
 
-// Device interface
-
-// Init initializes the memory
-func (memory *Memory) Init() {
-	for _, b := range memory.banks {
-		if b != nil {
-			b.Init()
-		}
-	}
-}
-
-// Reset resets the memory data at initial state
-func (memory *Memory) Reset() {
-	for _, b := range memory.banks {
-		b.Reset()
-	}
-}
-
-// Bus interface
-
-// Read reads a byte from memory
-func (memory *Memory) Read(address uint16) byte {
-	bank, bankAddr := memory.mapper.SelectBank(address)
-	if bank != nil {
-		return bank.bus.Read(bankAddr)
-	}
-	return DataDefault
-}
-
-// Write writes a byte to the memory
-func (memory *Memory) Write(address uint16, data byte) {
-	bank, bankAddr := memory.mapper.SelectBankRW(address)
-	if bank != nil {
-		bank.bus.Write(bankAddr, data)
-	}
-	// default : no write
-}
-
-// Bank mapping
-
-// Banks returns Banks
-func (memory *Memory) Banks() []*BankMap { return memory.banks }
-
-// Bank returns bank mapped at index
+// Bank returns memory bank mapped at index
 func (memory *Memory) Bank(index int) *Bank {
-	return memory.Map(index).Bank()
-}
-
-// Map returns bank map at index
-func (memory *Memory) Map(index int) *BankMap {
-	return memory.banks[index]
-}
-
-// SetMap sets the bank map at index
-func (memory *Memory) SetMap(index int, bank *BankMap) {
-	memory.banks[index] = bank
-}
-
-// Mapper returns the bank mapper
-func (memory *Memory) Mapper() Mapper { return memory.mapper }
-
-// SetMapper sets the bank mapper
-func (memory *Memory) SetMapper(mapper Mapper) {
-	mapper.Init(memory)
-	memory.mapper = mapper
+	return memory.Map(index).Device().(*Bank)
 }
 
 // LoadRAM loads a data chunk of bytes into memory starting at address
 func (memory *Memory) LoadRAM(address uint16, data []byte) {
-	length := len(data)
-	offset, last := 0, 0
+	var offset, last uint
+	length := uint(len(data))
 	for offset < length {
 		bankaddr := address + uint16(offset)
-		bmap, rel := memory.mapper.SelectBankRW(bankaddr)
-		last = offset + bmap.bank.Size()
-		bmap.bank.Load(rel, data[offset:last])
+		m, rel := memory.Mapper().SelectWrite(bankaddr)
+		last = offset + uint(m.Size())
+		bank := m.Device().(*Bank)
+		if bank != nil {
+			bank.Load(rel, data[offset:last])
+		}
 		offset = last
 	}
 }
