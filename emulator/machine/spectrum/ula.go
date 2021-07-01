@@ -62,7 +62,7 @@ type ULA struct {
 func NewULA(spectrum *Spectrum) *ULA {
 	ula := new(ULA)
 	ula.spectrum = spectrum
-	spectrum.VideoMemory().OnAccess = ula.onVideoAccess
+	spectrum.memory.Map(zxVideoMemory).OnAccess = ula.onVideoAccess
 	return ula
 }
 

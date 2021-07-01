@@ -75,8 +75,8 @@ func NewTVVideo(spectrum *Spectrum) *TvVideo {
 	tv.screen = video.NewScreen(tvTotalWidth, tvTotalHeight, zxPaletteRGBA)
 	tv.screen.SetView(tvViewLeft, tvViewTop, tvViewWidth, tvViewHeight)
 	tv.clock = spectrum.clock
-	tv.srcdata = spectrum.VideoMemory().Data()
-	spectrum.VideoMemory().OnPostAccess = tv.onVideoPostAccess
+	tv.srcdata = spectrum.memory.Bank(zxVideoMemory).Data()
+	spectrum.memory.Map(zxVideoMemory).OnPostAccess = tv.onVideoPostAccess
 	tv.accurate = true
 	return tv
 }

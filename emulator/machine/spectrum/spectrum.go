@@ -27,10 +27,11 @@ const (
 
 // Default ZX Spectrum constants
 const (
-	zxFPS        = 50    // 50 Hz (50.08 Hz)
-	zxTStates    = 69888 // TStates per frame
-	zxIntTstates = 32    // ZX Spectrum 16k & 48k
-	zxRomName    = "zxspectrum.rom"
+	zxFPS         = 50    // 50 Hz (50.08 Hz)
+	zxTStates     = 69888 // TStates per frame
+	zxIntTstates  = 32    // ZX Spectrum 16k & 48k
+	zxVideoMemory = 1     // Video memory bank
+	zxRomName     = "zxspectrum.rom"
 )
 
 // Spectrum the ZX Spectrum
@@ -158,11 +159,6 @@ func (spectrum *Spectrum) InitControl(control machine.Control) {
 	control.RegisterTape(format.TAP, format.NewTap)
 	control.RegisterTape(format.TZX, format.NewTzx)
 	spectrum.control = control
-}
-
-// VideoMemory gets the video memory bank
-func (spectrum *Spectrum) VideoMemory() *memory.Bank {
-	return spectrum.memory.Bank(1)
 }
 
 // Emulation control
