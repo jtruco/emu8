@@ -41,7 +41,7 @@ func New(machine machine.Machine) *Emulator {
 
 // GetDefault returns the configured emulator
 func GetDefault() (*Emulator, error) {
-	return FromModel(config.Get().MachineModel)
+	return FromModel(config.Get().Machine.Model)
 }
 
 // FromModel returns an emulator for a machine model name

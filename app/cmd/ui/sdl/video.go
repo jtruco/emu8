@@ -116,7 +116,7 @@ func (video *Video) sdlCreateWindow() bool {
 		W: int32(float32(screen.View().W) * float32(video.config.Scale) * screen.ScaleX()),
 		H: int32(float32(screen.View().H) * float32(video.config.Scale) * screen.ScaleY())}
 	video.window, err = sdl.CreateWindow(
-		video.app.config.AppTitle, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
+		video.app.config.App.Title, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
 		video.wRect.W, video.wRect.H, sdl.WINDOW_SHOWN)
 	if err != nil {
 		log.Println("SDL : Error creating Window:", err.Error())

@@ -117,7 +117,7 @@ func (cpc *AmstradCPC) Reset() {
 func (cpc *AmstradCPC) initAmstrad() {
 	// load lower rom (os)
 	romname := cpcOsRomName
-	switch config.Get().MachineOptions {
+	switch config.Get().Machine.Options {
 	case "es":
 		romname = cpcOsRomNameES
 	case "fr":

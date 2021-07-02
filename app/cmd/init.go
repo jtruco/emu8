@@ -11,16 +11,16 @@ func init() {
 	conf := config.Get()
 
 	// parse config parameters
-	flag.StringVar(&conf.FileName, "file", "", "Load file")
-	flag.BoolVar(&conf.EmulatorAsync, "async", config.DefaultEmulatorAsync, "Asynchronous emulation")
-	flag.StringVar(&conf.MachineModel, "model", config.DefaultMachineModel, "Machine model")
-	flag.StringVar(&conf.MachineOptions, "options", "", "Machine options")
+	flag.StringVar(&conf.App.File, "file", "", "Load file")
+	flag.BoolVar(&conf.Emulator.Async, "async", config.DefaultEmulatorAsync, "Asynchronous emulation")
+	flag.StringVar(&conf.Machine.Model, "model", config.DefaultMachineModel, "Machine model")
+	flag.StringVar(&conf.Machine.Options, "options", "", "Machine options")
 	flag.IntVar(&conf.Video.Scale, "scale", config.DefaultVideoScale, "Video scale (1..3)")
 	flag.BoolVar(&conf.Video.FullScreen, "fullscreen", config.DefaultVideoFullScreen, "Video in full screen mode")
 	flag.BoolVar(&conf.Audio.Mute, "mute", config.DefaultAudioMute, "Audio Mute")
 	flag.Parse()
 	if len(flag.Args()) > 0 {
-		conf.FileName = flag.Args()[0]
+		conf.App.File = flag.Args()[0]
 	}
 
 	// validate parameters

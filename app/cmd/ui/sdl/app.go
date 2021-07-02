@@ -30,7 +30,7 @@ type App struct {
 func NewApp() *App {
 	app := new(App)
 	app.config = config.Get()
-	app.async = app.config.EmulatorAsync
+	app.async = app.config.Emulator.Async
 	app.video = NewVideo(app)
 	app.audio = NewAudio(app)
 	return app
@@ -75,8 +75,8 @@ func (app *App) Run() {
 	// init emulator
 	app.emulator.Init()
 	app.emulator.SetAsync(app.async)
-	if app.config.FileName != "" {
-		app.emulator.LoadFile(app.config.FileName)
+	if app.config.App.File != "" {
+		app.emulator.LoadFile(app.config.App.File)
 	}
 	app.emulator.Start()
 
