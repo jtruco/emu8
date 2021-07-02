@@ -123,6 +123,8 @@ func (app *App) pollEvents() {
 		switch e := event.(type) {
 		case *sdl.QuitEvent:
 			app.running = false
+		case *sdl.WindowEvent:
+			app.processWindowEvent(e)
 		case *sdl.KeyboardEvent:
 			app.processKeyboard(e)
 		case *sdl.JoyAxisEvent:
@@ -130,6 +132,13 @@ func (app *App) pollEvents() {
 		case *sdl.JoyButtonEvent:
 			app.processJoyButton(e)
 		}
+	}
+}
+
+func (app *App) processWindowEvent(e *sdl.WindowEvent) {
+	switch e.Event {
+	case sdl.WINDOWEVENT_SHOWN, sdl.WINDOWEVENT_RESIZED:
+		app.video.onUpdate(true) // Refresh screen
 	}
 }
 

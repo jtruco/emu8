@@ -83,7 +83,7 @@ func (video *Video) Update(screen *video.Screen) {
 }
 
 // onUpdate updates screen changes to video display
-func (video *Video) onUpdate(force bool) {
+func (video *Video) onUpdate(refresh bool) {
 	video._sync.Lock()
 	defer video._sync.Unlock()
 
@@ -96,7 +96,7 @@ func (video *Video) onUpdate(force bool) {
 
 	// copy texture region/s
 	rects := video.device.Screen().DirtyRects()
-	if force || video.hwAccel || len(rects) == 0 {
+	if refresh || video.hwAccel || len(rects) == 0 {
 		video.renderer.Copy(texture, &video.sRect, &video.wRect)
 	} else {
 		for _, r := range rects {
