@@ -8,8 +8,9 @@ package config
 // Default configuration constants
 const (
 	// General
-	DefaultAppTitle     = "emu8"
-	DefaultMachineModel = "Speccy"
+	DefaultAppTitle      = "emu8"
+	DefaultMachineModel  = "Speccy"
+	DefaultEmulatorAsync = false
 	// Video
 	DefaultVideoScale      = 2
 	DefaultVideoFullScreen = false
@@ -21,9 +22,10 @@ const (
 // Config is the main configuration
 type Config struct {
 	AppTitle       string
+	FileName       string
 	MachineModel   string
 	MachineOptions string
-	FileName       string
+	EmulatorAsync  bool
 	Video          VideoConfig
 	Audio          AudioConfig
 }
@@ -53,6 +55,7 @@ func init() {
 	// General
 	config.AppTitle = DefaultAppTitle
 	config.MachineModel = DefaultMachineModel
+	config.EmulatorAsync = DefaultEmulatorAsync
 	// Video
 	config.Video.Scale = DefaultVideoScale
 	config.Video.FullScreen = DefaultVideoFullScreen

@@ -168,7 +168,7 @@ func (emulator *Emulator) emulationLoop() {
 	emulator.wg.Add(1)
 	defer emulator.wg.Done()
 
-	log.Println("Emulator : emulation loop started")
+	log.Println("Emulator : emulation started")
 
 	// emulation loop
 	for emulator.running {
@@ -176,7 +176,7 @@ func (emulator *Emulator) emulationLoop() {
 		emulator.Sync()
 	}
 
-	log.Println("Emulator : emulation loop terminated")
+	log.Println("Emulator : emulation finalized")
 }
 
 // emulateFrame emulates the frame

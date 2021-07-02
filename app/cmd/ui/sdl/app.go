@@ -10,9 +10,15 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+// app constants
+const (
+	loopSleepMillis = 10 // SDL poll interval
+)
+
 // App is the SDL application
 type App struct {
 	config   *config.Config
+	async    bool
 	video    *Video
 	audio    *Audio
 	emulator *emulator.Emulator
@@ -24,8 +30,9 @@ type App struct {
 func NewApp() *App {
 	app := new(App)
 	app.config = config.Get()
-	app.video = NewVideo(app.config)
-	app.audio = NewAudio(app.config)
+	app.async = app.config.EmulatorAsync
+	app.video = NewVideo(app)
+	app.audio = NewAudio(app)
 	return app
 }
 
@@ -55,7 +62,7 @@ func (app *App) Init(emu *emulator.Emulator) bool {
 		return false
 	}
 	// init SDL audio
-	if !app.audio.Init() {
+	if !app.audio.Init(app.control.Audio().Device()) {
 		app.End()
 		return false
 	}
@@ -67,6 +74,7 @@ func (app *App) Run() {
 
 	// init emulator
 	app.emulator.Init()
+	app.emulator.SetAsync(app.async)
 	if app.config.FileName != "" {
 		app.emulator.LoadFile(app.config.FileName)
 	}
@@ -75,10 +83,25 @@ func (app *App) Run() {
 	// event loop
 	app.running = true
 	for app.running {
+		// Poll SDL events
 		app.pollEvents()
-		app.emulator.Emulate()
-		app.emulator.Sync()
+
+		// Sync emulation
+		if !app.async {
+			app.emulator.Emulate()
+			app.emulator.Sync()
+			continue
+		}
+
+		// Async emulation
+		select {
+		case <-app.video.updateUi:
+			app.video.onUpdate(false)
+		default:
+			sdl.Delay(loopSleepMillis)
+		}
 	}
+
 	app.emulator.Stop()
 }
 

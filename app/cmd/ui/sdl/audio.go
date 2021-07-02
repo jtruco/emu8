@@ -10,18 +10,22 @@ import (
 
 // Audio the SDL audio engine
 type Audio struct {
+	app    *App                // SDL Application
 	config *config.AudioConfig // Audio configuration
+	device audio.Audio         // Machine audio device
 }
 
 // NewAudio the SDL audio
-func NewAudio(config *config.Config) *Audio {
+func NewAudio(app *App) *Audio {
 	audio := new(Audio)
-	audio.config = &config.Audio
+	audio.app = app
+	audio.config = &app.config.Audio
 	return audio
 }
 
 // Init the SDL audio
-func (audio *Audio) Init() bool {
+func (audio *Audio) Init(device audio.Audio) bool {
+	audio.device = device
 	var want, spec sdl.AudioSpec
 	want.Freq = int32(audio.config.Frequency)
 	want.Format = sdl.AUDIO_S16LSB
@@ -47,6 +51,14 @@ func (audio *Audio) Close() {
 // Play plays the audio buffer
 func (audio *Audio) Play(buffer *audio.Buffer) {
 	if !audio.config.Mute {
-		sdl.QueueAudio(1, buffer.Data())
+		if audio.app.async {
+			go audio.onPlay(buffer)
+		} else {
+			audio.onPlay(buffer)
+		}
 	}
+}
+
+func (audio *Audio) onPlay(buffer *audio.Buffer) {
+	sdl.QueueAudio(1, buffer.Data())
 }

@@ -12,9 +12,9 @@ import (
 
 // Video is the SDL video UI
 type Video struct {
-	_sync    sync.Mutex          // Sync object
-	device   video.Video         // Machine video device
+	app      *App                // SDL Application
 	config   *config.VideoConfig // Video configuration
+	device   video.Video         // Machine video device
 	window   *sdl.Window         // Main window
 	renderer *sdl.Renderer       // Window renderer
 	surface  *sdl.Surface        // Emulator screen surface
@@ -23,12 +23,16 @@ type Video struct {
 	srcRects []sdl.Rect          // The source regions cache
 	dstRects []sdl.Rect          // The dest regions cache
 	hwAccel  bool                // Hardware accelerated renderer
+	updateUi chan bool           // Update UI channel
+	_sync    sync.Mutex          // Sync object
 }
 
 // NewVideo creates a new video UI
-func NewVideo(config *config.Config) *Video {
+func NewVideo(app *App) *Video {
 	video := new(Video)
-	video.config = &config.Video
+	video.app = app
+	video.config = &app.config.Video
+	video.updateUi = make(chan bool, 2) // 2-slot channel
 	return video
 }
 
@@ -69,8 +73,17 @@ func (video *Video) ToggleFullscreen() {
 	video.updateScreen()
 }
 
-// Update updates screen changes to video display
+// Update display
 func (video *Video) Update(screen *video.Screen) {
+	if video.app.async {
+		video.updateUi <- true // Notify SDL main thread
+		return
+	}
+	video.onUpdate(false)
+}
+
+// onUpdate updates screen changes to video display
+func (video *Video) onUpdate(force bool) {
 	video._sync.Lock()
 	defer video._sync.Unlock()
 
@@ -82,8 +95,8 @@ func (video *Video) Update(screen *video.Screen) {
 	defer texture.Destroy()
 
 	// copy texture region/s
-	rects := screen.DirtyRects()
-	if video.hwAccel || len(rects) == 0 {
+	rects := video.device.Screen().DirtyRects()
+	if force || video.hwAccel || len(rects) == 0 {
 		video.renderer.Copy(texture, &video.sRect, &video.wRect)
 	} else {
 		for _, r := range rects {
@@ -103,9 +116,8 @@ func (video *Video) sdlCreateWindow() bool {
 		W: int32(float32(screen.View().W) * float32(video.config.Scale) * screen.ScaleX()),
 		H: int32(float32(screen.View().H) * float32(video.config.Scale) * screen.ScaleY())}
 	video.window, err = sdl.CreateWindow(
-		config.Get().AppTitle, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-		video.wRect.W, video.wRect.H,
-		sdl.WINDOW_SHOWN)
+		video.app.config.AppTitle, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
+		video.wRect.W, video.wRect.H, sdl.WINDOW_SHOWN)
 	if err != nil {
 		log.Println("SDL : Error creating Window:", err.Error())
 	}
@@ -116,7 +128,7 @@ func (video *Video) sdlCreateWindow() bool {
 	}
 	video.renderer.SetLogicalSize(video.wRect.W, video.wRect.H)
 	info, _ := video.renderer.GetInfo()
-	video.hwAccel = info.Flags&sdl.RENDERER_ACCELERATED != 0
+	video.hwAccel = (info.Flags & sdl.RENDERER_ACCELERATED) != 0
 	log.Println("SDL : Renderer is:", info.Name)
 	return true
 }
