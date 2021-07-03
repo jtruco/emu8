@@ -15,13 +15,14 @@ type Composite struct {
 	mapper Mapper // Composite bus address mapper
 }
 
-// NewComposite
+// NewComposite returns a new composite
 func NewComposite(size int) *Composite {
 	composite := new(Composite)
 	composite.Build(size)
 	return composite
 }
 
+// Build initializes the composite bus and the default mapper
 func (composite *Composite) Build(size int) {
 	composite.maps = make(Maps, size)
 	composite.SetMapper(NewDefaultMapper())
