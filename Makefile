@@ -8,8 +8,7 @@ GO_TEST = $(GO) test -v
 GO_GET = $(GO) get -v
 
 # app variables
-SDL_APP = ./app/cmd
-APP = $(SDL_APP)
+APP = ./cmd/emu8
 OUTPUT = emu8
 
 # build & clean
