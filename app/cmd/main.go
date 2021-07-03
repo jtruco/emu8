@@ -4,7 +4,7 @@ package main
 import (
 	"log"
 
-	"github.com/jtruco/emu8/app/cmd/ui/sdl"
+	"github.com/jtruco/emu8/app/cmd/sdl"
 	"github.com/jtruco/emu8/emulator"
 )
 
