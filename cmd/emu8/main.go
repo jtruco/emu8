@@ -13,13 +13,13 @@ func main() {
 	// initialize emulator
 	emu, err := emulator.GetDefault()
 	if err != nil {
-		log.Fatal("App : Could not initialize emulator", err.Error())
+		log.Fatal("App : Could not initialize emulator: ", err.Error())
 	}
 	log.Println("App : Emulator for machine:", emu.Machine().Config().Name)
 
 	app := sdl.NewApp()
-	if !app.Init(emu) {
-		log.Fatal("App : Could not initialize application")
+	if err := app.Init(emu); err != nil {
+		log.Fatal("App : Could not initialize application: ", err.Error())
 	}
 	app.Run()
 	app.End()

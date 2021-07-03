@@ -2,6 +2,7 @@
 package sdl
 
 import (
+	"errors"
 	"log"
 
 	"github.com/jtruco/emu8/emulator"
@@ -37,11 +38,11 @@ func NewApp() *App {
 }
 
 // Init the SDL App
-func (app *App) Init(emu *emulator.Emulator) bool {
+func (app *App) Init(emu *emulator.Emulator) error {
 	// init sdl
 	if err := sdl.Init(sdl.INIT_VIDEO | sdl.INIT_AUDIO | sdl.INIT_JOYSTICK); err != nil {
 		log.Println("SDL : Error initializing SDL:", err.Error())
-		return false
+		return errors.New("could not initialize SDL library")
 	}
 	log.Print("SDL : Initialized")
 	// open sdl joystick (only one supported)
@@ -59,14 +60,14 @@ func (app *App) Init(emu *emulator.Emulator) bool {
 	// init SDL video output
 	if !app.video.Init(app.control.Video().Device()) {
 		app.End()
-		return false
+		return errors.New("could not initialize video subsystem")
 	}
 	// init SDL audio
 	if !app.audio.Init(app.control.Audio().Device()) {
 		app.End()
-		return false
+		return errors.New("could not initialize audio subsystem")
 	}
-	return true
+	return nil
 }
 
 // Run the SDL App
