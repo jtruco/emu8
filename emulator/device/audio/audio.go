@@ -2,7 +2,6 @@
 package audio
 
 import (
-	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/device"
 )
 
@@ -28,9 +27,9 @@ type Config struct {
 }
 
 // NewConfig creates audio config
-func NewConfig(fps, tstates int) *Config {
+func NewConfig(frecuency, fps, tstates int) *Config {
 	c := new(Config)
-	c.Frequency = config.Get().Audio.Frequency
+	c.Frequency = frecuency
 	c.Fps = fps
 	c.TStates = tstates
 	c.Samples = c.Frequency / c.Fps

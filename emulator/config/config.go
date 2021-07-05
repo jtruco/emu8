@@ -64,9 +64,7 @@ type AudioConfig struct {
 var config = new(Config)
 
 // Get gets the main configuration
-func Get() *Config {
-	return config
-}
+func Get() *Config { return config }
 
 // init initializes configuration
 func init() {

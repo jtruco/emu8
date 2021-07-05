@@ -77,7 +77,8 @@ func New(model int) machine.Machine {
 	cpc.gatearray = NewGateArray(cpc)
 	cpc.video = NewVduVideo(cpc)
 	cpc.keyboard = NewKeyboard()
-	cpc.psg = audio.NewAY38910(audio.NewConfig(cpcFPS, cpcAudioTStates))
+	cpc.psg = audio.NewAY38910(
+		audio.NewConfig(config.Get().Audio.Frequency, cpcFPS, cpcAudioTStates))
 	cpc.psg.OnReadPortA = cpc.onPsgReadPortA
 	cpc.ppi = NewPpi(cpc)
 	cpc.tape = tape.New(cpc.clock)
