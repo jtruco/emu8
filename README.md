@@ -68,7 +68,7 @@ To run the emulator and load a snapshot file into the machine just type :
 The default machine model is the classic *Speccy* or *ZX Spectrum 48k*.
 To select another machine model use :
 ```
-./emu8 -m cpc464 blagger.sna
+./emu8 -model cpc464 fred.sna
 ```
 
 *Current supported models are : zx16k, zx48k, and cpc464.*
@@ -84,6 +84,22 @@ Once the emulator is running you can control it with the following keys :
 - F8 : Rewinds the tape.
 - F10 : Exits the application.
 - F11 : Toggle full-screen video mode.
+
+### Command line arguments
+**emu8** have these command line arguments:
+
+- file : Path of the file to load into the emulator.
+- model : Machine model (case insensitive).
+- options : Extra machine options.
+- async : Asyncrhonous emulation.
+- scale : Video scale factor (1..3). Default 2.
+- fullscreen : Start video in full screen mode.
+- mute : Audio mute.
+
+Here is an example of use of various command line arguments:
+```
+./emu8 -model speccy -async -fullscreen tapes/pyjamarama.tzx
+```
 
 ## Features
 
@@ -107,8 +123,8 @@ The emulation is stable and accurate for the current supported models :
 - Tape formats supported (read only) : TAP, TZX.
 - Kempston joystick support.
 
-### Amstrad CPC ( Status : Beta )
-The emulation is good, but needs some fixes and audio quality improvements :
+### Amstrad CPC ( Status : Stable )
+The emulation is stable and accurate for the current supported model :
 - Amstrad CPC 464 model supported.
 - Zilog Z80 CPU emulation.
 - MC6845 CRTC device emulation.
@@ -120,12 +136,11 @@ The emulation is good, but needs some fixes and audio quality improvements :
 
 ## Roadmap
 These are the main goals and features for the next versions :
-- Web application using [WebAssembly](https://github.com/golang/go/wiki/WebAssembly) and HTML5/Js.
 - Support more machines and models.
-- [libretro](https://github.com/libretro) core implementation.
+- UI : A cross-platform desktop user interface.
+- Web : Web version, [WebAssembly](https://github.com/golang/go/wiki/WebAssembly) and HTML5/Js.
+- UI : [libRETRO](https://github.com/libretro) core implementation.
 - Mobile : native apps for Android & iOS.
-- Gui : A cross-platform desktop user interface.
-- OpenGL / OpenAL desktop app frontend.
 
 ## Contributing
 
