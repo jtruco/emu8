@@ -16,7 +16,6 @@ type Control struct {
 	Playing    bool  // Tape drive is playing
 	Ear        byte  // Tape EAR level
 	State      int   // Playback state
-	Tstate     int64 // Last clock Tstate
 	Timeout    int   // Timeout of current state
 	Block      Block // Current tape block
 	NumBlocks  int   // Total number of blocks on tape
@@ -43,7 +42,6 @@ func (control *Control) reset() {
 	control.Playing = false
 	control.Ear = LevelLow
 	control.State = 0
-	control.Tstate = 0
 	control.Timeout = 0
 	control.BlockIndex = 0
 	control.BlockPos = 0

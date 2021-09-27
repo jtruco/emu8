@@ -184,21 +184,21 @@ func (cpc *AmstradCPC) BeginFrame() {} // nothing to do
 
 // Emulate one machine step
 func (cpc *AmstradCPC) Emulate() {
-	// Tape emulation
-	cpc.tape.Playback()
+	// Executes a CPU instruction
+	tstates := cpc.cpu.Execute()
 
-	// z80 cpu emulation
-	lapse := cpc.cpu.Execute()
-
-	// 4 tstate rounding fix
-	fix := (0x04 - lapse) & 0x03
+	// 4-tstate rounding fix
+	fix := (0x04 - tstates) & 0x03
 	if fix != 0 {
 		cpc.clock.Add(fix)
-		lapse += fix
+		tstates += fix
 	}
 
 	// CPC bus emulation
-	cpc.gatearray.Emulate(lapse)
+	cpc.gatearray.Emulate(tstates)
+
+	// Tape emulation
+	cpc.tape.Emulate(tstates)
 }
 
 // EndFrame end emulation frame tasks

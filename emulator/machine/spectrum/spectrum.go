@@ -173,16 +173,16 @@ func (spectrum *Spectrum) BeginFrame() {
 
 // Emulate one machine step
 func (spectrum *Spectrum) Emulate() {
-	// Tape emulation
-	spectrum.tape.Playback()
-
 	// Executes a CPU instruction
-	spectrum.cpu.Execute()
+	tstates := spectrum.cpu.Execute()
 
 	// Maskable interrupt request length
 	if spectrum.cpu.IntRq && spectrum.clock.Tstates() >= zxIntTstates {
 		spectrum.cpu.InterruptRequest(false)
 	}
+
+	// Tape emulation
+	spectrum.tape.Emulate(tstates)
 }
 
 // EndFrame end emulation frame tasks

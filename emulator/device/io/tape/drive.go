@@ -89,22 +89,23 @@ func (drive *Drive) Rewind() {
 	log.Println("Tape : Tape rewinded")
 }
 
-// Playback emulates the loaded tape
-func (drive *Drive) Playback() {
+// Emulate emulates the tape drive
+func (drive *Drive) Emulate(tstates int) {
 	if !drive.IsPlaying() {
 		return
 	}
-	// control state timeout
-	ellapse := int(drive.clock.Total() - drive.control.Tstate)
-	if drive.control.Timeout > ellapse {
+	// control tstates timeout
+	drive.control.Timeout -= tstates
+	if drive.control.Timeout > 0 {
 		return
 	}
-	drive.control.Tstate = drive.clock.Total()
-	// next state
+	padding := drive.control.Timeout
+	// play until next state
 	drive.control.Timeout = 0
 	for drive.IsPlaying() && drive.control.Timeout == 0 {
 		drive.tape.Play(&drive.control)
 	}
+	drive.control.Timeout += padding
 	// control end of tape playback
 	if !drive.IsPlaying() {
 		if drive.control.EndOfTape() {
