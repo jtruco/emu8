@@ -1,4 +1,4 @@
-// +build darwin freebsd linux windows
+//go:build !android && !ios && !js
 // +build !android,!ios,!js
 
 package vfs
