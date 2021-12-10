@@ -10,7 +10,7 @@ const (
 	DefaultMachineOptions  = ""
 	DefaultVideoScale      = 2
 	DefaultVideoFullScreen = false
-	DefaultAudioFrecuency  = 44100 // 48 KHz
+	DefaultAudioFrecuency  = 48000 // 48 KHz
 	DefaultAudioMute       = false
 )
 
