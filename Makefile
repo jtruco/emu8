@@ -9,6 +9,7 @@ GO_GET = $(GO) get -v
 
 # app variables
 APP = ./cmd/emu8
+APP_WASM = ./cmd/wasm
 OUTPUT = emu8
 
 # build & clean
@@ -16,7 +17,7 @@ OUTPUT = emu8
 .DEFAULT_GOAL = build
 
 .PHONY: all
-all: clean deps build cross
+all: clean deps build cross wasm
 
 .PHONY: build
 build: emu8
@@ -24,11 +25,20 @@ build: emu8
 .PHONY: clean
 clean:
 	$(GO_CLEAN) $(APP)
+	$(GO_CLEAN) $(APP_WASM)
 	rm -f $(OUTPUT) $(OUTPUT)-*
 
 .PHONY: emu8
 emu8:
 	$(GO_BUILD) -o $(OUTPUT) $(APP)
+
+# wasm 
+
+GO_WASM = GOOS="js" GOARCH="wasm"
+
+.PHONY: wasm
+wasm:
+	$(GO_WASM) $(GO_BUILD) -o $(OUTPUT)-js.wasm $(APP_WASM)
 
 # cross compilation (windows)
 
