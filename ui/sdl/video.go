@@ -5,43 +5,43 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/device/video"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 // Video is the SDL video UI
 type Video struct {
-	app      *App                // SDL Application
-	config   *config.VideoConfig // Video configuration
-	device   video.Video         // Machine video device
-	window   *sdl.Window         // Main window
-	renderer *sdl.Renderer       // Window renderer
-	surface  *sdl.Surface        // Emulator screen surface
-	wRect    sdl.Rect            // Window rect
-	sRect    sdl.Rect            // Surface rect
-	srcRects []sdl.Rect          // The source regions cache
-	dstRects []sdl.Rect          // The dest regions cache
-	hwAccel  bool                // Hardware accelerated renderer
-	updateUi chan bool           // Update UI channel
-	_sync    sync.Mutex          // Sync object
+	Screen     *video.Screen // Machine video screen
+	Title      string        // Window title
+	FullScreen bool          // Fullscreen state
+	Scale      float32       // Video scale
+	Async      bool          // Asynchronous mode
+	UpdateUi   chan bool     // Update UI channel
+	window     *sdl.Window   // Main window
+	renderer   *sdl.Renderer // Window renderer
+	surface    *sdl.Surface  // Emulator screen surface
+	wRect      sdl.Rect      // Window rect
+	sRect      sdl.Rect      // Surface rect
+	srcRects   []sdl.Rect    // The source regions cache
+	dstRects   []sdl.Rect    // The dest regions cache
+	hwAccel    bool          // Hardware accelerated renderer
+	_sync      sync.Mutex    // Sync object
 }
 
 // NewVideo creates a new video UI
-func NewVideo(app *App) *Video {
+func NewVideo() *Video {
 	video := new(Video)
-	video.app = app
-	video.config = &app.config.Video
-	video.updateUi = make(chan bool, 2) // 2-slot channel
+	video.Title = "SDL UI"
+	video.Scale = 1
+	video.UpdateUi = make(chan bool, 2) // 2-slot channel
 	return video
 }
 
 // Init initialices video
-func (video *Video) Init(device video.Video) bool {
+func (video *Video) Init() bool {
 	video._sync.Lock()
 	defer video._sync.Unlock()
 
-	video.device = device
 	if !video.sdlCreateWindow() {
 		return false
 	}
@@ -58,7 +58,7 @@ func (video *Video) Destroy() {
 	video._sync.Lock()
 	defer video._sync.Unlock()
 
-	log.Println("SDL : Freeing video resources")
+	log.Println("SDL : Closing video resources")
 	video.surface.Free()
 	video.renderer.Destroy()
 	video.window.Destroy()
@@ -69,21 +69,21 @@ func (video *Video) ToggleFullscreen() {
 	video._sync.Lock()
 	defer video._sync.Unlock()
 
-	video.config.FullScreen = !video.config.FullScreen
+	video.FullScreen = !video.FullScreen
 	video.updateScreen()
 }
 
 // Update display
 func (video *Video) Update(screen *video.Screen) {
-	if video.app.async {
-		video.updateUi <- true // Notify SDL main thread
+	if video.Async {
+		video.UpdateUi <- true // Notify SDL main thread
 		return
 	}
-	video.onUpdate(false)
+	video.OnUpdate(false)
 }
 
-// onUpdate updates screen changes to video display
-func (video *Video) onUpdate(refresh bool) {
+// OnUpdate updates screen changes to video display
+func (video *Video) OnUpdate(refresh bool) {
 	video._sync.Lock()
 	defer video._sync.Unlock()
 
@@ -95,7 +95,7 @@ func (video *Video) onUpdate(refresh bool) {
 	defer texture.Destroy()
 
 	// copy texture region/s
-	rects := video.device.Screen().DirtyRects()
+	rects := video.Screen.DirtyRects()
 	if refresh || video.hwAccel || len(rects) == 0 {
 		video.renderer.Copy(texture, &video.sRect, &video.wRect)
 	} else {
@@ -110,13 +110,12 @@ func (video *Video) onUpdate(refresh bool) {
 
 func (video *Video) sdlCreateWindow() bool {
 	var err error
-	screen := video.device.Screen()
 	video.wRect = sdl.Rect{
 		X: 0, Y: 0,
-		W: int32(float32(screen.View().W) * float32(video.config.Scale) * screen.ScaleX()),
-		H: int32(float32(screen.View().H) * float32(video.config.Scale) * screen.ScaleY())}
+		W: int32(float32(video.Screen.View().W) * video.Scale * video.Screen.ScaleX()),
+		H: int32(float32(video.Screen.View().H) * video.Scale * video.Screen.ScaleY())}
 	video.window, err = sdl.CreateWindow(
-		video.app.config.App.Title, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
+		video.Title, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
 		video.wRect.W, video.wRect.H, sdl.WINDOW_SHOWN)
 	if err != nil {
 		log.Println("SDL : Error creating Window:", err.Error())
@@ -135,14 +134,13 @@ func (video *Video) sdlCreateWindow() bool {
 
 func (video *Video) sdlCreateSurface() bool {
 	var err error
-	screen := video.device.Screen()
-	pixels := unsafe.Pointer(&screen.Data()[0])
+	pixels := unsafe.Pointer(&video.Screen.Data()[0])
 	video.surface, err = sdl.CreateRGBSurfaceWithFormatFrom(
-		pixels, int32(screen.Width()), int32(screen.Height()),
-		32, 4*int32(screen.Width()), uint32(sdl.PIXELFORMAT_RGBA32))
+		pixels, int32(video.Screen.Width()), int32(video.Screen.Height()),
+		32, 4*int32(video.Screen.Width()), uint32(sdl.PIXELFORMAT_RGBA32))
 	video.sRect = sdl.Rect{
-		X: int32(screen.View().X), Y: int32(screen.View().Y),
-		W: int32(screen.View().W), H: int32(screen.View().H)}
+		X: int32(video.Screen.View().X), Y: int32(video.Screen.View().Y),
+		W: int32(video.Screen.View().W), H: int32(video.Screen.View().H)}
 	if err != nil {
 		log.Println("Error creating emulator surface:", err.Error())
 		return false
@@ -153,7 +151,7 @@ func (video *Video) sdlCreateSurface() bool {
 // updateScreen update screen state
 func (video *Video) updateScreen() {
 	// check fullscreen mode
-	if video.config.FullScreen {
+	if video.FullScreen {
 		video.window.SetFullscreen(sdl.WINDOW_FULLSCREEN_DESKTOP)
 		sdl.ShowCursor(sdl.DISABLE)
 		log.Println("SDL : Screen state is: fullscreen")
@@ -164,16 +162,15 @@ func (video *Video) updateScreen() {
 	}
 	video.renderer.Clear()
 	// force screen refresh
-	video.device.Screen().SetDirty(true)
+	video.Screen.SetDirty(true)
 }
 
 // render regions
 func (video *Video) createRegions() {
-	screen := video.device.Screen()
-	view := screen.View()
-	scaleX := float32(video.config.Scale) * screen.ScaleX()
-	scaleY := float32(video.config.Scale) * screen.ScaleY()
-	regions := screen.Rects()
+	view := video.Screen.View()
+	scaleX := video.Scale * video.Screen.ScaleX()
+	scaleY := video.Scale * video.Screen.ScaleY()
+	regions := video.Screen.Rects()
 	video.srcRects = make([]sdl.Rect, len(regions))
 	video.dstRects = make([]sdl.Rect, len(regions))
 	for i, rect := range regions {

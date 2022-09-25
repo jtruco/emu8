@@ -3,33 +3,32 @@ package sdl
 import (
 	"log"
 
-	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 // Audio the SDL audio engine
 type Audio struct {
-	app    *App                // SDL Application
-	config *config.AudioConfig // Audio configuration
-	device audio.Audio         // Machine audio device
+	Frequency int32 // Audio frequency
+	Channels  int32 // Audio channels
+	Mute      bool  // Mute audio
+	Async     bool  // Asynchronous mode
 }
 
 // NewAudio the SDL audio
-func NewAudio(app *App) *Audio {
+func NewAudio() *Audio {
 	audio := new(Audio)
-	audio.app = app
-	audio.config = &app.config.Audio
+	audio.Frequency = 48000
+	audio.Channels = 1 // mono
 	return audio
 }
 
 // Init the SDL audio
-func (audio *Audio) Init(device audio.Audio) bool {
-	audio.device = device
+func (audio *Audio) Init() bool {
 	var want, spec sdl.AudioSpec
-	want.Freq = int32(audio.config.Frequency)
+	want.Freq = audio.Frequency
 	want.Format = sdl.AUDIO_S16LSB
-	want.Channels = 1 // mono
+	want.Channels = uint8(audio.Channels)
 	want.Samples = 1024
 	err := sdl.OpenAudio(&want, &spec)
 	if err != nil {
@@ -50,8 +49,8 @@ func (audio *Audio) Close() {
 
 // Play plays the audio buffer
 func (audio *Audio) Play(buffer *audio.Buffer) {
-	if !audio.config.Mute {
-		if audio.app.async {
+	if !audio.Mute {
+		if audio.Async {
 			go audio.onPlay(buffer)
 		} else {
 			audio.onPlay(buffer)

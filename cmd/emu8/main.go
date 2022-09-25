@@ -5,22 +5,26 @@ import (
 	"log"
 
 	"github.com/jtruco/emu8/emulator"
-	"github.com/jtruco/emu8/ui/sdl"
+	"github.com/jtruco/emu8/ui"
 )
 
 // main program
 func main() {
 	// initialize emulator
-	emu, err := emulator.GetDefault()
+	emu, err := emulator.GetEmulator()
 	if err != nil {
-		log.Fatal("App : Could not initialize emulator: ", err.Error())
+		log.Fatal("Main : Could not initialize emulator: ", err.Error())
 	}
-	log.Println("App : Emulator for machine:", emu.Machine().Config().Name)
+	log.Println("Main : Emulator for machine:", emu.Machine().Config().Name)
 
-	app := sdl.NewApp()
-	if err := app.Init(emu); err != nil {
-		log.Fatal("App : Could not initialize application: ", err.Error())
+	// initialize UI application
+	app := ui.GetApp()
+	app.Connect(emu)
+	if err := app.Init(); err != nil {
+		log.Fatal("Main : Could not initialize UI: ", err.Error())
 	}
+
+	// run application
+	defer app.Quit()
 	app.Run()
-	app.End()
 }
