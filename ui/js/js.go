@@ -1,11 +1,7 @@
 // Package js is the Js/Wasm user interface
 package js
 
-const (
-	emu8_default_ui = "emu8"
-)
-
-var myJsApp = NewApp(emu8_default_ui)
+const emu8_default_ui = "emu8"
 
 // Get returns a JavaScript user application
-func Get() *App { return myJsApp }
+func GetApp() *App { return NewApp(emu8_default_ui) }

@@ -2,4 +2,4 @@
 package sdl
 
 // Get returns the SDL application
-func Get() *App { return NewApp() }
+func GetApp() *App { return NewApp() }
