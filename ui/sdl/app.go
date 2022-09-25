@@ -94,16 +94,16 @@ func (app *App) Run() {
 	app.running = true
 	for app.running {
 		app.pollEvents() // Poll SDL events
-		if !app.async {  // Sync emulation
+		if app.async {   // Async emulation
+			select {
+			case <-app.video.UpdateUi:
+				app.video.OnUpdate(false)
+			default:
+				sdl.Delay(loopSleepMillis)
+			}
+		} else { // Sync emulation
 			app.emulator.Emulate()
 			app.emulator.Sync()
-			continue
-		}
-		select { // Async emulation
-		case <-app.video.UpdateUi:
-			app.video.OnUpdate(false)
-		default:
-			sdl.Delay(loopSleepMillis)
 		}
 	}
 	// end emulation

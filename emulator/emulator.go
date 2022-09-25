@@ -92,27 +92,6 @@ func (emulator *Emulator) Reset() {
 	emulator.machine.Reset()
 }
 
-// Emulate one frame loop
-func (emulator *Emulator) Emulate() {
-	if !emulator.running {
-		return
-	}
-	emulator.emulateFrame()
-}
-
-// Sync synchronizes next frame loop
-func (emulator *Emulator) Sync() {
-	emulator.sleep += emulator.duration - time.Since(emulator.current)
-	emulator.current = time.Now()
-	if emulator.sleep > 0 {
-		emulator.lost = false
-		time.Sleep(emulator.sleep) // sleep until next frame
-	} else {
-		emulator.lost = true // lost frame
-		emulator.sleep = 0   // reset sleep control
-	}
-}
-
 // Start the emulation
 func (emulator *Emulator) Start() {
 	if !emulator.running {
@@ -157,34 +136,62 @@ func (emulator *Emulator) TakeSnapshot() {
 
 // Emulation
 
+// Emulate one frame loop
+func (emulator *Emulator) Emulate() {
+	if emulator.running && !emulator.async {
+		emulator.emulateFrame()
+	}
+}
+
+// Sync synchronizes next frame loop
+func (emulator *Emulator) Sync() {
+	if emulator.running && !emulator.async {
+		emulator.syncFrame()
+	}
+}
+
 // emulationLoop the emulation loop goroutine
 func (emulator *Emulator) emulationLoop() {
 	emulator.wg.Add(1)
 	defer emulator.wg.Done()
 
-	log.Println("Emulator : emulation started")
-
-	// emulation loop
+	log.Println("Emulator : emulation loop started")
 	for emulator.running {
 		emulator.emulateFrame()
-		emulator.Sync()
+		emulator.syncFrame()
 	}
-
-	log.Println("Emulator : emulation finalized")
+	log.Println("Emulator : emulation loop finalized")
 }
 
 // emulateFrame emulates the frame
 func (emulator *Emulator) emulateFrame() {
-	clock := emulator.machine.Clock()
-
+	// first we process input events and begin the frame
 	emulator.control.Scan()
 	emulator.machine.BeginFrame()
 
+	// the clock is restarted every frame to adjust the emulation rate
+	clock := emulator.machine.Clock()
 	clock.Restart(emulator.tstates)
+
+	// machine frame-cycle emulation
 	for clock.Tstates() < emulator.tstates {
 		emulator.machine.Emulate()
 	}
 
+	// last we finish the frame and update the output
 	emulator.machine.EndFrame()
 	emulator.control.Refresh()
+}
+
+// syncFrame adjusts the frame timing
+func (emulator *Emulator) syncFrame() {
+	emulator.sleep += emulator.duration - time.Since(emulator.current)
+	emulator.current = time.Now()
+	if emulator.sleep > 0 {
+		emulator.lost = false
+		time.Sleep(emulator.sleep) // sleep until next frame
+	} else {
+		emulator.lost = true // lost frame
+		emulator.sleep = 0   // reset sleep control
+	}
 }
