@@ -144,7 +144,7 @@ func (vdu *VduVideo) OnHSync() {
 	y := int(scanLine - vdu.minSLine)
 
 	// vertical border scanlines
-	border := vdu.screen.GetColour(vdu.gatearray.Border())
+	border := vdu.screen.GetColor(vdu.gatearray.Border())
 	if vdu.crtc.CurrentRow() >= vdu.crtc.VerticalDisplayed {
 		vdu.paintLine(y, 0, videoTotalWidth, border)
 		return

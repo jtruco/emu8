@@ -15,7 +15,7 @@ const (
 type Screen struct {
 	rect    Rect     // Screen rect dimensions
 	data    []uint32 // Screen data
-	palette []uint32 // Screen colour palette
+	palette []uint32 // Screen color palette
 	view    Rect     // Visible viewport of the screen
 	scaleX  float32  // Horizontal scale factor
 	scaleY  float32  // Vertical scale factor
@@ -46,10 +46,9 @@ func NewScreen(width, height int, palette []uint32) *Screen {
 
 // Clear clears the screen
 func (screen *Screen) Clear(index int) {
-	colour := screen.palette[index]
-	size := len(screen.data)
-	for i := 0; i < size; i++ {
-		screen.data[i] = colour
+	color := screen.palette[index]
+	for i := range screen.data {
+		screen.data[i] = color
 	}
 	screen.SetDirty(true)
 }
@@ -94,34 +93,42 @@ func (screen *Screen) SetDirty(dirty bool) {
 	}
 }
 
-// Palette returns the colour palette
+// Palette returns the color palette
 func (screen *Screen) Palette() []uint32 { return screen.palette }
 
-// GetColour gets colour from palette index
-func (screen *Screen) GetColour(index int) uint32 { return screen.palette[index] }
+// GetColor gets color from palette index
+func (screen *Screen) GetColor(index int) uint32 { return screen.palette[index] }
 
-// GetPixel gets colour from pixel coordinates
+// GetPos gets screen position
+func (screen *Screen) GetPos(x, y int) int {
+	return x + y*screen.rect.W
+}
+
+// GetPixel gets color from pixel coordinates
 func (screen *Screen) GetPixel(x, y int) uint32 {
-	pos := x + y*screen.rect.W
+	pos := screen.GetPos(x, y)
 	return screen.data[pos]
 }
 
-// SetPixel sets colour at pixel coordinates
-func (screen *Screen) SetPixel(x, y int, colour uint32) {
-	pos := x + y*screen.rect.W
-	if screen.data[pos] != colour {
-		screen.data[pos] = colour
-		region := ((y >> screen.factor) * screen.cols) + (x >> screen.factor)
-		if !screen.rdirty[region] {
-			screen.rdirty[region] = true
-			screen.dirty = true
-		}
+// SetPixel sets color at pixel coordinates
+func (screen *Screen) SetPixel(x, y int, color uint32) {
+	pos := screen.GetPos(x, y)
+	if screen.data[pos] != color {
+		screen.data[pos] = color
+		region := screen.getRegion(x, y)
+		screen.markRegion(region)
 	}
 }
 
-// SetPixelIndex sets colour index at pixel coordinates
-func (screen *Screen) SetPixelIndex(x, y int, index int) {
-	screen.SetPixel(x, y, screen.palette[index])
+func (screen *Screen) getRegion(x, y int) int {
+	return ((y >> screen.factor) * screen.cols) + (x >> screen.factor)
+}
+
+func (screen *Screen) markRegion(region int) {
+	if !screen.rdirty[region] {
+		screen.rdirty[region] = true
+		screen.dirty = true
+	}
 }
 
 // regions

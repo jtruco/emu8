@@ -167,7 +167,7 @@ func (tv *TvVideo) paintScreen() {
 // paintBorder is a simple border emulation
 func (tv *TvVideo) paintBorder() {
 	// Border Top, Bottom and Paper
-	border := tv.screen.GetColour(int(tv.border))
+	border := tv.screen.GetColor(int(tv.border))
 	view := tv.screen.View()
 	for y := view.Y; y < tvBorderTop; y++ {
 		tv.scanlineBorder(y, 0, tvTotalWidth-1, border)
@@ -195,13 +195,15 @@ func (tv *TvVideo) paintByte(y, sx int, data, attr byte) {
 	if (attr&0x80) != 0 && tv.flash {
 		ink, paper = paper, ink
 	}
+	inkRgb := tv.screen.GetColor(int(ink))
+	paperRgb := tv.screen.GetColor(int(paper))
 	mask = 0x80
 	for x := sx; x < sx+8; x++ {
 		set := (data & mask) != 0
 		if set {
-			tv.screen.SetPixelIndex(x, y, int(ink))
+			tv.screen.SetPixel(x, y, inkRgb)
 		} else {
-			tv.screen.SetPixelIndex(x, y, int(paper))
+			tv.screen.SetPixel(x, y, paperRgb)
 		}
 		mask >>= 1
 	}
@@ -216,7 +218,7 @@ func (tv *TvVideo) DoScanlines() {
 	// Horizontal : 128 Ts screen, 24 Ts border right, 48 Ts retrace, 24 TS border left
 	// First screen (0,0) pixel Tstate = 14336 TS = 64 Scanlines * 224 Tstates
 	view := tv.screen.View()
-	border := tv.screen.GetColour(int(tv.border))
+	border := tv.screen.GetColor(int(tv.border))
 	tstate := tv.tstate
 	endtstate := tv.clock.Tstates()
 	limitBottom := view.Y*tvLineTstates - tvHBorderTstates
@@ -272,7 +274,8 @@ func (tv *TvVideo) DoScanlines() {
 }
 
 func (tv *TvVideo) scanlineScreen(y, x1, x2 int) {
-	var attr, data, ink, paper, mask byte
+	var attr, data, mask byte
+	var inkRgb, paperRgb uint32
 
 	xx := x1 - tvBorderLeft
 	yy := y - tvBorderTop
@@ -290,24 +293,26 @@ func (tv *TvVideo) scanlineScreen(y, x1, x2 int) {
 			scrAddr++
 			attrAddr++
 			// calculate ink + paper
-			ink = attr & 0x07
+			ink := attr & 0x07
 			if (attr & 0x40) != 0 {
 				ink |= 0x08
 			}
-			paper = (attr >> 3) & 0x07
+			paper := (attr >> 3) & 0x07
 			if (attr & 0x40) != 0 {
 				paper |= 0x08
 			}
 			if attr&0x80 != 0 && tv.flash {
 				ink, paper = paper, ink
 			}
+			inkRgb = tv.screen.GetColor(int(ink))
+			paperRgb = tv.screen.GetColor(int(paper))
 		}
 		// paint pixel
 		set := (data & mask) != 0
 		if set {
-			tv.screen.SetPixelIndex(x, y, int(ink))
+			tv.screen.SetPixel(x, y, inkRgb)
 		} else {
-			tv.screen.SetPixelIndex(x, y, int(paper))
+			tv.screen.SetPixel(x, y, paperRgb)
 		}
 		// next pixel
 		bit++
