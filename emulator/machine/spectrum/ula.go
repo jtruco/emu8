@@ -33,16 +33,15 @@ var ulaDelayTable [zxTStates + tvLineTstates]int
 
 func init() {
 	// contention table
-	tstate := tvFirstScreenTstate - 1
-	for y := 0; y < tvScreenHeight; y++ {
-		for x := 0; x < tvScreenWidth; x += 16 {
-			tstatex := x / tvTstatePixels
-			ulaDelayTable[tstate+tstatex+0] = 6
-			ulaDelayTable[tstate+tstatex+1] = 5
-			ulaDelayTable[tstate+tstatex+2] = 4
-			ulaDelayTable[tstate+tstatex+3] = 3
-			ulaDelayTable[tstate+tstatex+4] = 2
-			ulaDelayTable[tstate+tstatex+5] = 1
+	tstate := tvScreenTstate - 1
+	for y := 0; y < tvPaperHeight; y++ {
+		for x := 0; x < tvPaperTstates; x += 8 {
+			ulaDelayTable[tstate+x+0] = 6
+			ulaDelayTable[tstate+x+1] = 5
+			ulaDelayTable[tstate+x+2] = 4
+			ulaDelayTable[tstate+x+3] = 3
+			ulaDelayTable[tstate+x+4] = 2
+			ulaDelayTable[tstate+x+5] = 1
 		}
 		tstate += tvLineTstates
 	}
