@@ -1,6 +1,7 @@
 package spectrum
 
 import (
+	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/video"
 )
 
@@ -18,18 +19,27 @@ const (
 	tvScreenHeight = tvPaperHeight + 2*tvBorderHeight
 )
 
-// Sync constants
+// Timing constants
+//
+// Vertical   : 312 lines = 16 sync, 48 border top, 192 paper, 56 border bottom
+// Horizontal : 224 Ts = 24 border left, 128 paper, 24 border right, 48 retrace
+// A line starts with its left border, 24 Ts before its first paper pixel, so
+// the first paper pixel (0,0) is at Tstate 14336 = 64 lines * 224 Ts.
 const (
-	tvScanlines     = 312
-	tvVSyncLines    = 16
-	tvTopLine       = 48 + tvVSyncLines
-	tvBottomLine    = tvScanlines - 56
-	tvLineTstates   = 224
-	tvHSyncTstates  = 200
-	tvBorderLines   = tvBorderHeight
-	tvBorderTstates = tvBorderWidth / 2
-	tvPaperTstates  = tvPaperWidth / 2
-	tvScreenTstate  = 14336
+	tvScanlines        = 312
+	tvLineTstates      = 224
+	tvFrameTstates     = tvScanlines * tvLineTstates // 69888
+	tvLeftTstates      = 24                          // left border Ts before paper
+	tvPaperTstates     = tvPaperWidth / 2            // 1 Ts == 2 px
+	tvBorderTstates    = tvBorderWidth / 2           // visible border Ts
+	tvPaperLine        = 64                          // first paper line
+	tvScreenTstate     = tvPaperLine * tvLineTstates // 14336
+	tvFirstVisibleLine = tvPaperLine - tvBorderHeight
+	tvEndVisibleLine   = tvPaperLine + tvPaperHeight + tvBorderHeight
+	tvColVisible       = tvLeftTstates - tvBorderTstates // line Ts : first visible
+	tvColPaper         = tvLeftTstates                   // line Ts : first paper
+	tvColBorderRight   = tvColPaper + tvPaperTstates     // line Ts : first right border
+	tvColEndVisible    = tvColBorderRight + tvBorderTstates
 )
 
 // Video memory constants
@@ -42,8 +52,8 @@ const (
 )
 
 var (
-	// Scanline addresses table
-	tvScanlineAddr [tvScanlines][2]int
+	// Paper line addresses table : bitmap & attribute
+	tvPaperAddr [tvPaperHeight][2]int
 
 	// ZX Spetrum 16/48k RGBA colour palette
 	zxPaletteRGBA = []uint32{
@@ -54,30 +64,30 @@ var (
 	}
 )
 
-// UlaTv is the spectrum RF video device
+// UlaTv is the spectrum RF video device.
+//
+// The TV beam is rendered on demand: Update draws from the last rendered
+// Tstate up to the current clock Tstate. It must be called before any change
+// that affects the output (border, video memory) and at the end of the frame,
+// so the beam position is always derived from the machine clock.
 type UlaTv struct {
-	screen     *video.Screen // The video screen
-	scrdata    []byte        // The screen data
-	border     byte          // The border current colour index
-	borderRgb  uint32        // The border rgb colour
-	flash      bool          // Flash state
-	frames     int           // Frame count
-	tstate     int           // Video TState
-	scanline   int           // Video Scanline
-	x, y       int           // Screen beam position
-	scrAddr    int           // Screen memory address
-	attAddr    int           // Attribute memory address
-	scrByte    byte          // Screen byte
-	bitCount   byte          // Bit position
-	bitMask    byte          // Bit mask
-	attInk     uint32        // Current ink color
-	attPaper   uint32        // Current paper color
-	isOnScreen bool
-	isOnBorder bool
+	screen    *video.Screen // The video screen
+	clock     device.Clock  // The machine clock
+	scrdata   []byte        // The screen data
+	border    byte          // The border current colour index
+	borderRgb uint32        // The border rgb colour
+	flash     bool          // Flash state
+	frames    int           // Frame count
+	tstate    int           // Frame Tstate rendered so far (beam position)
+	scrByte   byte          // Current paper bitmap byte
+	attInk    uint32        // Current paper ink colour
+	attPaper  uint32        // Current paper paper colour
 }
 
+// NewUlaTv creates the ULA TV video device
 func NewUlaTv(spectrum *Spectrum) *UlaTv {
 	var tv = new(UlaTv)
+	tv.clock = spectrum.clock
 	tv.scrdata = spectrum.memory.Bank(zxVideoMemory).Data()
 	tv.screen = video.NewScreen(tvScreenWidth, tvScreenHeight, zxPaletteRGBA)
 	return tv
@@ -85,6 +95,7 @@ func NewUlaTv(spectrum *Spectrum) *UlaTv {
 
 // SetBorder sets de current border color
 func (tv *UlaTv) SetBorder(color byte) {
+	tv.Update(tv.clock.Tstates())
 	tv.border = color
 	tv.borderRgb = tv.screen.GetColor(int(color))
 }
@@ -97,9 +108,10 @@ func (tv *UlaTv) Init() { tv.Reset() }
 // Reset resets video device
 func (tv *UlaTv) Reset() {
 	tv.screen.Clear(0)
-	tv.SetBorder(7)
+	tv.tstate = 0
+	tv.border = 7
+	tv.borderRgb = tv.screen.GetColor(7)
 	tv.flash = false
-	tv.onVSync()
 }
 
 // Video
@@ -107,144 +119,106 @@ func (tv *UlaTv) Reset() {
 // Screen the video screen
 func (tv *UlaTv) Screen() *video.Screen { return tv.screen }
 
-// EndFrame updates screen video frame
+// EndFrame renders the rest of the frame and starts a new one
 func (tv *UlaTv) EndFrame() {
+	tv.Update(tvFrameTstates)
+	tv.tstate = 0
 	tv.frames++
 	tv.flash = (tv.frames & 0x10) == 0
 }
 
 // Emulation
 
-func (tv *UlaTv) Emulate(tstates int) {
-	for i := 0; i < tstates; i++ {
-		tv.OnClock()
+// Resync sets the beam position to the clock without rendering (i.e. after
+// the clock has been set by a snapshot load)
+func (tv *UlaTv) Resync() {
+	tv.tstate = tv.clock.Tstates()
+	if tv.tstate > tvFrameTstates {
+		tv.tstate = tvFrameTstates
 	}
 }
 
-func (tv *UlaTv) OnClock() {
-	// Spectrum 48k - Tv Scanlines timings
-	// Vertical   : 312 Sl = 16 Sl sync, 48 Sl border top, 192 Sl Screen, 56 Sl border bottom
-	// Horizontal : 224 Ts = 128 Ts screen, 24 Ts border right, 48 Ts retrace, 24 TS border left
-	// First screen (0,0) pixel Tstate = 14336 TS = 64 Scanlines * 224 Tstates
-
-	// tstate & scanline control
-	if tv.tstate == tvHSyncTstates {
-		tv.onHSync()
-		if tv.scanline == tvScanlines {
-			tv.onVSync()
-		}
-	} else if tv.tstate == tvLineTstates {
-		tv.tstate = 0
+// Update renders the TV beam up to frame Tstate (exclusive)
+func (tv *UlaTv) Update(tstate int) {
+	if tstate > tvFrameTstates {
+		tstate = tvFrameTstates
 	}
+	for tv.tstate < tstate {
+		pos := tv.tstate + tvLeftTstates
+		line, col := pos/tvLineTstates, pos%tvLineTstates
+		end := col + tstate - tv.tstate
+		if end > tvLineTstates {
+			end = tvLineTstates
+		}
+		if line >= tvFirstVisibleLine && line < tvEndVisibleLine {
+			tv.renderLine(line, col, end)
+		}
+		tv.tstate += end - col
+	}
+}
 
-	// screen : 1 ts == 2px
-	if tv.isOnScreen && tv.isTstateOnScreen() {
-		if tv.isOnBorder || tv.isTstateOnBorder() {
-			tv.paintBorderPixel()
-			tv.paintBorderPixel()
+// renderLine renders line Tstates [col, end)
+func (tv *UlaTv) renderLine(line, col, end int) {
+	if col < tvColVisible {
+		col = tvColVisible
+	}
+	if end > tvColEndVisible {
+		end = tvColEndVisible
+	}
+	y := line - tvFirstVisibleLine
+	paperY := line - tvPaperLine
+	isPaper := paperY >= 0 && paperY < tvPaperHeight
+	for ; col < end; col++ {
+		x := (col - tvColVisible) << 1
+		if isPaper && col >= tvColPaper && col < tvColBorderRight {
+			tv.paintPaper(x, y, paperY, col-tvColPaper)
 		} else {
-			tv.paintScreenPixel()
-			tv.paintScreenPixel()
-		}
-	}
-	tv.tstate++
-}
-
-func (tv *UlaTv) onHSync() {
-	tv.x = 0
-	tv.bitCount = 0
-	tv.bitMask = 0x80
-	tv.scanline++
-	tv.isOnScreen = tv.isScanlineOnScreen()
-	tv.isOnBorder = tv.isScanlineOnBorder()
-	if tv.isOnScreen {
-		tv.y = tv.scanline - tvTopLine + tvBorderLines
-		if !tv.isOnBorder {
-			var addrs = tvScanlineAddr[tv.scanline]
-			tv.scrAddr = addrs[0]
-			tv.attAddr = addrs[1]
+			tv.screen.SetPixel(x, y, tv.borderRgb)
+			tv.screen.SetPixel(x+1, y, tv.borderRgb)
 		}
 	}
 }
 
-func (tv *UlaTv) onVSync() {
-	tv.x = 0
-	tv.y = 0
-	tv.bitCount = 0
-	tv.bitMask = 0x80
-	tv.scanline = 0
-	tv.isOnBorder = tv.isScanlineOnBorder()
-	tv.isOnScreen = tv.isScanlineOnScreen()
-}
-
-func (tv *UlaTv) isScanlineOnScreen() bool {
-	return tv.scanline >= tvTopLine-tvBorderLines &&
-		tv.scanline < tvBottomLine+tvBorderLines
-}
-
-func (tv *UlaTv) isScanlineOnBorder() bool {
-	return tv.scanline < tvTopLine || tv.scanline >= tvBottomLine
-}
-
-func (tv *UlaTv) isTstateOnScreen() bool {
-	return tv.tstate < tvPaperTstates+tvBorderTstates ||
-		tv.tstate >= tvLineTstates-tvBorderTstates
-}
-
-func (tv *UlaTv) isTstateOnBorder() bool {
-	return tv.tstate >= tvPaperTstates
-}
-
-func (tv *UlaTv) paintBorderPixel() {
-	tv.screen.SetPixel(tv.x, tv.y, tv.borderRgb)
-	tv.x++
-}
-
-func (tv *UlaTv) paintScreenPixel() {
-	// read video mem
-	if tv.bitCount == 0 {
-		tv.bitMask = 0x80
-		tv.scrByte = tv.scrdata[tv.scrAddr]
-		attByte := tv.scrdata[tv.attAddr]
-		attInk := attByte & 0x07
-		if (attByte & 0x40) != 0 {
-			attInk |= 0x08
-		}
-		attPaper := (attByte >> 3) & 0x07
-		if (attByte & 0x40) != 0 {
-			attPaper |= 0x08
-		}
-		if ((attByte & 0x80) != 0) && tv.flash {
-			attInk = attInk ^ attPaper
-			attPaper = attInk ^ attPaper
-			attInk = attInk ^ attPaper
-		}
-		tv.attInk = tv.screen.GetColor(int(attInk))
-		tv.attPaper = tv.screen.GetColor(int(attPaper))
+// paintPaper paints the 2 pixels of a paper Tstate (4 Ts per byte)
+func (tv *UlaTv) paintPaper(x, y, paperY, paperTs int) {
+	if paperTs&0x03 == 0 {
+		tv.fetch(paperY, paperTs>>2)
 	}
-	// paint bit
-	if (tv.scrByte & tv.bitMask) != 0 {
-		tv.screen.SetPixel(tv.x, tv.y, tv.attInk)
+	mask := byte(0x80) >> ((paperTs & 0x03) << 1)
+	tv.paintPixel(x, y, tv.scrByte&mask)
+	tv.paintPixel(x+1, y, tv.scrByte&(mask>>1))
+}
+
+func (tv *UlaTv) paintPixel(x, y int, bit byte) {
+	if bit != 0 {
+		tv.screen.SetPixel(x, y, tv.attInk)
 	} else {
-		tv.screen.SetPixel(tv.x, tv.y, tv.attPaper)
+		tv.screen.SetPixel(x, y, tv.attPaper)
 	}
-	// next bit / byte
-	tv.x++
-	tv.bitCount++
-	tv.bitMask >>= 1
-	if tv.bitCount == 8 {
-		tv.bitCount = 0
-		tv.scrAddr++
-		tv.attAddr++
+}
+
+// fetch reads the bitmap & attribute bytes of a paper column
+func (tv *UlaTv) fetch(paperY, column int) {
+	addrs := tvPaperAddr[paperY]
+	tv.scrByte = tv.scrdata[addrs[0]+column]
+	attByte := tv.scrdata[addrs[1]+column]
+	ink := attByte & 0x07
+	paper := (attByte >> 3) & 0x07
+	if (attByte & 0x40) != 0 {
+		ink |= 0x08
+		paper |= 0x08
 	}
+	if (attByte&0x80) != 0 && tv.flash {
+		ink, paper = paper, ink
+	}
+	tv.attInk = tv.screen.GetColor(int(ink))
+	tv.attPaper = tv.screen.GetColor(int(paper))
 }
 
 func init() {
-	// Scanline addresses table
+	// Paper line addresses table
 	for y := 0; y < tvPaperHeight; y++ {
-		scrAddr := tvVideoAddr + ((y & 0xc0) << 5) + ((y & 0x38) << 2) + ((y & 0x07) << 8)
-		attAddr := tvAttrAddr + ((y & 0xf8) << 2)
-		tvScanlineAddr[tvTopLine+y][0] = scrAddr
-		tvScanlineAddr[tvTopLine+y][1] = attAddr
+		tvPaperAddr[y][0] = tvVideoAddr + ((y & 0xc0) << 5) + ((y & 0x38) << 2) + ((y & 0x07) << 8)
+		tvPaperAddr[y][1] = tvAttrAddr + ((y & 0xf8) << 2)
 	}
 }

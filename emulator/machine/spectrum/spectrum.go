@@ -176,9 +176,6 @@ func (spectrum *Spectrum) Emulate() {
 	// Executes a CPU instruction
 	tstates := spectrum.cpu.Execute()
 
-	// ULA TV emulation
-	spectrum.tv.Emulate(tstates)
-
 	// Tape emulation
 	spectrum.tape.Emulate(tstates)
 
@@ -217,6 +214,7 @@ func (spectrum *Spectrum) LoadState(state machine.State) {
 func (spectrum *Spectrum) loadSnapshot(snap *format.Snapshot) {
 	spectrum.cpu.State.Copy(&snap.State)    // CPU
 	spectrum.clock.SetTstates(snap.Tstates) // TStates
+	spectrum.tv.Resync()                    // TV beam follows the clock
 	spectrum.tv.SetBorder(snap.Border)      // Border
 	// Memory banks (16k, 48k)
 	if spectrum.config.Model == ZXSpectrum16K {

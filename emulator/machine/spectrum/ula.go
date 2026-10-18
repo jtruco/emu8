@@ -1,5 +1,7 @@
 package spectrum
 
+import "github.com/jtruco/emu8/emulator/device/bus"
+
 // -----------------------------------------------------------------------------
 // ULA constants & vars
 // -----------------------------------------------------------------------------
@@ -68,6 +70,10 @@ func NewULA(spectrum *Spectrum) *ULA {
 // onVideoAccess processes the bus event
 func (ula *ULA) onVideoAccess(code int, address uint16) {
 	ula.doContention(0)
+	// render the TV beam before video memory changes
+	if code == bus.EventWrite && address < tvVideoSize {
+		ula.spectrum.tv.Update(ula.spectrum.clock.Tstates())
+	}
 }
 
 // Device
