@@ -6,6 +6,7 @@ import (
 
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
+	"github.com/jtruco/emu8/emulator/device/bus"
 	"github.com/jtruco/emu8/emulator/device/cpu"
 	"github.com/jtruco/emu8/emulator/device/cpu/z80"
 	"github.com/jtruco/emu8/emulator/device/io/tape"
@@ -70,6 +71,7 @@ func New(model int, settings machine.Settings) machine.Machine {
 	cpc.memory.SetMap(3, memory.NewRAM(0x8000, memory.Size16K))
 	cpc.memory.SetMap(4, memory.NewROM(0xC000, memory.Size16K)) // Upper ROM Basic
 	cpc.memory.SetMap(5, memory.NewRAM(0xC000, memory.Size16K))
+	cpc.memory.SetMapper(bus.NewPageMapper(14)) // ROMs over RAM : 16K pages
 	// devices
 	cpc.clock = device.NewClock()
 	cpc.cpu = z80.New(cpc.clock, cpc.memory, cpc)

@@ -84,3 +84,53 @@ func (mapper *MaskMapper) Select(address uint16) (*Map, uint16) {
 func (mapper *MaskMapper) SelectWrite(address uint16) (*Map, uint16) {
 	return mapper.Select(address)
 }
+
+// -----------------------------------------------------------------------------
+// PageMapper
+// -----------------------------------------------------------------------------
+
+// PageMapper is an efficient mapper for maps that can be switched (active)
+// or read only, like ROMs over RAM. It keeps, for each page of 2^shift bytes,
+// the maps that cover it in index order, and selects the first active map at
+// the address (the same selection as DefaultMapper, without scanning every map).
+type PageMapper struct {
+	shift uint16 // Number of shift bits
+	pages []Maps // Maps covering each page, in index order
+}
+
+// NewPageMapper creates a new page mapper of pages of 2^shift bytes
+func NewPageMapper(shift uint16) Mapper { return &PageMapper{shift: shift} }
+
+// Init inits the mapper : builds the maps of each page
+func (mapper *PageMapper) Init(maps Maps) {
+	size := 1 << mapper.shift
+	mapper.pages = make([]Maps, 0x10000>>mapper.shift)
+	for page := range mapper.pages {
+		start, end := page*size, page*size+size-1
+		for _, m := range maps {
+			if m != nil && int(m.startAddress) <= end && int(m.endAddress) >= start {
+				mapper.pages[page] = append(mapper.pages[page], m)
+			}
+		}
+	}
+}
+
+// Select selects the first active device map at address
+func (mapper *PageMapper) Select(address uint16) (*Map, uint16) {
+	for _, m := range mapper.pages[address>>mapper.shift] {
+		if m.active && address >= m.startAddress && address <= m.endAddress {
+			return m, address - m.startAddress
+		}
+	}
+	return nil, 0
+}
+
+// SelectWrite selects the first active and writable device map at address
+func (mapper *PageMapper) SelectWrite(address uint16) (*Map, uint16) {
+	for _, m := range mapper.pages[address>>mapper.shift] {
+		if m.active && !m.readOnly && address >= m.startAddress && address <= m.endAddress {
+			return m, address - m.startAddress
+		}
+	}
+	return nil, 0
+}

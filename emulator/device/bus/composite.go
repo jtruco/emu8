@@ -45,8 +45,13 @@ func (composite *Composite) SetMapper(mapper Mapper) {
 // Map returns map at index
 func (composite *Composite) Map(index int) *Map { return composite.maps[index] }
 
-// SetMap sets the map at index
-func (composite *Composite) SetMap(index int, m *Map) { composite.maps[index] = m }
+// SetMap sets the map at index (and updates the mapper)
+func (composite *Composite) SetMap(index int, m *Map) {
+	composite.maps[index] = m
+	if composite.mapper != nil {
+		composite.mapper.Init(composite.maps)
+	}
+}
 
 // Device interface
 
