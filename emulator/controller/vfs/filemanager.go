@@ -95,6 +95,10 @@ func (manager *FileManager) CreateFileInfo(filename string) *FileInfo {
 
 // NewName helper function to obtain a new filename
 func (manager *FileManager) NewName(prefix, ext string) string {
-	now := time.Now().Format("20060102030405")
-	return (prefix + "_" + now + "." + ext)
+	return newName(prefix, ext, time.Now())
+}
+
+// newName returns a filename with a timestamp (24 hour clock)
+func newName(prefix, ext string, t time.Time) string {
+	return prefix + "_" + t.Format("20060102150405") + "." + ext
 }
