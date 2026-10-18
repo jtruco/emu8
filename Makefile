@@ -52,11 +52,12 @@ deps:
 
 # tests
 
-.PHONY: test test-z80 test-spectrum
-test: test-spectrum test-z80
+.PHONY: test test-short
 
-test-spectrum:
-	$(GO_TEST) ./emulator/machine/spectrum/...
+# all tests (including the slow Z80 zexall test)
+test:
+	$(GO_TEST) ./...
 
-test-z80:
-	$(GO_TEST) ./emulator/device/cpu/z80/test
+# fast tests (slow tests are skipped with testing.Short)
+test-short:
+	$(GO_TEST) -short ./...

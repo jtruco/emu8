@@ -2,8 +2,8 @@ package z80
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/jtruco/emu8/emulator/device"
@@ -26,22 +26,35 @@ func (m *Memory) Write(address uint16, value byte) {
 
 // Z80 Test
 
-// TestZexall test Z80 emulator
+// TestZ80 runs the zexall Z80 instruction set exerciser
 func TestZ80(t *testing.T) {
-	testFile("zexall.bin")
+	if testing.Short() {
+		t.Skip("zexall: slow Z80 instruction set test (~90 s)")
+	}
+	output := runCPM(t, "zexall.bin")
+	if !strings.Contains(output, "Tests complete") {
+		t.Fatal("zexall did not complete")
+	}
+	for _, line := range strings.Split(output, "\n") {
+		if strings.Contains(line, "ERROR") {
+			t.Error(strings.TrimSpace(line))
+		}
+	}
 }
 
-func testFile(testfile string) {
+// runCPM runs a CP/M program and returns its console output. With -v the
+// output is also shown while it runs.
+func runCPM(t *testing.T, testfile string) string {
+	t.Helper()
 
 	// initialize cpu
 	mem, io := new(Memory), new(Memory)
 	cpu := z80.New(device.NewClock(), mem, io)
 
 	// load testfile
-	data, err := ioutil.ReadFile(testfile)
+	data, err := os.ReadFile(testfile)
 	if err != nil {
-		log.Println(err.Error())
-		return
+		t.Fatal(err)
 	}
 	copy(mem.data[0x100:], data[:])
 
@@ -51,27 +64,32 @@ func testFile(testfile string) {
 	mem.data[2] = 0x01
 	mem.data[5] = 0xc9 // RET from BDOS call
 
+	// console output
+	var output strings.Builder
+	print := func(c byte) {
+		output.WriteByte(c)
+		if testing.Verbose() {
+			fmt.Printf("%c", c)
+		}
+	}
+
 	// run test
-	done := false
-	for !done {
+	for {
 		cpu.Execute()
 		// Emulate CP/M syscall at address 5
 		if cpu.PC == 0x05 {
 			switch cpu.C {
 			case 0: // BDOS 0 System Reset
-				fmt.Println("Z80 reset after ", cpu.Clock().Tstates(), " t-states")
-				done = true
+				t.Logf("Z80 reset after %d t-states", cpu.Clock().Tstates())
+				return output.String()
 			case 2: // BDOS 2 console char output
-				fmt.Printf("%c", cpu.E)
+				print(cpu.E)
 			case 9: // BDOS 9 console string output (string terminated by "$")
-				addr := cpu.DE.Get()
-				for mem.data[addr] != '$' {
-					fmt.Printf("%c", mem.data[addr])
-					addr++
+				for addr := cpu.DE.Get(); mem.data[addr] != '$'; addr++ {
+					print(mem.data[addr])
 				}
 			default:
-				fmt.Println("BDOS Call ", cpu.C)
-				done = true
+				t.Fatalf("unsupported BDOS call %d", cpu.C)
 			}
 		}
 	}

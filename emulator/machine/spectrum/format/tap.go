@@ -19,6 +19,10 @@ const (
 	tapBLockData   = 0xff
 )
 
+// tapHeaderLength is the length of a standard header block (flag, 17 bytes
+// header, checksum)
+const tapHeaderLength = 19
+
 // TapBlockHeader information
 type TapBlockHeader struct {
 	tapType  byte
@@ -80,15 +84,23 @@ func (tap *Tap) Load(data []byte) bool {
 	}
 	index := 0
 	for offset := 0; offset < tapeLength; {
-		block := new(TapBlock)
+		if offset+2 > tapeLength {
+			log.Print("Tape (TAP) : Invalid format: truncated block length")
+			return false
+		}
 		length := int(readWord(data, offset))
 		offset += 2
+		if length == 0 || offset+length > tapeLength {
+			log.Printf("Tape (TAP) : Invalid format: block #%d of %d bytes", index, length)
+			return false
+		}
+		block := new(TapBlock)
 		block.Type = data[offset]
 		block.Index = index
 		block.Offset = offset
 		block.Length = length
 		block.data = data[offset : offset+length]
-		if block.Type == tapBlockHeader {
+		if block.Type == tapBlockHeader && length >= tapHeaderLength {
 			block.header.tapType = block.data[1]
 			block.header.filename = readString(block.data, 2, 10)
 			block.header.length = readWord(block.data, 12)
