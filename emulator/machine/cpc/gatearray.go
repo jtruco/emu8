@@ -93,7 +93,7 @@ func (ga *GateArray) SetInk(ink byte) {
 
 // Bus Input / Output
 
-// Read read from gatearray
+// Read reads from the gate array
 func (ga *GateArray) Read() byte {
 	return 0xff
 }

@@ -67,7 +67,7 @@ var ay38910VolumeLevels = [AY38910Nlevels]float32{
 // AY38910
 // -----------------------------------------------------------------------------
 
-// AY38910 Crtc Device
+// AY38910 is the AY-3-891x programmable sound generator device
 type AY38910 struct {
 	config    *Config
 	buffer    *Buffer

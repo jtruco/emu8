@@ -112,7 +112,7 @@ func (app *App) Quit() {
 	log.Print("App : Terminated !")
 }
 
-// poll SDL event queue
+// pollEvents polls the SDL event queue
 func (app *App) pollEvents() {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch e := event.(type) {

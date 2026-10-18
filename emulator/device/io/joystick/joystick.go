@@ -40,7 +40,7 @@ func NewJoyAxisEvent(id, axis, value byte) JoyEvent {
 		AxisValue: value}
 }
 
-// NewJoyButtonEvent creates a joystick axis event
+// NewJoyButtonEvent creates a joystick button event
 func NewJoyButtonEvent(id, button, state byte) JoyEvent {
 	return JoyEvent{
 		Event:       device.CreateEvent(EventJoyButton),

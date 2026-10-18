@@ -109,7 +109,7 @@ func (controller *Controller) Keyboard() *io.KeyboardController {
 	return controller.keyboard
 }
 
-// Joystick the keyboard controller
+// Joystick the joystick controller
 func (controller *Controller) Joystick() *io.JoystickController {
 	return controller.joystick
 }

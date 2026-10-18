@@ -139,7 +139,8 @@ func (z80 *Z80) fetchAndExecute(execute func(byte)) {
 	execute(opcode)
 }
 
-// fetchAndExecute fetchs and executes an opcode
+// acceptInterrupt leaves the HALT state and acknowledges the interrupt. It
+// returns true if the interrupt request remains active.
 func (z80 *Z80) acceptInterrupt() bool {
 	// Check halted state
 	if z80.Halted {

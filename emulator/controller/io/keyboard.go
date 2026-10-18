@@ -18,7 +18,7 @@ type KeyboardController struct {
 	mtx        sync.Mutex                            // Sync
 }
 
-// Keyboard key event
+// keyEvent is a keyboard key event
 type keyEvent struct {
 	Keycode   keyboard.KeyCode
 	EventType int

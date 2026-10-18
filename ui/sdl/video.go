@@ -144,7 +144,7 @@ func (video *Video) updateScreen() {
 	video.Screen.SetDirty(true)
 }
 
-// render regions
+// createRegions creates the screen render regions
 func (video *Video) createRegions() {
 	view := video.Screen.View()
 	scaleX := video.Scale * video.Screen.ScaleX()

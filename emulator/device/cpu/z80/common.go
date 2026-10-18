@@ -580,7 +580,7 @@ func (z80 *Z80) outd() {
 		sz53Table[z80.B]
 }
 
-// outd output with increment
+// outi output with increment
 func (z80 *Z80) outi() {
 	z80.readNoReq(z80.IR.Get(), 1)
 	tmp := z80.readByte(z80.HL.Get())
@@ -610,7 +610,7 @@ func (z80 *Z80) sbc16(value uint16) {
 // Register IX/IY extended instructions
 // -----------------------------------------------------------------------------
 
-// ld8rrixdd loads a value from an indexed address to a register
+// ld8rixdd loads a value from an indexed address to a register
 func (z80 *Z80) ld8rixdd(to *cpu.Reg8, reg *cpu.Register16) {
 	offset := expandsign(z80.readByte(z80.PC))
 	z80.readNoReq(z80.PC, 5)
@@ -620,7 +620,7 @@ func (z80 *Z80) ld8rixdd(to *cpu.Reg8, reg *cpu.Register16) {
 	*to = z80.readByte(reg.Get() + offset)
 }
 
-// ld8ixddrr loads a value to an indexed address
+// ld8ixddr loads a value to an indexed address
 func (z80 *Z80) ld8ixddr(reg *cpu.Register16, value cpu.Reg8) {
 	offset := expandsign(z80.readByte(z80.PC))
 	z80.readNoReq(z80.PC, 5)

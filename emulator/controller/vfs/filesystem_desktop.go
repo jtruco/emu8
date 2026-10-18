@@ -84,12 +84,12 @@ func (dfs *DesktopFileSystem) stat(info *FileInfo) error {
 	return err
 }
 
-// FormatPath gets filename from format path
+// formatPath sets the file path in the default folder of its format
 func (dfs *DesktopFileSystem) formatPath(info *FileInfo) {
 	info.Path = filepath.Join(dfs.subpaths[info.Format], filepath.Base(info.Name))
 }
 
-// Unzip unzips file data
+// unzip unzips the file data
 func (dfs *DesktopFileSystem) unzip(file *FileInfo) error {
 	zipdata := file.Data
 	zr, err := zip.NewReader(bytes.NewReader(zipdata), int64(len(zipdata)))
