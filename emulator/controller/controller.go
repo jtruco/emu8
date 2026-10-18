@@ -140,6 +140,12 @@ func (controller *Controller) Refresh() {
 // LoadFile loads file into machine
 func (controller *Controller) LoadFile(filename string) {
 	info := controller.file.CreateFileInfo(filename)
+	// safety net : a malformed file must not crash the emulator
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Emulator : Error loading file:", info.Name, ":", r)
+		}
+	}()
 	if info.Format == vfs.FormatUnknown {
 		log.Println("Emulator : Not supported format:", info.Ext)
 		return
