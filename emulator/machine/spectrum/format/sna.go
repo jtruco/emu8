@@ -11,6 +11,8 @@ const SNA = "sna"
 
 const (
 	_SNAFileLength = 49179
+	_SNAHeaderSize = 27
+	_SNARamAddress = 0x4000 // SNA memory dump starts at RAM address 0x4000
 )
 
 // LoadSNA loads snap from SNA data format
@@ -87,9 +89,22 @@ func (snap *Snapshot) SaveSNA() []byte {
 	data[20] = snap.R
 	data[21] = snap.F
 	data[22] = snap.A
-	writeWord(data, 23, snap.SP)
 	data[25] = snap.IM & 0x03
 	data[26] = snap.Border & 0x07
-	copy(data[27:], snap.Memory[0:0xc000])
+	copy(data[_SNAHeaderSize:], snap.Memory[0:0xc000])
+	// SNA stores PC on the stack (LoadSNA resumes with RETN): push PC
+	sp := snap.SP - 2
+	writeWord(data, 23, sp)
+	snaWriteRAM(data, sp, byte(snap.PC))
+	snaWriteRAM(data, sp+1, byte(snap.PC>>8))
 	return data
+}
+
+// snaWriteRAM writes a byte of the SNA memory dump at a machine address
+func snaWriteRAM(data []byte, address uint16, value byte) {
+	if address < _SNARamAddress {
+		log.Println("SNA : Stack in ROM, PC can not be saved")
+		return
+	}
+	data[_SNAHeaderSize+int(address-_SNARamAddress)] = value
 }
