@@ -101,9 +101,11 @@ func (app *App) Run() {
 			default:
 				sdl.Delay(loopSleepMillis)
 			}
-		} else { // Sync emulation
+		} else if app.emulator.IsRunning() { // Sync emulation
 			app.emulator.Emulate()
 			app.emulator.Sync()
+		} else { // Paused
+			sdl.Delay(loopSleepMillis)
 		}
 	}
 	// end emulation
