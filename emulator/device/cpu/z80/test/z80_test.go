@@ -28,6 +28,9 @@ func (m *Memory) Write(address uint16, value byte) {
 
 // TestZexall test Z80 emulator
 func TestZ80(t *testing.T) {
+	if testing.Short() {
+		t.Skip("zexall: slow Z80 instruction set test (~90 s)")
+	}
 	testFile("zexall.bin")
 }
 
