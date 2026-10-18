@@ -29,16 +29,3 @@ type Device interface {
 
 // Callback is a device bus event callback
 type Callback func(code int, address uint16)
-
-// Event is a bus event
-type Event struct {
-	device.Event        // Is a device event
-	Address      uint16 // Address on bus
-}
-
-// NewEvent creates a bus event
-func NewEvent(code int, address uint16) *Event {
-	return &Event{
-		Event:   device.CreateEvent(code),
-		Address: address}
-}

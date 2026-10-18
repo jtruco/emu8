@@ -280,12 +280,6 @@ func (z80 *Z80) ld16nnrr(regL, regH cpu.Reg8) {
 	z80.writeByte(tmp, regH)
 }
 
-// ld16rr loads 16 bit inmediate value
-func (z80 *Z80) ld16rr(reg *cpu.Register16) {
-	reg.SetL(z80.readBytePC())
-	reg.SetH(z80.readBytePC())
-}
-
 // ld16rrnn loads 16 bit register from extended address
 func (z80 *Z80) ld16rrnn(regL, regH *cpu.Reg8) {
 	tmp := toword(z80.readBytePC(), z80.readBytePC())

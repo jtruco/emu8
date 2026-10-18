@@ -24,18 +24,3 @@ type Receiver interface {
 	KeyMap() KeyMap                   // Keyboard map
 	ProcessKey(key Key, pressed bool) // Sets key state
 }
-
-// KeyEvent is a keyboard event
-type KeyEvent struct {
-	device.Event      // Is a device event
-	Key          Key  // Machine key pressed Down/Up
-	Pressed      bool // True if key is pressed down, False if is up
-}
-
-// NewKeyEvent creates a keyboard key event
-func NewKeyEvent(code int, key Key) KeyEvent {
-	return KeyEvent{
-		Event:   device.CreateEvent(code),
-		Key:     key,
-		Pressed: code == KeyDown}
-}
