@@ -314,10 +314,9 @@ func (ay *AY38910) OnClock() {
 	ay.channelB.onClock()
 	ay.channelC.onClock()
 	// update envelope every 16 clocks
-	if ay.counter&0xff == 0 {
+	if ay.counter&0x0f == 0 {
 		ay.envelope.onClock()
 	}
-	ay.counter = 0
 	// create audio sample
 	mix := ay.channelA.level + ay.channelB.level + ay.channelC.level
 	index := int(ay.nsample)
@@ -419,7 +418,7 @@ var ay38910Shapes = [][]uint8{
 	/* 1 1 1 0 */
 	{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0},
 	/* 1 1 1 1 */
-	{15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 }
 
 // AY38910Envelope audio envelope
@@ -432,36 +431,42 @@ type AY38910Envelope struct {
 	pos     int
 }
 
+const ay38910EnvelopeLast = 0x1f // last envelope shape step
+
 func (e *AY38910Envelope) reset() {
-	e.volume = 0
 	e.period = 1
-	e.counter = 0
 	e.setShape(0)
+	// idle : held at the end of the shape
+	e.pos = ay38910EnvelopeLast
+	e.volume = 0
 }
 
 func (e *AY38910Envelope) setPeriod(high, low uint8) {
 	e.period = uint16(high)<<8 | uint16(low)
 }
 
+// setShape restarts the envelope at the first step of the shape
 func (e *AY38910Envelope) setShape(shape uint8) {
 	e.shape = ay38910Shapes[shape]
 	e.pos = 0
+	e.counter = 0
+	e.volume = e.shape[0]
 	e.hold = (shape&0x08 == 0) || (shape&0x01 != 0)
 }
 
+// onClock steps the envelope every period clocks (period 0 acts as 1)
 func (e *AY38910Envelope) onClock() {
 	e.counter++
-	if e.counter == e.period {
-		e.counter = 0
-		e.volume = e.shape[e.pos]
-		if e.pos == 0x1f {
-			if !e.hold {
-				e.pos = 0
-			}
-		} else {
-			e.pos++
-		}
+	if e.counter < e.period {
+		return
 	}
+	e.counter = 0
+	if e.pos < ay38910EnvelopeLast {
+		e.pos++
+	} else if !e.hold {
+		e.pos = 0
+	}
+	e.volume = e.shape[e.pos]
 }
 
 // -----------------------------------------------------------------------------
