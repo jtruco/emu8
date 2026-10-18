@@ -1,4 +1,6 @@
-// Package config contains the emulator configuration
+// Package config contains the application configuration (machine, user
+// interface, video and audio). It maps to the settings of each emulator layer
+// (MachineSettings); the emulator core does not depend on it.
 package config
 
 import "github.com/jtruco/emu8/emulator/machine"

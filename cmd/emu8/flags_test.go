@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/jtruco/emu8/emulator/config"
+	"github.com/jtruco/emu8/config"
 )
 
 func TestParseFlags(t *testing.T) {

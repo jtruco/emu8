@@ -29,7 +29,7 @@ func main() {
 	}
 
 	// initialize emulator
-	emu, err := emulator.FromConfig(conf, vfs.NewDesktopFileSystem(cwd))
+	emu, err := emulator.Create(conf.MachineSettings(), vfs.NewDesktopFileSystem(cwd))
 	if err != nil {
 		log.Fatal("Main : Could not initialize emulator: ", err.Error())
 	}

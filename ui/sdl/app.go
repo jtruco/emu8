@@ -4,8 +4,8 @@ import (
 	"errors"
 	"log"
 
+	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/emulator"
-	"github.com/jtruco/emu8/emulator/config"
 	"github.com/veandco/go-sdl2/sdl"
 )
 

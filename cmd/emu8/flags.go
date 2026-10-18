@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/jtruco/emu8/emulator/config"
+	"github.com/jtruco/emu8/config"
 )
 
 // parseFlags returns the configuration from the command line arguments

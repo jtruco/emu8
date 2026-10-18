@@ -4,7 +4,7 @@
 package ui
 
 import (
-	"github.com/jtruco/emu8/emulator/config"
+	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/ui/sdl"
 )
 
