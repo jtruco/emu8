@@ -3,7 +3,12 @@
 // (MachineSettings); the emulator core does not depend on it.
 package config
 
-import "github.com/jtruco/emu8/emulator/machine"
+import (
+	"errors"
+	"fmt"
+
+	"github.com/jtruco/emu8/emulator/machine"
+)
 
 // Default configuration constants
 const (
@@ -65,6 +70,25 @@ func New() *Config {
 	config.Audio.Frequency = DefaultAudioFrequency
 	config.Audio.Mute = DefaultAudioMute
 	return config
+}
+
+// Video scale limits
+const (
+	MinVideoScale = 1
+	MaxVideoScale = 3
+)
+
+// Validate checks the configuration values
+func (config *Config) Validate() error {
+	switch {
+	case config.Machine.Model == "":
+		return errors.New("config : machine model is empty")
+	case config.Video.Scale < MinVideoScale || config.Video.Scale > MaxVideoScale:
+		return fmt.Errorf("config : video scale %d out of range (%d..%d)", config.Video.Scale, MinVideoScale, MaxVideoScale)
+	case config.Audio.Frequency <= 0:
+		return fmt.Errorf("config : invalid audio frequency %d", config.Audio.Frequency)
+	}
+	return nil
 }
 
 // MachineSettings returns the machine construction settings

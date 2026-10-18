@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/jtruco/emu8/config"
 )
@@ -24,10 +25,10 @@ func parseFlags(args []string) (*config.Config, error) {
 	if flags.NArg() > 0 {
 		conf.App.File = flags.Arg(0)
 	}
-
-	// validate parameters
-	if conf.Video.Scale < 1 || conf.Video.Scale > 3 {
-		conf.Video.Scale = config.DefaultVideoScale
+	if err := conf.Validate(); err != nil {
+		fmt.Fprintln(flags.Output(), err)
+		flags.Usage()
+		return nil, err
 	}
 	return conf, nil
 }

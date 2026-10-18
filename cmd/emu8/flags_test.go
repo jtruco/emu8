@@ -22,7 +22,6 @@ func TestParseFlags(t *testing.T) {
 		{"all flags", []string{"-model", "cpc464", "-options", "es", "-scale", "3", "-fullscreen", "-mute", "-file", "a.cdt"},
 			"a.cdt", "cpc464", "es", 3, true, true},
 		{"argument overrides -file", []string{"-file", "a.sna", "b.sna"}, "b.sna", config.DefaultMachineModel, "", 2, false, false},
-		{"invalid scale", []string{"-scale", "9"}, "", config.DefaultMachineModel, "", config.DefaultVideoScale, false, false},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -39,7 +38,9 @@ func TestParseFlags(t *testing.T) {
 			}
 		})
 	}
-	if _, err := parseFlags([]string{"-unknown"}); err == nil {
-		t.Error("unknown flag accepted")
+	for _, args := range [][]string{{"-unknown"}, {"-scale", "9"}, {"-scale", "0"}, {"-model", ""}} {
+		if _, err := parseFlags(args); err == nil {
+			t.Errorf("parseFlags(%q) accepted invalid arguments", args)
+		}
 	}
 }

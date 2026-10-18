@@ -3,6 +3,8 @@ package sdl
 import (
 	"log"
 
+	"github.com/jtruco/emu8/config"
+
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -17,7 +19,7 @@ type Audio struct {
 // NewAudio the SDL audio
 func NewAudio() *Audio {
 	audio := new(Audio)
-	audio.Frequency = 48000
+	audio.Frequency = config.DefaultAudioFrequency
 	audio.Channels = 1 // mono
 	return audio
 }
