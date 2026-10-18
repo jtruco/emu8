@@ -169,6 +169,8 @@ func (spectrum *Spectrum) InitControl(control machine.Control) {
 func (spectrum *Spectrum) BeginFrame() {
 	// Request cpu maskable interrupt
 	spectrum.cpu.InterruptRequest(true)
+	// Devices
+	spectrum.beeper.BeginFrame()
 }
 
 // Emulate one machine step
@@ -186,7 +188,10 @@ func (spectrum *Spectrum) Emulate() {
 }
 
 // EndFrame end emulation frame tasks
-func (spectrum *Spectrum) EndFrame() {} // nothing to do
+func (spectrum *Spectrum) EndFrame() {
+	spectrum.tv.EndFrame()
+	spectrum.beeper.EndFrame()
+}
 
 // onInterruptAck
 func (spectrum *Spectrum) onInterruptAck() bool {

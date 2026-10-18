@@ -24,8 +24,8 @@ type Machine interface {
 	Components() *device.Components // Components the machine components
 	InitControl(Control)            // InitControl connects the machine to the emulator controller
 	Emulate()                       // Emulate one machine step
-	BeginFrame()                    // BeginFrame begin emulation frame tasks
-	EndFrame()                      // EndFrame end emulation frame tasks
+	BeginFrame()                    // BeginFrame begins the frame of the machine and its devices
+	EndFrame()                      // EndFrame ends the frame of the machine and its devices (video and audio output ready)
 	LoadState(State)                // LoadState loads machine state
 	SaveState() State               // SaveState saves machine state
 }

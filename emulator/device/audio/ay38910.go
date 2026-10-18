@@ -183,6 +183,11 @@ func (ay *AY38910) Buffer() *Buffer {
 	return ay.buffer
 }
 
+// BeginFrame starts a new audio frame
+func (ay *AY38910) BeginFrame() {
+	ay.buffer.Reset()
+}
+
 // EndFrame ends audio frame
 func (ay *AY38910) EndFrame() {
 	ay.nsample = 0

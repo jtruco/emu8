@@ -44,12 +44,11 @@ func (controller *VideoController) SetDevice(device video.Video) {
 	controller.device = device
 }
 
-// Refresh updates screen changes to display output
+// Refresh updates the screen changes of the finished frame to display output
 func (controller *VideoController) Refresh() {
 	if controller.device == nil {
 		return
 	}
-	controller.device.EndFrame()
 	screen := controller.device.Screen()
 	if controller.display != nil {
 		if screen.IsDirty() {

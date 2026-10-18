@@ -9,11 +9,13 @@ import (
 // Audio
 // -----------------------------------------------------------------------------
 
-// Audio device
+// Audio device. The machine calls BeginFrame and EndFrame around every
+// emulation frame; the buffer is complete between EndFrame and BeginFrame.
 type Audio interface {
 	device.Device    // Is a device
 	Buffer() *Buffer // Buffer returns the audio buffer
 	Config() *Config // Config returns the audio configuration
+	BeginFrame()     // BeginFrame starts a new audio frame (clears the buffer)
 	EndFrame()       // EndFrame audio frame is finished and buffer is ready
 }
 
