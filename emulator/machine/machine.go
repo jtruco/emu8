@@ -60,6 +60,23 @@ func (config *Config) SetTimings(tstates, fps int) {
 	config.Duration = time.Duration(1e9 / fps)
 }
 
+// DefaultAudioFrequency is the default audio output frequency (48 KHz)
+const DefaultAudioFrequency = 48000
+
+// Settings are the machine construction settings
+type Settings struct {
+	AudioFrequency int    // Audio output frequency in Hz (0 : DefaultAudioFrequency)
+	Options        string // Machine specific options (e.g. CPC "es", "fr" ROMs)
+}
+
+// Frequency returns the audio output frequency, or the default if not set
+func (settings Settings) Frequency() int {
+	if settings.AudioFrequency > 0 {
+		return settings.AudioFrequency
+	}
+	return DefaultAudioFrequency
+}
+
 // State contains the serialized machine state
 type State struct {
 	Format string // Format extension

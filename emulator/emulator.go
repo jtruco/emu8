@@ -36,9 +36,9 @@ func New(machine machine.Machine) *Emulator {
 
 // Emulator factory
 
-// FromModel returns an emulator for a machine model name
-func FromModel(model string) (*Emulator, error) {
-	machine, err := machine.Create(model)
+// FromModel returns an emulator for a machine model name and its settings
+func FromModel(model string, settings machine.Settings) (*Emulator, error) {
+	machine, err := machine.Create(model, settings)
 	if err != nil {
 		log.Println(err.Error())
 		return nil, err

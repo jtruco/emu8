@@ -4,7 +4,6 @@ package cpc
 import (
 	"log"
 
-	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/jtruco/emu8/emulator/device/cpu"
@@ -42,6 +41,7 @@ const (
 // AmstradCPC the Amstrad CPC 464
 type AmstradCPC struct {
 	config     machine.Config      // Machine information
+	options    string              // Machine options (OS ROM language)
 	control    machine.Control     // The emulator controller
 	components *device.Components  // Machine device components
 	clock      *device.ClockDevice // The system clock
@@ -58,10 +58,11 @@ type AmstradCPC struct {
 }
 
 // New returns a new Amstrad CPC
-func New(model int) machine.Machine {
+func New(model int, settings machine.Settings) machine.Machine {
 	cpc := new(AmstradCPC)
 	cpc.config.Model = model
 	cpc.config.SetTimings(cpcTStates, cpcFPS)
+	cpc.options = settings.Options
 	// memory map
 	cpc.memory = memory.New(6)
 	cpc.memory.SetMap(0, memory.NewROM(0x0000, memory.Size16K)) // Lower ROM Bios
@@ -78,7 +79,7 @@ func New(model int) machine.Machine {
 	cpc.video = NewVduVideo(cpc)
 	cpc.keyboard = NewKeyboard()
 	cpc.psg = audio.NewAY38910(
-		audio.NewConfig(config.Get().Audio.Frequency, cpcFPS, cpcAudioTStates))
+		audio.NewConfig(settings.Frequency(), cpcFPS, cpcAudioTStates))
 	cpc.psg.OnReadPortA = cpc.onPsgReadPortA
 	cpc.ppi = NewPpi(cpc)
 	cpc.tape = tape.New(cpc.clock)
@@ -118,7 +119,7 @@ func (cpc *AmstradCPC) Reset() {
 func (cpc *AmstradCPC) initAmstrad() {
 	// load lower rom (os)
 	romname := cpcOsRomName
-	switch config.Get().Machine.Options {
+	switch cpc.options {
 	case "es":
 		romname = cpcOsRomNameES
 	case "fr":

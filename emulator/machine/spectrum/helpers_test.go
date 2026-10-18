@@ -5,6 +5,7 @@ import (
 
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/emulator/controller/vfs"
+	"github.com/jtruco/emu8/emulator/machine"
 )
 
 // Test palette colours (bright 0 / bright 1)
@@ -23,7 +24,7 @@ var (
 func newTestSpectrum(t *testing.T) *Spectrum {
 	t.Helper()
 	vfs.SetFileSystem(vfs.NewMemFileSystem())
-	m := New(ZXSpectrum48K).(*Spectrum)
+	m := New(ZXSpectrum48K, machine.Settings{}).(*Spectrum)
 	controller.New(m)
 	m.Init()
 	return m

@@ -1,6 +1,8 @@
 // Package config contains the emulator configuration
 package config
 
+import "github.com/jtruco/emu8/emulator/machine"
+
 // Default configuration constants
 const (
 	DefaultAppTitle        = "emu8"
@@ -9,7 +11,7 @@ const (
 	DefaultMachineOptions  = ""
 	DefaultVideoScale      = 2
 	DefaultVideoFullScreen = false
-	DefaultAudioFrequency  = 48000 // 48 KHz
+	DefaultAudioFrequency  = machine.DefaultAudioFrequency // 48 KHz
 	DefaultAudioMute       = false
 )
 

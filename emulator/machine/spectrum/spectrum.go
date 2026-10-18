@@ -4,7 +4,6 @@ package spectrum
 import (
 	"log"
 
-	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/jtruco/emu8/emulator/device/bus"
@@ -52,7 +51,7 @@ type Spectrum struct {
 }
 
 // New returns a new ZX Spectrum
-func New(model int) machine.Machine {
+func New(model int, settings machine.Settings) machine.Machine {
 	spectrum := new(Spectrum)
 	spectrum.config.Model = model
 	spectrum.config.SetTimings(zxTStates, zxFPS)
@@ -76,7 +75,7 @@ func New(model int) machine.Machine {
 	spectrum.cpu.OnIntAck = spectrum.onInterruptAck
 	spectrum.tv = NewUlaTv(spectrum)
 	spectrum.beeper = audio.NewBeeper(
-		audio.NewConfig(config.Get().Audio.Frequency, zxFPS, zxTStates))
+		audio.NewConfig(settings.Frequency(), zxFPS, zxTStates))
 	spectrum.beeper.SetMap(zxBeeperMap)
 	spectrum.keyboard = NewKeyboard()
 	spectrum.tape = tape.New(spectrum.clock)

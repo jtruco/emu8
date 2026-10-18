@@ -5,13 +5,14 @@ import (
 
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/emulator/controller/vfs"
+	"github.com/jtruco/emu8/emulator/machine"
 )
 
 // The machine ends its devices frames : the emulation does not depend on
 // the UI controllers being refreshed.
 func TestCpcFrameLifecycleHeadless(t *testing.T) {
 	vfs.SetFileSystem(vfs.NewMemFileSystem())
-	m := New(AmstradCPC464).(*AmstradCPC)
+	m := New(AmstradCPC464, machine.Settings{}).(*AmstradCPC)
 	controller.New(m)
 	m.Init()
 	m.psg.WriteRegister(7, 0x3e) // tone A
