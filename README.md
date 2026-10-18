@@ -79,9 +79,9 @@ Once the emulator is running you can control it with the following keys :
 - F7 : Plays and Stops the tape.
 - F8 : Rewinds the tape.
 - F10 : Exits the application.
+- F11 : Toggle full-screen video mode.
 
 Other keys are mapped to the emulated machine keyboard (for example Esc is the CPC ESC key, and EDIT on the Spectrum).
-- F11 : Toggle full-screen video mode.
 
 ### Command line arguments
 **emu8** have these command line arguments:
