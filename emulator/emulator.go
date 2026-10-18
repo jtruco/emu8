@@ -3,7 +3,6 @@ package emulator
 
 import (
 	"log"
-	"sync"
 	"time"
 
 	"github.com/jtruco/emu8/emulator/controller"
@@ -14,13 +13,12 @@ import (
 // Emulator
 // -----------------------------------------------------------------------------
 
-// Emulator is the emulator main controller
+// Emulator is the emulator main controller. The UI drives the emulation
+// calling Emulate and Sync once per frame.
 type Emulator struct {
 	machine  machine.Machine        // The hosted machine
 	control  *controller.Controller // The emulator controller
 	running  bool                   // Indicates emulation is running
-	async    bool                   // Async emulation goroutine
-	wg       sync.WaitGroup         // Sync control
 	tstates  int                    // Tstates per frame
 	duration time.Duration          // Frame duration
 	sleep    time.Duration          // Sleep duration
@@ -65,17 +63,6 @@ func (emulator *Emulator) Machine() machine.Machine {
 // IsRunning the emulation
 func (emulator *Emulator) IsRunning() bool { return emulator.running }
 
-// IsAsync async emulation is active
-func (emulator *Emulator) IsAsync() bool { return emulator.async }
-
-// SetAsync sets async emulation
-func (emulator *Emulator) SetAsync(async bool) {
-	if emulator.running {
-		emulator.Stop()
-	}
-	emulator.async = async
-}
-
 // Init the emulation
 func (emulator *Emulator) Init() {
 	emulator.machine.Init()
@@ -98,9 +85,6 @@ func (emulator *Emulator) Start() {
 		emulator.running = true
 		emulator.sleep = emulator.duration
 		emulator.current = time.Now()
-		if emulator.async {
-			go emulator.emulationLoop()
-		}
 		log.Println("Emulator : Started")
 	}
 }
@@ -109,9 +93,6 @@ func (emulator *Emulator) Start() {
 func (emulator *Emulator) Stop() {
 	if emulator.running {
 		emulator.running = false
-		if emulator.async {
-			emulator.wg.Wait()
-		}
 		log.Println("Emulator : Stopped")
 	}
 }
@@ -138,29 +119,16 @@ func (emulator *Emulator) TakeSnapshot() {
 
 // Emulate one frame loop
 func (emulator *Emulator) Emulate() {
-	if emulator.running && !emulator.async {
+	if emulator.running {
 		emulator.emulateFrame()
 	}
 }
 
 // Sync synchronizes next frame loop
 func (emulator *Emulator) Sync() {
-	if emulator.running && !emulator.async {
+	if emulator.running {
 		emulator.syncFrame()
 	}
-}
-
-// emulationLoop the emulation loop goroutine
-func (emulator *Emulator) emulationLoop() {
-	emulator.wg.Add(1)
-	defer emulator.wg.Done()
-
-	log.Println("Emulator : emulation loop started")
-	for emulator.running {
-		emulator.emulateFrame()
-		emulator.syncFrame()
-	}
-	log.Println("Emulator : emulation loop finalized")
 }
 
 // emulateFrame emulates the frame

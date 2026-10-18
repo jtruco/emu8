@@ -12,7 +12,6 @@ type Audio struct {
 	Frequency int32 // Audio frequency
 	Channels  int32 // Audio channels
 	Mute      bool  // Mute audio
-	Async     bool  // Asynchronous mode
 }
 
 // NewAudio the SDL audio
@@ -50,14 +49,6 @@ func (audio *Audio) Close() {
 // Play plays the audio buffer
 func (audio *Audio) Play(buffer *audio.Buffer) {
 	if !audio.Mute {
-		if audio.Async {
-			go audio.onPlay(buffer)
-		} else {
-			audio.onPlay(buffer)
-		}
+		sdl.QueueAudio(1, buffer.Data())
 	}
-}
-
-func (audio *Audio) onPlay(buffer *audio.Buffer) {
-	sdl.QueueAudio(1, buffer.Data())
 }
