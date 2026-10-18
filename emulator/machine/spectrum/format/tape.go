@@ -58,19 +58,13 @@ func writeWord(data []byte, pos int, value uint16) {
 	data[pos+1] = byte(value >> 8)
 }
 
-// readIntN reads LSB unsgined integer as integer
-func readIntN(data []byte, pos int, len int) int {
-	value := uint(data[pos])
-	if len > 1 && len < 4 {
-		lshift := uint(8)
-		for len > 1 {
-			pos++
-			value += uint(data[pos]) << lshift
-			lshift += 8
-			len--
-		}
+// readIntN reads a n bytes (1..4) LSB unsigned integer as integer
+func readIntN(data []byte, pos int, n int) int {
+	value := 0
+	for i := n - 1; i >= 0; i-- {
+		value = value<<8 | int(data[pos+i])
 	}
-	return int(value)
+	return value
 }
 
 // readString reads valid characters to string

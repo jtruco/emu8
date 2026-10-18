@@ -10,6 +10,9 @@ import (
 // Tape Drive
 // -----------------------------------------------------------------------------
 
+// maxStatesPerStep is the limit of tape states played in one emulation step
+const maxStatesPerStep = 10000
+
 // Drive tape device
 type Drive struct {
 	control Control      // Tape control data
@@ -100,9 +103,10 @@ func (drive *Drive) Emulate(tstates int) {
 		return
 	}
 	padding := drive.control.Timeout
-	// play until next state
+	// play until next state (zero time states of a malformed tape are limited
+	// per step, so they can't freeze the emulation)
 	drive.control.Timeout = 0
-	for drive.IsPlaying() && drive.control.Timeout == 0 {
+	for n := 0; n < maxStatesPerStep && drive.IsPlaying() && drive.control.Timeout == 0; n++ {
 		drive.tape.Play(&drive.control)
 	}
 	drive.control.Timeout += padding

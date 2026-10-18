@@ -16,6 +16,7 @@ const TZX = "tzx"
 // TZX constants
 const (
 	tzxHeaderSignature = "ZXTape!"
+	tzxHeaderLength    = 10 // signature, 0x1A, major and minor version
 	tzxStartEar        = tape.LevelLow
 	tzxLogAllBlocks    = false
 )
@@ -89,11 +90,7 @@ func (tzx *Tzx) Blocks() []tape.Block {
 // Load loads the tape file data
 func (tzx *Tzx) Load(data []byte) bool {
 	tapeLength := len(data)
-	if tapeLength == 0 {
-		log.Print("Tape (TZX) : Invalid format: 0-length data")
-		return false
-	}
-	if string(data[0:7]) != tzxHeaderSignature {
+	if tapeLength < tzxHeaderLength || string(data[0:7]) != tzxHeaderSignature {
 		log.Print("Tape (TZX) : Invalid TZX header signature")
 		return false
 	}
@@ -103,60 +100,9 @@ func (tzx *Tzx) Load(data []byte) bool {
 		block.Type = data[offset]
 		block.Index = index
 		block.Offset = offset
-		length := 0
-		switch block.Type {
-		case 0x10: // Standard speed data
-			length = 5 + readInt(data, offset+3)
-		case 0x11: // Turbo speed data
-			length = 19 + readIntN(data, offset+16, 3)
-		case 0x12: // Pure tone
-			length = 5
-		case 0x13: // Pulse sequence
-			length = 2 + 2*int(data[offset+1])
-		case 0x14: // Pure data
-			length = 11 + readIntN(data, offset+8, 3)
-		case 0x15: // Direct data
-			length = 9 + readIntN(data, offset+6, 3)
-		case 0x18: // CSW recording
-			length = 5 + readIntN(data, offset+1, 4)
-		case 0x19: // Generalized data
-			length = 5 + readIntN(data, offset+1, 4)
-		case 0x20: // Pause (silence) or 'Stop the Tape' command
-			length = 3
-		case 0x21: // Group Start
-			length = 2 + int(data[offset+1])
-		case 0x22: // Group End
-			length = 1
-		case 0x23: // Jump to Block
-			length = 3
-		case 0x24: // Loop Start
-			length = 3
-		case 0x25: // Loop End
-			length = 1
-		case 0x26: // Call Sequence
-			length = 3 + 2*readInt(data, offset+1)
-		case 0x27: // Return from Sequence
-			length = 1
-		case 0x28: // Select Block
-			length = 3 + readInt(data, offset+1)
-		case 0x2A: // Stop the tape if in 48K mode
-			length = 5
-		case 0x2B: // Set Signal Level
-			length = 6
-		case 0x30: // Text Description
-			length = 2 + int(data[offset+1])
-		case 0x31: // Message
-			length = 3 + int(data[offset+2])
-		case 0x32: // Archive Info
-			length = 3 + readInt(data, offset+1)
-		case 0x33: // Hardware Type
-			length = 2 + 3*int(data[offset+1])
-		case 0x35: // Custom Info
-			length = 21 + 2*readIntN(data, offset+17, 4)
-		case 'Z': // Glue Block
-			length = 10
-		default:
-			log.Printf("Tape (TZX) : Unknown block ID 0x%x", block.Type)
+		length, ok := tzxBlockLength(data[offset:])
+		if !ok {
+			log.Printf("Tape (TZX) : Invalid block #%d ID 0x%x at offset %d", index, block.Type, offset)
 			return false
 		}
 		block.Length = length
@@ -166,6 +112,78 @@ func (tzx *Tzx) Load(data []byte) bool {
 		index++
 	}
 	return true
+}
+
+// tzxBlockLength returns the length of the block at the start of data. It is
+// not valid if the block ID is unknown or the block is truncated.
+func tzxBlockLength(data []byte) (int, bool) {
+	// fixed part of the block (ID included) and its length field
+	size, lenPos, lenBytes, lenFactor := 0, 0, 0, 1
+	switch data[0] {
+	case 0x10: // Standard speed data
+		size, lenPos, lenBytes = 5, 3, 2
+	case 0x11: // Turbo speed data
+		size, lenPos, lenBytes = 19, 16, 3
+	case 0x12: // Pure tone
+		size = 5
+	case 0x13: // Pulse sequence
+		size, lenPos, lenBytes, lenFactor = 2, 1, 1, 2
+	case 0x14: // Pure data
+		size, lenPos, lenBytes = 11, 8, 3
+	case 0x15: // Direct data
+		size, lenPos, lenBytes = 9, 6, 3
+	case 0x18: // CSW recording
+		size, lenPos, lenBytes = 5, 1, 4
+	case 0x19: // Generalized data
+		size, lenPos, lenBytes = 5, 1, 4
+	case 0x20: // Pause (silence) or 'Stop the Tape' command
+		size = 3
+	case 0x21: // Group Start
+		size, lenPos, lenBytes = 2, 1, 1
+	case 0x22: // Group End
+		size = 1
+	case 0x23: // Jump to Block
+		size = 3
+	case 0x24: // Loop Start
+		size = 3
+	case 0x25: // Loop End
+		size = 1
+	case 0x26: // Call Sequence
+		size, lenPos, lenBytes, lenFactor = 3, 1, 2, 2
+	case 0x27: // Return from Sequence
+		size = 1
+	case 0x28: // Select Block
+		size, lenPos, lenBytes = 3, 1, 2
+	case 0x2A: // Stop the tape if in 48K mode
+		size = 5
+	case 0x2B: // Set Signal Level
+		size = 6
+	case 0x30: // Text Description
+		size, lenPos, lenBytes = 2, 1, 1
+	case 0x31: // Message
+		size, lenPos, lenBytes = 3, 2, 1
+	case 0x32: // Archive Info
+		size, lenPos, lenBytes = 3, 1, 2
+	case 0x33: // Hardware Type
+		size, lenPos, lenBytes, lenFactor = 2, 1, 1, 3
+	case 0x35: // Custom Info
+		size, lenPos, lenBytes = 21, 17, 4
+	case 'Z': // Glue Block
+		size = tzxHeaderLength
+	default:
+		return 0, false
+	}
+	if size > len(data) {
+		return 0, false
+	}
+	length := size
+	if lenBytes > 0 {
+		length += lenFactor * readIntN(data, lenPos, lenBytes)
+	}
+	if length > len(data) {
+		return 0, false
+	}
+	return length, true
 }
 
 // Play TZX tape
@@ -212,6 +230,10 @@ func (tzx *Tzx) Play(control *tape.Control) {
 		control.State = tapeStateByte
 
 	case tapeStateByte:
+		if tzx.blockLength <= 0 { // no data
+			control.State = tapeStateLastPulse
+			break
+		}
 		tzx.bitMask = 0x80
 		tzx.lastBit = 0x00
 		if tzx.blockLength == 1 {
@@ -274,7 +296,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 	case tapeStatePulseSeqNc:
 		if tzx.pilotPulses > 0 {
 			tzx.pilotPulses--
-			control.Timeout = readInt(control.Block.Data(), control.BlockPos)
+			control.Timeout = tzxReadPulse(control.Block.Data(), control.BlockPos)
 			control.BlockPos += 2
 			control.State = tapeStatePulseSeq
 		} else {
@@ -307,6 +329,22 @@ func (tzx *Tzx) Play(control *tape.Control) {
 	}
 }
 
+// tzxReadPulse reads a pulse length in Ts (at least 1 Ts)
+func tzxReadPulse(data []byte, pos int) int {
+	if pulse := readInt(data, pos); pulse > 0 {
+		return pulse
+	}
+	return 1
+}
+
+// tzxLastByteBits returns the valid used bits of the last byte (1..8)
+func tzxLastByteBits(bits byte) byte {
+	if bits == 0 || bits > 8 {
+		return 8
+	}
+	return bits
+}
+
 // stopTape stops the playback (stop the tape blocks). Playing again continues
 // with the next block.
 func (tzx *Tzx) stopTape(control *tape.Control) {
@@ -329,15 +367,15 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		tzx.endBlockPause = readInt(data, control.BlockPos+1)
 		tzx.blockLength = readInt(data, control.BlockPos+3)
 		control.BlockPos += 5
-		if control.DataAtPos() < 0x80 {
-			tzx.pilotPulses = tapeHeaderPulses
-		} else {
+		if tzx.blockLength > 0 && control.DataAtPos() >= 0x80 {
 			tzx.pilotPulses = tapeDataPulses
+		} else {
+			tzx.pilotPulses = tapeHeaderPulses
 		}
 		control.State = tapeStatePilotNc
 		control.BlockIndex++
 		// log : standar data block
-		if data[5] == 0 {
+		if tzx.blockLength >= tapHeaderLength && data[5] == 0 {
 			switch data[6] {
 			case 0:
 				log.Println("Tape (TZX) : Program header block:", readString(data, 7, 10))
@@ -351,13 +389,13 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		}
 
 	case 0x11:
-		tzx.pilotTiming = readInt(data, control.BlockPos+1)
-		tzx.sync1Timing = readInt(data, control.BlockPos+3)
-		tzx.sync2timing = readInt(data, control.BlockPos+5)
-		tzx.zeroTiming = readInt(data, control.BlockPos+7)
-		tzx.oneTiming = readInt(data, control.BlockPos+9)
+		tzx.pilotTiming = tzxReadPulse(data, control.BlockPos+1)
+		tzx.sync1Timing = tzxReadPulse(data, control.BlockPos+3)
+		tzx.sync2timing = tzxReadPulse(data, control.BlockPos+5)
+		tzx.zeroTiming = tzxReadPulse(data, control.BlockPos+7)
+		tzx.oneTiming = tzxReadPulse(data, control.BlockPos+9)
 		tzx.pilotPulses = readInt(data, control.BlockPos+11)
-		tzx.bitsLastByte = data[control.BlockPos+13]
+		tzx.bitsLastByte = tzxLastByteBits(data[control.BlockPos+13])
 		tzx.endBlockPause = readInt(data, control.BlockPos+14)
 		tzx.blockLength = readIntN(data, control.BlockPos+16, 3)
 		control.BlockPos += 19
@@ -367,7 +405,7 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		log.Println("Tape (TZX) : Turbo data block:", tzx.blockLength, "bytes")
 
 	case 0x12: // Pure Tone Block
-		tzx.pilotTiming = readInt(data, control.BlockPos+1)
+		tzx.pilotTiming = tzxReadPulse(data, control.BlockPos+1)
 		tzx.pilotPulses = readInt(data, control.BlockPos+3)
 		control.BlockPos += 5
 		control.State = tapeStatePureToneNc
@@ -380,9 +418,9 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		control.BlockIndex++
 
 	case 0x14: // Pure Data Block
-		tzx.zeroTiming = readInt(data, control.BlockPos+1)
-		tzx.oneTiming = readInt(data, control.BlockPos+3)
-		tzx.bitsLastByte = data[control.BlockPos+5]
+		tzx.zeroTiming = tzxReadPulse(data, control.BlockPos+1)
+		tzx.oneTiming = tzxReadPulse(data, control.BlockPos+3)
+		tzx.bitsLastByte = tzxLastByteBits(data[control.BlockPos+5])
 		tzx.endBlockPause = readInt(data, control.BlockPos+6)
 		tzx.blockLength = readIntN(data, control.BlockPos+8, 3)
 		control.BlockPos += 11
@@ -403,6 +441,9 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 
 	case 0x23: // Jump to Block
 		target := readInt(data, control.BlockPos+1)
+		if target == 0 { // invalid jump to itself : next block
+			target = 1
+		}
 		control.BlockIndex += target
 
 	case 0x24: // Loop Start
@@ -412,7 +453,7 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 
 	case 0x25: // Loop End
 		tzx.loopCount--
-		if tzx.loopCount == 0 {
+		if tzx.loopCount <= 0 { // loop done (or no loop start)
 			control.BlockIndex++
 		} else {
 			control.BlockIndex = tzx.loopStart
