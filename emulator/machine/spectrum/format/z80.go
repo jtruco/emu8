@@ -11,8 +11,9 @@ import "log"
 const Z80 = "z80"
 
 const (
-	_Z80HeaderLength = 30
-	_Z80BankSize     = 0x4000
+	_Z80HeaderLength   = 30
+	_Z80ExtraMinLength = 23 // v2 additional header length (v3 : 54 or 55)
+	_Z80BankSize       = 0x4000
 )
 
 var z80BankAddresses = map[byte]int{8: 0x0000, 4: 0x4000, 5: 0x8000}
@@ -86,9 +87,13 @@ func z80LoadFileV1(data []byte, snap *Snapshot) bool {
 
 func z80LoadFileV23(data []byte, snap *Snapshot) bool {
 	totalSize := len(data)
-	extraSize := uint16(data[30]) | (uint16(data[31]) << 8)
-	headerSize := int(_Z80HeaderLength + 2 + extraSize)
-	if totalSize < headerSize {
+	if totalSize < _Z80HeaderLength+2 {
+		log.Println("Z80 : Invalid file format")
+		return false
+	}
+	extraSize := readInt(data, _Z80HeaderLength)
+	headerSize := _Z80HeaderLength + 2 + extraSize
+	if extraSize < _Z80ExtraMinLength || totalSize < headerSize {
 		log.Println("Z80 : Invalid file format")
 		return false
 	}
@@ -102,44 +107,65 @@ func z80LoadFileV23(data []byte, snap *Snapshot) bool {
 	snap.PC = uint16(data[32]) | (uint16(data[33]) << 8)
 	// load 16k data banks. 48k model RAM banks
 	for idx := headerSize; idx < totalSize; {
+		if idx+3 > totalSize {
+			log.Println("Z80 : truncated bank header")
+			return false
+		}
 		num := data[idx+2]
 		address, ok := z80BankAddresses[num]
 		if !ok {
 			log.Println("Z80 : unsupported bank format")
 			return false
 		}
-		size := int(uint16(data[idx+0]) | uint16(data[idx+1])<<8)
+		size := readInt(data, idx)
 		if size > _Z80BankSize {
 			log.Println("Z80 : wrong bank size")
 			return false
 		}
 		idx += 3
+		if idx+size > totalSize {
+			log.Println("Z80 : truncated bank data")
+			return false
+		}
 		bankdata := data[idx : idx+size]
 		if size < _Z80BankSize {
-			bankdata = z80DecompressBlock(bankdata)
+			bankdata, ok = z80DecompressBlock(bankdata)
+			if !ok {
+				log.Println("Z80 : wrong compressed bank data")
+				return false
+			}
 		}
-		copy(snap.Memory[address:], bankdata[:_Z80BankSize])
+		copy(snap.Memory[address:address+_Z80BankSize], bankdata)
 		idx += size
 	}
 	return true
 }
 
-func z80DecompressBlock(data []byte) []byte {
+// z80DecompressBlock decompresses a 16k bank. It fails if the data
+// decompresses to more than 16k.
+func z80DecompressBlock(data []byte) ([]byte, bool) {
 	buffer := make([]byte, _Z80BankSize)
 	sizeIn := len(data)
 	sizeOut := 0
 	for i := 0; i < sizeIn; {
 		if data[i] == 0xED && i < (sizeIn-3) && data[i+1] == 0xED {
-			for j := byte(0); j < data[i+2]; j++ {
+			count := int(data[i+2])
+			if sizeOut+count > _Z80BankSize {
+				return nil, false
+			}
+			for j := 0; j < count; j++ {
 				buffer[sizeOut] = data[i+3]
 				sizeOut++
 			}
 			i += 4
 		} else {
+			if sizeOut == _Z80BankSize {
+				return nil, false
+			}
 			buffer[sizeOut] = data[i]
 			sizeOut++
 			i++
 		}
 	}
-	return buffer[0:sizeOut]
+	return buffer[0:sizeOut], true
 }

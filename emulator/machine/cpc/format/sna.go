@@ -17,8 +17,7 @@ const (
 // LoadSNA loads snap from SNA data format
 func LoadSNA(data []byte) *Snapshot {
 	// Check format
-	idstr := string(data[:0x08])
-	if idstr != _SNAIdString {
+	if len(data) < _SNAMemDump || string(data[:0x08]) != _SNAIdString {
 		log.Println("SNA : Invalid file format")
 		return nil
 	}
@@ -34,6 +33,10 @@ func LoadSNA(data []byte) *Snapshot {
 		return nil
 	}
 	memsize *= 0x400 // 1k
+	if len(data) < _SNAMemDump+memsize {
+		log.Println("SNA : Truncated memory dump")
+		return nil
+	}
 
 	// load SNA data
 	snap := NewSnapshot()
