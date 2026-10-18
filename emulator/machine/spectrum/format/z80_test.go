@@ -85,6 +85,8 @@ func TestZ80LoadValidation(t *testing.T) {
 }
 
 func FuzzLoadZ80(f *testing.F) {
+	f.Add(z80V1Image(0x8000, 0x20, z80Compress(z80TestMemory()), z80V1EndMarker))
+	f.Add(z80V1Image(0x8000, 0x00, z80TestMemory()))
 	f.Add(z80Image(0x8000, z80Bank(8, []byte{0x01, 0xed, 0xed, 0x03, 0xaa, 0x02})))
 	f.Add(z80Image(0x8000, z80Bank(4, make([]byte, _Z80BankSize))))
 	f.Add(z80Image(0x8000, append([]byte{0xff, 0xff, 5}, make([]byte, _Z80BankSize)...)))
@@ -99,4 +101,110 @@ func FuzzLoadSNA(f *testing.F) {
 	f.Fuzz(func(t *testing.T, data []byte) {
 		LoadSNA(data)
 	})
+}
+
+// z80V1Image builds a Z80 v1 snapshot : header (PC, SP, byte 12) and data
+func z80V1Image(pc uint16, byte12 byte, parts ...[]byte) []byte {
+	data := make([]byte, _Z80HeaderLength)
+	data[6], data[7] = byte(pc), byte(pc>>8)
+	data[8], data[9] = 0x00, 0xff // SP 0xff00
+	data[12] = byte12
+	for _, p := range parts {
+		data = append(data, p...)
+	}
+	return data
+}
+
+// z80Compress compresses data as in the Z80 format: runs of 5 or more equal
+// bytes, and runs of 2 or more ED bytes, as ED ED nn bb. The byte after a
+// single ED is never compressed.
+func z80Compress(data []byte) []byte {
+	var out []byte
+	for i := 0; i < len(data); {
+		b, run := data[i], 1
+		for i+run < len(data) && data[i+run] == b && run < 255 {
+			run++
+		}
+		switch {
+		case run >= 5 || (b == 0xed && run >= 2):
+			out = append(out, 0xed, 0xed, byte(run), b)
+			i += run
+		case b == 0xed && i+1 < len(data):
+			out = append(out, b, data[i+1])
+			i += 2
+		default:
+			out = append(out, b)
+			i++
+		}
+	}
+	return out
+}
+
+// z80TestMemory is 48k of data with runs, single and repeated ED bytes
+func z80TestMemory() []byte {
+	mem := make([]byte, _Z80V1MemorySize)
+	for i := range mem {
+		switch {
+		case i%997 < 300: // long runs
+			mem[i] = byte(i / 997)
+		case i%13 == 0:
+			mem[i] = 0xed
+		default:
+			mem[i] = byte(i * 7)
+		}
+	}
+	copy(mem[0x100:], []byte{0xed, 0xed, 0xed, 0x05, 0xed, 0x05, 0x05, 0x05, 0x05, 0x05, 0x05})
+	return mem
+}
+
+func TestZ80LoadV1(t *testing.T) {
+	mem := z80TestMemory()
+	compressed := z80Compress(mem)
+	cases := []struct {
+		name string
+		data []byte
+	}{
+		{"uncompressed", z80V1Image(0x8123, 0x00, mem)},
+		{"byte 12 is 255 (uncompressed)", z80V1Image(0x8123, 0xff, mem)},
+		{"compressed with end marker", z80V1Image(0x8123, 0x20, compressed, z80V1EndMarker)},
+		{"compressed without end marker", z80V1Image(0x8123, 0x20, compressed)},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			snap := LoadZ80(c.data)
+			if snap == nil {
+				t.Fatal("LoadZ80 failed")
+			}
+			if snap.PC != 0x8123 || snap.SP != 0xff00 {
+				t.Errorf("PC/SP = %#04x/%#04x, want 0x8123/0xff00", snap.PC, snap.SP)
+			}
+			if !bytes.Equal(snap.Memory[:], mem) {
+				t.Error("memory does not match")
+			}
+		})
+	}
+	if len(compressed) >= len(mem) {
+		t.Errorf("test data compressed to %d bytes, want less than %d", len(compressed), len(mem))
+	}
+}
+
+func TestZ80LoadV1Validation(t *testing.T) {
+	mem := z80TestMemory()
+	cases := []struct {
+		name string
+		data []byte
+	}{
+		{"uncompressed too short", z80V1Image(0x8000, 0x00, mem[:len(mem)-1])},
+		{"uncompressed too long", z80V1Image(0x8000, 0x00, mem, []byte{0x00})},
+		{"compressed too short", z80V1Image(0x8000, 0x20, z80Compress(mem[:0x4000]), z80V1EndMarker)},
+		{"compressed too long", z80V1Image(0x8000, 0x20, z80Compress(append(mem, mem[:16]...)), z80V1EndMarker)},
+		{"no memory", z80V1Image(0x8000, 0x20)},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if snap := LoadZ80(c.data); snap != nil {
+				t.Error("LoadZ80 accepted invalid data")
+			}
+		})
+	}
 }

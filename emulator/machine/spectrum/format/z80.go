@@ -1,6 +1,9 @@
 package format
 
-import "log"
+import (
+	"bytes"
+	"log"
+)
 
 // -----------------------------------------------------------------------------
 // Z80 snapshot format
@@ -15,13 +18,16 @@ const (
 	_Z80ExtraMinLength   = 23 // v2 additional header length (v3 : 54 or 55)
 	_Z80BankSize         = 0x4000
 	_Z80BankUncompressed = 0xffff // v3 bank length : 16k not compressed
+	_Z80V1MemorySize     = 0xc000 // v1 : 48k memory from 0x4000
 )
+
+var z80V1EndMarker = []byte{0x00, 0xed, 0xed, 0x00}
 
 var z80BankAddresses = map[byte]int{8: 0x0000, 4: 0x4000, 5: 0x8000}
 
 // LoadZ80 loads snap from Z80 data format
 func LoadZ80(data []byte) *Snapshot {
-	// Check version (only v1 supported)
+	// Check header (versions 1, 2 and 3)
 	if len(data) < _Z80HeaderLength {
 		log.Println("Z80 : Invalid file format")
 		return nil
@@ -80,10 +86,28 @@ func z80LoadHeaderV1(data []byte, snap *Snapshot) bool {
 	return true
 }
 
+// z80LoadFileV1 loads the 48k memory of a version 1 snapshot. It is
+// compressed if header byte 12 bit 5 is set, ending with a 00 ED ED 00 marker.
 func z80LoadFileV1(data []byte, snap *Snapshot) bool {
-	// not implemented
-	log.Println("Z80 : Version 1 not implemented")
-	return false
+	memory := data[_Z80HeaderLength:]
+	compressed := data[12] != 255 && data[12]&0x20 != 0
+	if compressed {
+		if n := len(memory); n >= len(z80V1EndMarker) && bytes.Equal(memory[n-len(z80V1EndMarker):], z80V1EndMarker) {
+			memory = memory[:n-len(z80V1EndMarker)]
+		}
+		var ok bool
+		memory, ok = z80Decompress(memory, _Z80V1MemorySize)
+		if !ok {
+			log.Println("Z80 : wrong compressed memory data")
+			return false
+		}
+	}
+	if len(memory) != _Z80V1MemorySize {
+		log.Println("Z80 : wrong memory size")
+		return false
+	}
+	copy(snap.Memory[:], memory)
+	return true
 }
 
 func z80LoadFileV23(data []byte, snap *Snapshot) bool {
@@ -151,13 +175,19 @@ func z80LoadFileV23(data []byte, snap *Snapshot) bool {
 // z80DecompressBlock decompresses a 16k bank. It fails if the data
 // decompresses to more than 16k.
 func z80DecompressBlock(data []byte) ([]byte, bool) {
-	buffer := make([]byte, _Z80BankSize)
+	return z80Decompress(data, _Z80BankSize)
+}
+
+// z80Decompress decompresses data (ED ED nn bb : nn times bb). It fails if
+// the data decompresses to more than size bytes.
+func z80Decompress(data []byte, size int) ([]byte, bool) {
+	buffer := make([]byte, size)
 	sizeIn := len(data)
 	sizeOut := 0
 	for i := 0; i < sizeIn; {
 		if data[i] == 0xED && i < (sizeIn-3) && data[i+1] == 0xED {
 			count := int(data[i+2])
-			if sizeOut+count > _Z80BankSize {
+			if sizeOut+count > size {
 				return nil, false
 			}
 			for j := 0; j < count; j++ {
@@ -166,7 +196,7 @@ func z80DecompressBlock(data []byte) ([]byte, bool) {
 			}
 			i += 4
 		} else {
-			if sizeOut == _Z80BankSize {
+			if sizeOut == size {
 				return nil, false
 			}
 			buffer[sizeOut] = data[i]
