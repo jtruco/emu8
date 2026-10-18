@@ -98,7 +98,8 @@ func (ula *ULA) Reset() {
 
 // DataBus
 
-// Read bus at address
+// Read bus at address : the ULA adds the whole I/O cycle time (preIO and
+// postIO : 4 Ts with the contention pattern of the port)
 func (ula *ULA) Read(address uint16) byte {
 	var result byte = 0xff
 	ula.preIO(address)
@@ -119,7 +120,8 @@ func (ula *ULA) Read(address uint16) byte {
 	return result
 }
 
-// Write bus at address
+// Write bus at address : the ULA adds the whole I/O cycle time (preIO and
+// postIO : 4 Ts with the contention pattern of the port)
 func (ula *ULA) Write(address uint16, data byte) {
 	ula.preIO(address)
 	defer ula.postIO(address)

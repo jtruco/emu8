@@ -212,7 +212,8 @@ func (cpc *AmstradCPC) EndFrame() {
 // CPC IO bus
 // -----------------------------------------------------------------------------
 
-// Read bus at address
+// Read bus at address. Known bug B17 : it adds no I/O cycle time (the Z80
+// core leaves it to the I/O device), so I/O instructions are too short.
 func (cpc *AmstradCPC) Read(address uint16) byte {
 	var result byte = 0xff
 	if address&0x4000 == 0 { // CRTC
@@ -226,7 +227,8 @@ func (cpc *AmstradCPC) Read(address uint16) byte {
 	return result
 }
 
-// Write bus at address
+// Write bus at address. Known bug B17 : it adds no I/O cycle time (the Z80
+// core leaves it to the I/O device), so I/O instructions are too short.
 func (cpc *AmstradCPC) Write(address uint16, data byte) {
 	if address&0x4000 == 0 { // CRTC
 		port := byte(address>>8) & 0x3
