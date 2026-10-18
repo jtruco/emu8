@@ -14,19 +14,6 @@ type FileSystem interface {
 	SaveFile(info *FileInfo) error
 }
 
-// fileSystem is the current filesystem : default memory
-var fileSystem FileSystem = NewMemFileSystem()
-
-// GetFileSystem returns the current filesystem
-func GetFileSystem() FileSystem {
-	return fileSystem
-}
-
-// SetFileSystem returns the current filesystem
-func SetFileSystem(fs FileSystem) {
-	fileSystem = fs
-}
-
 // -----------------------------------------------------------------------------
 // Memory File System
 // -----------------------------------------------------------------------------

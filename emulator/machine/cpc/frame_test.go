@@ -11,9 +11,8 @@ import (
 // The machine ends its devices frames : the emulation does not depend on
 // the UI controllers being refreshed.
 func TestCpcFrameLifecycleHeadless(t *testing.T) {
-	vfs.SetFileSystem(vfs.NewMemFileSystem())
 	m := New(AmstradCPC464, machine.Settings{}).(*AmstradCPC)
-	controller.New(m)
+	controller.New(m, vfs.NewMemFileSystem())
 	m.Init()
 	m.psg.WriteRegister(7, 0x3e) // tone A
 	m.psg.WriteRegister(0, 0x40) // tone A period

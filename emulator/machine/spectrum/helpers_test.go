@@ -23,9 +23,8 @@ var (
 // (the ROM bank stays zeroed), at frame Tstate 0.
 func newTestSpectrum(t *testing.T) *Spectrum {
 	t.Helper()
-	vfs.SetFileSystem(vfs.NewMemFileSystem())
 	m := New(ZXSpectrum48K, machine.Settings{}).(*Spectrum)
-	controller.New(m)
+	controller.New(m, vfs.NewMemFileSystem())
 	m.Init()
 	return m
 }

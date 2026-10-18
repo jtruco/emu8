@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jtruco/emu8/emulator/controller"
+	"github.com/jtruco/emu8/emulator/controller/vfs"
 	"github.com/jtruco/emu8/emulator/machine"
 )
 
@@ -27,23 +28,24 @@ type Emulator struct {
 }
 
 // New creates a machine emulator
-func New(machine machine.Machine) *Emulator {
+func New(machine machine.Machine, fs vfs.FileSystem) *Emulator {
 	emulator := new(Emulator)
 	emulator.machine = machine
-	emulator.control = controller.New(machine)
+	emulator.control = controller.New(machine, fs)
 	return emulator
 }
 
 // Emulator factory
 
-// FromModel returns an emulator for a machine model name and its settings
-func FromModel(model string, settings machine.Settings) (*Emulator, error) {
+// FromModel returns an emulator for a machine model name and its settings,
+// using a file system for its files
+func FromModel(model string, settings machine.Settings, fs vfs.FileSystem) (*Emulator, error) {
 	machine, err := machine.Create(model, settings)
 	if err != nil {
 		log.Println(err.Error())
 		return nil, err
 	}
-	return New(machine), nil
+	return New(machine, fs), nil
 }
 
 // Machine controller

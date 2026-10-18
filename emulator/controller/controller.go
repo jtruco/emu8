@@ -30,12 +30,13 @@ type Controller struct {
 	tape     *io.TapeController     // The tape controller
 }
 
-// New returns a new emulator controller.
-func New(machine machine.Machine) *Controller {
+// New returns a new emulator controller of a machine, using a file system
+// for its files (ROMs, snapshots and tapes).
+func New(machine machine.Machine, fs vfs.FileSystem) *Controller {
 	controller := new(Controller)
 	controller.machine = machine
 	defer machine.InitControl(controller)
-	controller.file = vfs.NewFileManager()
+	controller.file = vfs.NewFileManager(fs)
 	controller.video = ui.NewVideoController()
 	controller.audio = ui.NewAudioController()
 	controller.keyboard = io.NewKeyboardController()

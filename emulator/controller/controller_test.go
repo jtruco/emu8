@@ -40,9 +40,8 @@ func (panicTape) Play(ctl *tape.Control) {}
 
 func TestLoadFileRecoversFromPanics(t *testing.T) {
 	fs := vfs.NewMemFileSystem()
-	vfs.SetFileSystem(fs)
 	m := new(panicMachine)
-	controller := New(m)
+	controller := New(m, fs)
 	for _, name := range []string{"game.snp", "game.tpe"} {
 		if err := fs.SaveFile(vfs.NewFileInfoData(name, []byte{0x00})); err != nil {
 			t.Fatal(err)

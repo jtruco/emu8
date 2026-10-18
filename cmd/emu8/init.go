@@ -4,7 +4,6 @@ import (
 	"flag"
 
 	"github.com/jtruco/emu8/emulator/config"
-	"github.com/jtruco/emu8/emulator/controller/vfs"
 )
 
 func init() {
@@ -26,7 +25,4 @@ func init() {
 	if conf.Video.Scale < 1 || conf.Video.Scale > 3 {
 		conf.Video.Scale = config.DefaultVideoScale
 	}
-
-	// init desktop vfs
-	vfs.InitDesktop()
 }

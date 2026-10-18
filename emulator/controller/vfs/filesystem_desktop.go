@@ -40,12 +40,6 @@ func NewDesktopFileSystem(path string) *DesktopFileSystem {
 	return fs
 }
 
-// InitDesktop initializes the desktop filesystem
-func InitDesktop() {
-	cwd, _ := os.Getwd()
-	SetFileSystem(NewDesktopFileSystem(cwd))
-}
-
 // LoadFile loads the file data from it's storage location.
 func (dfs *DesktopFileSystem) LoadFile(info *FileInfo) error {
 	// check for file

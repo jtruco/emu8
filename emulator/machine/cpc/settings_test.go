@@ -19,7 +19,6 @@ func TestCpcOptionsSelectOSRom(t *testing.T) {
 	}
 	for _, c := range cases {
 		fs := vfs.NewMemFileSystem()
-		vfs.SetFileSystem(fs)
 		for name, marker := range roms {
 			rom := make([]byte, 0x4000)
 			rom[0] = marker
@@ -27,7 +26,7 @@ func TestCpcOptionsSelectOSRom(t *testing.T) {
 		}
 		fs.SaveFile(vfs.NewFileInfoData(cpcBasicRomName, make([]byte, 0x4000)))
 		m := New(AmstradCPC464, machine.Settings{Options: c.options}).(*AmstradCPC)
-		controller.New(m)
+		controller.New(m, fs)
 		m.Init()
 		if got := m.memory.Bank(cpcLowerROM).Data()[0]; got != c.marker {
 			t.Errorf("options %q: OS ROM marker %#02x, want %#02x", c.options, got, c.marker)

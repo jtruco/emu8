@@ -2,6 +2,7 @@ package emulator
 
 import (
 	"github.com/jtruco/emu8/emulator/config"
+	"github.com/jtruco/emu8/emulator/controller/vfs"
 	"github.com/jtruco/emu8/emulator/machine"
 
 	// register machines
@@ -10,9 +11,9 @@ import (
 )
 
 // GetEmulator returns the emulator for the configured machine
-func GetEmulator() (*Emulator, error) {
+func GetEmulator(fs vfs.FileSystem) (*Emulator, error) {
 	conf := config.Get()
 	return FromModel(conf.Machine.Model, machine.Settings{
 		AudioFrequency: conf.Audio.Frequency,
-		Options:        conf.Machine.Options})
+		Options:        conf.Machine.Options}, fs)
 }
