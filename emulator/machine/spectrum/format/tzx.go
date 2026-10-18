@@ -296,7 +296,7 @@ func (tzx *Tzx) Play(control *tape.Control) {
 			control.Timeout = tzx.endBlockPause * tapeTimingEoB
 			control.State = tapeStateTzxHeader
 		} else {
-			control.State = tapeStateStop
+			tzx.stopTape(control)
 		}
 
 	case tapeStateStop:
@@ -305,6 +305,13 @@ func (tzx *Tzx) Play(control *tape.Control) {
 	default:
 		control.State = tapeStateStop
 	}
+}
+
+// stopTape stops the playback (stop the tape blocks). Playing again continues
+// with the next block.
+func (tzx *Tzx) stopTape(control *tape.Control) {
+	control.Playing = false
+	control.State = tapeStateTzxHeader
 }
 
 func (tzx *Tzx) parseHeader(control *tape.Control) {
@@ -415,8 +422,8 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		control.BlockIndex++
 
 	case 0x2A: // Stop the tape if in 48K mode
-		control.State = tapeStateStop
 		control.BlockIndex++
+		tzx.stopTape(control)
 
 	case 0x2B: // Set Signal Level
 		if data[control.BlockPos+5] == 0 {
