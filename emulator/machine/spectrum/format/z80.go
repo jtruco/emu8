@@ -11,9 +11,10 @@ import "log"
 const Z80 = "z80"
 
 const (
-	_Z80HeaderLength   = 30
-	_Z80ExtraMinLength = 23 // v2 additional header length (v3 : 54 or 55)
-	_Z80BankSize       = 0x4000
+	_Z80HeaderLength     = 30
+	_Z80ExtraMinLength   = 23 // v2 additional header length (v3 : 54 or 55)
+	_Z80BankSize         = 0x4000
+	_Z80BankUncompressed = 0xffff // v3 bank length : 16k not compressed
 )
 
 var z80BankAddresses = map[byte]int{8: 0x0000, 4: 0x4000, 5: 0x8000}
@@ -118,7 +119,13 @@ func z80LoadFileV23(data []byte, snap *Snapshot) bool {
 			return false
 		}
 		size := readInt(data, idx)
-		if size > _Z80BankSize {
+		compressed := true
+		switch {
+		case size == _Z80BankUncompressed: // v3 : 16k not compressed
+			size, compressed = _Z80BankSize, false
+		case size == _Z80BankSize:
+			compressed = false
+		case size > _Z80BankSize:
 			log.Println("Z80 : wrong bank size")
 			return false
 		}
@@ -128,7 +135,7 @@ func z80LoadFileV23(data []byte, snap *Snapshot) bool {
 			return false
 		}
 		bankdata := data[idx : idx+size]
-		if size < _Z80BankSize {
+		if compressed {
 			bankdata, ok = z80DecompressBlock(bankdata)
 			if !ok {
 				log.Println("Z80 : wrong compressed bank data")
