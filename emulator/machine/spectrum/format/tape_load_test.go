@@ -175,3 +175,29 @@ func FuzzTzxLoadPlay(f *testing.F) {
 		}
 	})
 }
+
+// Jump to block uses a signed relative offset
+func TestTzxJumpBackward(t *testing.T) {
+	data := tzxImage(
+		[]byte{0x23, 0x03, 0x00}, // #1 jump +3 -> #4
+		tzxPureToneBlock,         // #2 played after the backward jump
+		[]byte{0x23, 0x02, 0x00}, // #3 jump +2 -> end of tape
+		[]byte{0x23, 0xfe, 0xff}, // #4 jump -2 -> #2
+	)
+	drive := newTestDrive(t, data)
+	if toggles := playUntilStop(t, drive); toggles != tzxTestTonePulses {
+		t.Errorf("%d EAR toggles, want the tone %d", toggles, tzxTestTonePulses)
+	}
+}
+
+func TestTzxJumpBeforeFirstBlock(t *testing.T) {
+	tzx := NewTzx().(*Tzx)
+	if !tzx.Load(tzxImage([]byte{0x23, 0xf6, 0xff})) { // #1 jump -10
+		t.Fatal("Load failed")
+	}
+	control := tape.Control{State: tapeStateTzxHeader, BlockIndex: 1, NumBlocks: len(tzx.Blocks())}
+	tzx.Play(&control)
+	if control.BlockIndex != 0 {
+		t.Errorf("block index = %d, want 0", control.BlockIndex)
+	}
+}

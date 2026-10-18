@@ -440,11 +440,15 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		control.BlockIndex++
 
 	case 0x23: // Jump to Block
-		target := readInt(data, control.BlockPos+1)
+		// relative jump : signed offset
+		target := int(int16(readWord(data, control.BlockPos+1)))
 		if target == 0 { // invalid jump to itself : next block
 			target = 1
 		}
 		control.BlockIndex += target
+		if control.BlockIndex < 0 { // invalid jump before the first block
+			control.BlockIndex = 0
+		}
 
 	case 0x24: // Loop Start
 		tzx.loopCount = readInt(data, control.BlockPos+1)
