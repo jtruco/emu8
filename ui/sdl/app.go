@@ -23,12 +23,12 @@ type App struct {
 	running  bool
 }
 
-// NewApp creates a new application
-func NewApp() *App {
+// NewApp creates a new application from the configuration
+func NewApp(conf *config.Config) *App {
 	app := new(App)
 	app.video = NewVideo()
 	app.audio = NewAudio()
-	app.configure(config.Get())
+	app.configure(conf)
 	return app
 }
 

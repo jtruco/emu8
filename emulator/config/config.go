@@ -51,18 +51,9 @@ type AudioConfig struct {
 	Mute      bool // Mute audio
 }
 
-// -----------------------------------------------------------------------------
-// Configuration Singleton
-// -----------------------------------------------------------------------------
-
-// config is the application main configuration
-var config = new(Config)
-
-// Get gets the main configuration
-func Get() *Config { return config }
-
-// init initializes configuration
-func init() {
+// New returns a configuration with the default values
+func New() *Config {
+	config := new(Config)
 	config.App.Title = DefaultAppTitle
 	config.App.File = DefaultAppFile
 	config.Machine.Model = DefaultMachineModel
@@ -71,4 +62,12 @@ func init() {
 	config.Video.FullScreen = DefaultVideoFullScreen
 	config.Audio.Frequency = DefaultAudioFrequency
 	config.Audio.Mute = DefaultAudioMute
+	return config
+}
+
+// MachineSettings returns the machine construction settings
+func (config *Config) MachineSettings() machine.Settings {
+	return machine.Settings{
+		AudioFrequency: config.Audio.Frequency,
+		Options:        config.Machine.Options}
 }
