@@ -72,7 +72,7 @@ func readString(data []byte, pos int, len int) string {
 	bytes := make([]byte, len)
 	for i := 0; i < len; i++ {
 		char := data[pos+i]
-		if char > 31 || char < 128 {
+		if char > 31 && char < 128 {
 			bytes[i] = char
 		} else {
 			bytes[i] = '?'

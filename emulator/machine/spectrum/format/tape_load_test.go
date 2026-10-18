@@ -201,3 +201,10 @@ func TestTzxJumpBeforeFirstBlock(t *testing.T) {
 		t.Errorf("block index = %d, want 0", control.BlockIndex)
 	}
 }
+
+func TestReadString(t *testing.T) {
+	data := []byte("A\x01Z\x7f\x80~ ")
+	if got := readString(data, 0, len(data)); got != "A?Z\x7f?~ " {
+		t.Errorf("readString = %q", got)
+	}
+}
