@@ -97,7 +97,7 @@ func (tv *UlaTv) Init() { tv.Reset() }
 // Reset resets video device
 func (tv *UlaTv) Reset() {
 	tv.screen.Clear(0)
-	tv.border = 7
+	tv.SetBorder(7)
 	tv.flash = false
 	tv.onVSync()
 }
@@ -152,6 +152,8 @@ func (tv *UlaTv) OnClock() {
 
 func (tv *UlaTv) onHSync() {
 	tv.x = 0
+	tv.bitCount = 0
+	tv.bitMask = 0x80
 	tv.scanline++
 	tv.isOnScreen = tv.isScanlineOnScreen()
 	tv.isOnBorder = tv.isScanlineOnBorder()
@@ -168,6 +170,8 @@ func (tv *UlaTv) onHSync() {
 func (tv *UlaTv) onVSync() {
 	tv.x = 0
 	tv.y = 0
+	tv.bitCount = 0
+	tv.bitMask = 0x80
 	tv.scanline = 0
 	tv.isOnBorder = tv.isScanlineOnBorder()
 	tv.isOnScreen = tv.isScanlineOnScreen()
