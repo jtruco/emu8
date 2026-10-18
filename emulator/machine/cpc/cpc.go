@@ -250,7 +250,7 @@ func (cpc *AmstradCPC) onPsgReadPortA() byte {
 // Files : load & save state / tape
 // -----------------------------------------------------------------------------
 
-// LoadState loads a ZX Spectrum snapshot
+// LoadState loads an Amstrad CPC snapshot
 func (cpc *AmstradCPC) LoadState(state machine.State) {
 	var snap *format.Snapshot
 	switch state.Format {
@@ -288,7 +288,7 @@ func (cpc *AmstradCPC) loadSnapshot(snap *format.Snapshot) {
 	}
 }
 
-// SaveState loads a ZX Spectrum snapshot
+// SaveState saves an Amstrad CPC snapshot
 func (cpc *AmstradCPC) SaveState() machine.State {
 	return machine.State{
 		Format: format.SNA,

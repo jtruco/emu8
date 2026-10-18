@@ -93,7 +93,7 @@ func (ula *ULA) Init() {
 
 // Reset resets ULA
 func (ula *ULA) Reset() {
-	// nothing to to
+	// nothing to do
 }
 
 // DataBus
@@ -165,7 +165,7 @@ func (ula *ULA) postIO(address uint16) {
 	}
 }
 
-// doContention aplies clock contention
+// doContention applies clock contention
 func (ula *ULA) doContention(tstates int) {
 	delay := ulaDelayTable[ula.spectrum.clock.Tstates()] + tstates
 	if delay > 0 {

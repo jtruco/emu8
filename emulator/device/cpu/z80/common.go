@@ -142,7 +142,7 @@ func (z80 *Z80) writeByte(address uint16, value byte) {
 // writeNoReq only puts address on bus (no MREQ) during n tstates
 func (z80 *Z80) writeNoReq(address uint16, n int) {
 	for i := 0; i < n; i++ {
-		z80.mem.Read(address) // only bus acccess
+		z80.mem.Read(address) // only bus access
 		z80.clock.Inc()       // +1 tstates in bus access
 	}
 }
@@ -156,7 +156,7 @@ func (z80 *Z80) writePort(port uint16, value byte) {
 // Basic instructions
 // -----------------------------------------------------------------------------
 
-// adc acumulator add with carry
+// adc accumulator add with carry
 func (z80 *Z80) adc(value byte) {
 	tmp := uint16(z80.A) + uint16(value) + uint16((z80.F & FlagC))
 	lookup := ((z80.A & 0x88) >> 3) | ((value & 0x88) >> 2) | byte(((tmp & 0x88) >> 1))
@@ -165,7 +165,7 @@ func (z80 *Z80) adc(value byte) {
 		overflowAddTable[lookup>>4] | sz53Table[z80.A]
 }
 
-// add acumulator add
+// add accumulator add
 func (z80 *Z80) add(value byte) {
 	tmp := uint16(z80.A) + uint16(value)
 	lookup := ((z80.A & 0x88) >> 3) | ((value & 0x88) >> 2) | byte(((tmp & 0x88) >> 1))
@@ -174,7 +174,7 @@ func (z80 *Z80) add(value byte) {
 		overflowAddTable[lookup>>4] | sz53Table[z80.A]
 }
 
-// and acumulator and
+// and accumulator and
 func (z80 *Z80) and(value byte) {
 	z80.A &= value
 	z80.F = FlagH | sz53pTable[z80.A]
@@ -205,7 +205,7 @@ func (z80 *Z80) call(condition bool) {
 	}
 }
 
-// cp acumulator sub
+// cp accumulator sub
 func (z80 *Z80) cp(value byte) {
 	tmp := uint16(z80.A) - uint16(value)
 	lookup := ((z80.A & 0x88) >> 3) | ((value & 0x88) >> 2) | byte(((tmp & 0x88) >> 1))
@@ -214,7 +214,7 @@ func (z80 *Z80) cp(value byte) {
 		(value & (Flag3 | Flag5)) | (lowbyte(tmp) & FlagS)
 }
 
-// daa decimal adjust acummulator
+// daa decimal adjust accumulator
 func (z80 *Z80) daa() {
 	add, carry := byte(0), (z80.F & FlagC)
 	if ((z80.F & FlagH) != 0) || ((z80.A & 0x0f) > 9) {
@@ -280,12 +280,6 @@ func (z80 *Z80) ld16nnrr(regL, regH cpu.Reg8) {
 	z80.writeByte(tmp, regH)
 }
 
-// ld16rr loads 16 bit inmediate value
-func (z80 *Z80) ld16rr(reg *cpu.Register16) {
-	reg.SetL(z80.readBytePC())
-	reg.SetH(z80.readBytePC())
-}
-
 // ld16rrnn loads 16 bit register from extended address
 func (z80 *Z80) ld16rrnn(regL, regH *cpu.Reg8) {
 	tmp := toword(z80.readBytePC(), z80.readBytePC())
@@ -295,7 +289,7 @@ func (z80 *Z80) ld16rrnn(regL, regH *cpu.Reg8) {
 	*regH = z80.readByte(tmp)
 }
 
-// or acumulator or
+// or accumulator or
 func (z80 *Z80) or(value byte) {
 	z80.A |= value
 	z80.F = sz53pTable[z80.A]
@@ -326,7 +320,7 @@ func (z80 *Z80) push16(reg *cpu.Register16) {
 	z80.push8(reg.GetL())
 }
 
-// ret return from subrutine
+// ret return from subroutine
 func (z80 *Z80) ret(condition bool) {
 	if condition {
 		z80.setPC(toword(z80.pop8(), z80.pop8()))
@@ -342,7 +336,7 @@ func (z80 *Z80) rst(address uint16) {
 	z80.Memptr.Set(z80.PC)
 }
 
-// sbc acumulator sub with carry
+// sbc accumulator sub with carry
 func (z80 *Z80) sbc(value byte) {
 	tmp := uint16(z80.A) - uint16(value) - uint16((z80.F & FlagC))
 	lookup := ((z80.A & 0x88) >> 3) | ((value & 0x88) >> 2) | byte(((tmp & 0x88) >> 1))
@@ -351,7 +345,7 @@ func (z80 *Z80) sbc(value byte) {
 		halfCarrySubTable[lookup&0x07] | overflowSubTable[lookup>>4] | sz53Table[z80.A]
 }
 
-// sub acumulator sub
+// sub accumulator sub
 func (z80 *Z80) sub(value byte) {
 	tmp := uint16(z80.A) - uint16(value)
 	lookup := ((z80.A & 0x88) >> 3) | ((value & 0x88) >> 2) | byte(((tmp & 0x88) >> 1))
@@ -360,7 +354,7 @@ func (z80 *Z80) sub(value byte) {
 		halfCarrySubTable[lookup&0x07] | overflowSubTable[lookup>>4] | sz53Table[z80.A]
 }
 
-// xor acumulator xor
+// xor accumulator xor
 func (z80 *Z80) xor(value byte) {
 	z80.A ^= value
 	z80.F = sz53pTable[z80.A]
@@ -580,7 +574,7 @@ func (z80 *Z80) outd() {
 		sz53Table[z80.B]
 }
 
-// outd output with increment
+// outi output with increment
 func (z80 *Z80) outi() {
 	z80.readNoReq(z80.IR.Get(), 1)
 	tmp := z80.readByte(z80.HL.Get())
@@ -610,7 +604,7 @@ func (z80 *Z80) sbc16(value uint16) {
 // Register IX/IY extended instructions
 // -----------------------------------------------------------------------------
 
-// ld8rrixdd loads a value from an indexed address to a register
+// ld8rixdd loads a value from an indexed address to a register
 func (z80 *Z80) ld8rixdd(to *cpu.Reg8, reg *cpu.Register16) {
 	offset := expandsign(z80.readByte(z80.PC))
 	z80.readNoReq(z80.PC, 5)
@@ -620,7 +614,7 @@ func (z80 *Z80) ld8rixdd(to *cpu.Reg8, reg *cpu.Register16) {
 	*to = z80.readByte(reg.Get() + offset)
 }
 
-// ld8ixddrr loads a value to an indexed address
+// ld8ixddr loads a value to an indexed address
 func (z80 *Z80) ld8ixddr(reg *cpu.Register16, value cpu.Reg8) {
 	offset := expandsign(z80.readByte(z80.PC))
 	z80.readNoReq(z80.PC, 5)
@@ -630,7 +624,7 @@ func (z80 *Z80) ld8ixddr(reg *cpu.Register16, value cpu.Reg8) {
 	z80.writeByte(address, value)
 }
 
-// ac8ixdd acumulator op from indexed address value
+// ac8ixdd accumulator op from indexed address value
 func (z80 *Z80) ac8ixdd(reg *cpu.Register16, op8 func(byte)) {
 	offset := expandsign(z80.readByte(z80.PC))
 	z80.readNoReq(z80.PC, 5)
@@ -650,7 +644,7 @@ func expandsign(value byte) uint16 {
 	return uint16(int16(int8(value)))
 }
 
-// highbyte gets the hight byte of a word
+// highbyte gets the high byte of a word
 func highbyte(word uint16) byte {
 	return byte(word >> 8)
 }

@@ -7,7 +7,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,7 +40,7 @@ func NewDesktopFileSystem(path string) *DesktopFileSystem {
 	return fs
 }
 
-// InitDesktop initialices the desktop filesystem
+// InitDesktop initializes the desktop filesystem
 func InitDesktop() {
 	cwd, _ := os.Getwd()
 	SetFileSystem(NewDesktopFileSystem(cwd))
@@ -55,7 +54,7 @@ func (dfs *DesktopFileSystem) LoadFile(info *FileInfo) error {
 		return err
 	}
 	// read and unzip data
-	data, err := ioutil.ReadFile(info.Path)
+	data, err := os.ReadFile(info.Path)
 	if err == nil {
 		info.Data = data
 		if info.IsZip {
@@ -65,11 +64,11 @@ func (dfs *DesktopFileSystem) LoadFile(info *FileInfo) error {
 	return err
 }
 
-// SaveFile saves fhe file data to it's storage location.
+// SaveFile saves the file data to its storage location.
 func (dfs *DesktopFileSystem) SaveFile(info *FileInfo) error {
 	const fileMode = 0664
 	dfs.formatPath(info)
-	return ioutil.WriteFile(info.Path, info.Data, fileMode)
+	return os.WriteFile(info.Path, info.Data, fileMode)
 }
 
 // stat checks exists file in default folders
@@ -84,12 +83,12 @@ func (dfs *DesktopFileSystem) stat(info *FileInfo) error {
 	return err
 }
 
-// FormatPath gets filename from format path
+// formatPath sets the file path in the default folder of its format
 func (dfs *DesktopFileSystem) formatPath(info *FileInfo) {
 	info.Path = filepath.Join(dfs.subpaths[info.Format], filepath.Base(info.Name))
 }
 
-// Unzip unzips file data
+// unzip unzips the file data
 func (dfs *DesktopFileSystem) unzip(file *FileInfo) error {
 	zipdata := file.Data
 	zr, err := zip.NewReader(bytes.NewReader(zipdata), int64(len(zipdata)))

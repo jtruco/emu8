@@ -18,7 +18,7 @@ type KeyboardController struct {
 	mtx        sync.Mutex                            // Sync
 }
 
-// Keyboard key event
+// keyEvent is a keyboard key event
 type keyEvent struct {
 	Keycode   keyboard.KeyCode
 	EventType int
@@ -48,15 +48,15 @@ func (controller *KeyboardController) RemoveReceiver(receiver keyboard.Receiver)
 
 // KeyDown emits a keyboard keydown event
 func (controller *KeyboardController) KeyDown(keycode keyboard.KeyCode) {
-	controller.KeyEvent(keycode, keyboard.KeyDown)
+	controller.KeyEvent(keycode, keyboard.EventKeyDown)
 }
 
 // KeyUp emits a keyboard keyup event
 func (controller *KeyboardController) KeyUp(keycode keyboard.KeyCode) {
-	controller.KeyEvent(keycode, keyboard.KeyUp)
+	controller.KeyEvent(keycode, keyboard.EventKeyUp)
 }
 
-// KeyEvent emits a keyboard event
+// KeyEvent emits a keyboard event (keyboard.EventKeyDown or EventKeyUp)
 func (controller *KeyboardController) KeyEvent(keycode keyboard.KeyCode, eventType int) {
 	controller.mtx.Lock()
 	defer controller.mtx.Unlock()
@@ -82,7 +82,7 @@ func (controller *KeyboardController) emitEvent(e keyEvent) {
 	for receiver, keymap := range controller.receivers {
 		keys, ok := keymap[e.Keycode]
 		if ok {
-			pressed := e.EventType == keyboard.KeyDown
+			pressed := e.EventType == keyboard.EventKeyDown
 			// For each key emit event to receiver
 			for _, key := range keys {
 				receiver.ProcessKey(key, pressed)

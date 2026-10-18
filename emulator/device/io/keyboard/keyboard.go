@@ -9,8 +9,8 @@ import "github.com/jtruco/emu8/emulator/device"
 
 // Keyboard event types
 const (
-	EventKeyDown = iota // KeyDown is a key down event
-	EventKeyUp          // KeyDown is a key up event
+	EventKeyDown = iota // EventKeyDown is a key down event
+	EventKeyUp          // EventKeyUp is a key up event
 )
 
 // Keyboard is a keyboard (receiver) device
@@ -23,19 +23,4 @@ type Keyboard interface {
 type Receiver interface {
 	KeyMap() KeyMap                   // Keyboard map
 	ProcessKey(key Key, pressed bool) // Sets key state
-}
-
-// KeyEvent is a keyboard event
-type KeyEvent struct {
-	device.Event      // Is a device event
-	Key          Key  // Machine key pressed Down/Up
-	Pressed      bool // True if key is pressed down, False if is up
-}
-
-// NewKeyEvent creates a joystick axis event
-func NewKeyEvent(code int, key Key) KeyEvent {
-	return KeyEvent{
-		Event:   device.CreateEvent(code),
-		Key:     key,
-		Pressed: code == KeyDown}
 }

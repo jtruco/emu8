@@ -32,7 +32,7 @@ func NewVideo() *Video {
 	return video
 }
 
-// Init initialices video
+// Init initializes video
 func (video *Video) Init() bool {
 	if !video.sdlCreateWindow() {
 		return false
@@ -102,7 +102,7 @@ func (video *Video) sdlCreateWindow() bool {
 	// renderer
 	video.renderer, err = sdl.CreateRenderer(video.window, -1, sdl.RENDERER_ACCELERATED)
 	if err != nil {
-		log.Println("SDL : Errror creating Renderer:", err.Error())
+		log.Println("SDL : Error creating Renderer:", err.Error())
 	}
 	video.renderer.SetLogicalSize(video.wRect.W, video.wRect.H)
 	info, _ := video.renderer.GetInfo()
@@ -144,7 +144,7 @@ func (video *Video) updateScreen() {
 	video.Screen.SetDirty(true)
 }
 
-// render regions
+// createRegions creates the screen render regions
 func (video *Video) createRegions() {
 	view := video.Screen.View()
 	scaleX := video.Scale * video.Screen.ScaleX()

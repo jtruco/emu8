@@ -57,7 +57,7 @@ var (
 	// Paper line addresses table : bitmap & attribute
 	tvPaperAddr [tvPaperHeight][2]int
 
-	// ZX Spetrum 16/48k RGBA colour palette
+	// ZX Spectrum 16/48k RGBA colour palette
 	zxPaletteRGBA = []uint32{
 		/* Bright 0 (black, blue, red, magenta, green, cyan, yellow, white) */
 		0xff000000, 0xffc00000, 0xff0000c0, 0xffc000c0, 0xff00c000, 0xffc0c000, 0xff00c0c0, 0xffc0c0c0,
@@ -97,7 +97,7 @@ func NewUlaTv(spectrum *Spectrum) *UlaTv {
 	return tv
 }
 
-// SetBorder sets de current border color
+// SetBorder sets the current border color
 func (tv *UlaTv) SetBorder(color byte) {
 	tv.Update(tv.clock.Tstates())
 	tv.border = color

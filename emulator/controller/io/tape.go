@@ -11,13 +11,13 @@ import (
 // Tape Controller
 // -----------------------------------------------------------------------------
 
-// TapeController is the audio controller
+// TapeController is the tape controller
 type TapeController struct {
 	drive *tape.Drive             // Tape drive device
 	tapes map[string]tape.Builder // Tape factory
 }
 
-// NewTapeController creates a new video controller
+// NewTapeController creates a new tape controller
 func NewTapeController() *TapeController {
 	controller := new(TapeController)
 	controller.tapes = make(map[string]tape.Builder)
@@ -30,7 +30,7 @@ func (controller *TapeController) HasDrive() bool { return controller.drive != n
 // Drive the tape drive
 func (controller *TapeController) Drive() *tape.Drive { return controller.drive }
 
-// SetDrive sets audio device
+// SetDrive sets the tape drive
 func (controller *TapeController) SetDrive(drive *tape.Drive) { controller.drive = drive }
 
 // Tape factory

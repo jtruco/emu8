@@ -63,8 +63,10 @@ func (composite *Composite) Init() {
 // Reset resets the memory data at initial state
 func (composite *Composite) Reset() {
 	for _, m := range composite.maps {
-		m.device.Reset()
-		m.active = m.activeInit
+		if m != nil {
+			m.device.Reset()
+			m.active = m.activeInit
+		}
 	}
 }
 

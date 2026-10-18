@@ -114,7 +114,7 @@ func (spectrum *Spectrum) Reset() {
 	spectrum.initSpectrum()
 }
 
-// initSpectrum commont init tasks
+// initSpectrum common init tasks
 func (spectrum *Spectrum) initSpectrum() {
 	// load ROM at bank 0
 	data, err := spectrum.control.LoadROM(zxRomName)
@@ -229,7 +229,7 @@ func (spectrum *Spectrum) loadSnapshot(snap *format.Snapshot) {
 	}
 }
 
-// SaveState loads a ZX Spectrum snapshot
+// SaveState saves a ZX Spectrum snapshot
 func (spectrum *Spectrum) SaveState() machine.State {
 	return machine.State{
 		Format: format.SNA,

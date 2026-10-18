@@ -20,7 +20,7 @@ type Control struct {
 	Block      Block // Current tape block
 	NumBlocks  int   // Total number of blocks on tape
 	BlockIndex int   // Current block index
-	BlockPos   int   // Curren block pos
+	BlockPos   int   // Current block pos
 }
 
 // DataAtPos returns data byte at current block position

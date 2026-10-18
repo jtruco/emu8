@@ -74,7 +74,7 @@ func (controller *JoystickController) Flush() {
 	controller.eventQueue = controller.eventQueue[:0]
 }
 
-// processEvent process a joystick event
+// emitEvent emits a joystick event to its receiver
 func (controller *JoystickController) emitEvent(joyEvent *joystick.JoyEvent) {
 	if joy, ok := controller.receivers[joyEvent.ID]; ok {
 		switch joyEvent.Code() {

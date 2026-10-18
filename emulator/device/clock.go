@@ -32,7 +32,7 @@ type ClockDevice struct {
 
 // Device interface
 
-// Init initializces the clock
+// Init initializes the clock
 func (c *ClockDevice) Init() {
 	c.Reset()
 }

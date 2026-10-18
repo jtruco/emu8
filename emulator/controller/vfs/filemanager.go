@@ -14,7 +14,7 @@ const (
 	FormatMax // limit count
 )
 
-// Commont extensions
+// Common extensions
 const (
 	ExtRom = "rom"
 	ExtZip = "zip"
@@ -64,7 +64,8 @@ func (manager *FileManager) RegisterFormats(format int, extensions []string) {
 func (manager *FileManager) LoadROM(filename string) ([]byte, error) {
 	info := NewFileInfo(filename)
 	info.Format = FormatRom
-	return info.Data, manager.vfs.LoadFile(info)
+	err := manager.vfs.LoadFile(info)
+	return info.Data, err
 }
 
 // LoadFile loads a base filename from its format default location
@@ -93,8 +94,12 @@ func (manager *FileManager) CreateFileInfo(filename string) *FileInfo {
 	return info
 }
 
-// NewName helper funcion to obtain a new filename
+// NewName helper function to obtain a new filename
 func (manager *FileManager) NewName(prefix, ext string) string {
-	now := time.Now().Format("20060102030405")
-	return (prefix + "_" + now + "." + ext)
+	return newName(prefix, ext, time.Now())
+}
+
+// newName returns a filename with a timestamp (24 hour clock)
+func newName(prefix, ext string, t time.Time) string {
+	return prefix + "_" + t.Format("20060102150405") + "." + ext
 }

@@ -100,3 +100,17 @@ func TestLoadSNAInvalidLength(t *testing.T) {
 		}
 	}
 }
+
+// SNA byte 19 bit 2 stores IFF2 (the loader sets IFF1 = IFF2)
+func TestSNASaveIFF2(t *testing.T) {
+	cases := []struct{ iff1, iff2, want bool }{
+		{false, true, true}, {true, false, false}, {true, true, true}, {false, false, false},
+	}
+	for _, c := range cases {
+		snap := newTestSnapshot()
+		snap.IFF1, snap.IFF2 = c.iff1, c.iff2
+		if got := snap.SaveSNA()[19]&0x04 != 0; got != c.want {
+			t.Errorf("IFF1 %v IFF2 %v: interrupt bit = %v, want %v", c.iff1, c.iff2, got, c.want)
+		}
+	}
+}

@@ -128,7 +128,7 @@ func (z80 *Z80) NMInterrupt() {
 	z80.PC = 0x0066
 }
 
-// fetchAndExecute fetchs and executes an opcode
+// fetchAndExecute fetches and executes an opcode
 func (z80 *Z80) fetchAndExecute(execute func(byte)) {
 	opcode := z80.readByte(z80.PC)
 	z80.clock.Inc() // +1 tstate opcode execution
@@ -139,7 +139,8 @@ func (z80 *Z80) fetchAndExecute(execute func(byte)) {
 	execute(opcode)
 }
 
-// fetchAndExecute fetchs and executes an opcode
+// acceptInterrupt leaves the HALT state and acknowledges the interrupt. It
+// returns true if the interrupt request remains active.
 func (z80 *Z80) acceptInterrupt() bool {
 	// Check halted state
 	if z80.Halted {

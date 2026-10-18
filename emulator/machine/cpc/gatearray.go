@@ -93,7 +93,7 @@ func (ga *GateArray) SetInk(ink byte) {
 
 // Bus Input / Output
 
-// Read read from gatearray
+// Read reads from the gate array
 func (ga *GateArray) Read() byte {
 	return 0xff
 }
@@ -107,7 +107,7 @@ func (ga *GateArray) Write(data byte) {
 		} else {
 			ga.SetPen(gaBorderPen) // border
 		}
-	case 1: // set colur
+	case 1: // set colour
 		ga.SetInk(data & 0x1f)
 	case 2: // Video Mode & ROM
 		// mode

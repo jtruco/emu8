@@ -67,7 +67,7 @@ var ay38910VolumeLevels = [AY38910Nlevels]float32{
 // AY38910
 // -----------------------------------------------------------------------------
 
-// AY38910 Crtc Device
+// AY38910 is the AY-3-891x programmable sound generator device
 type AY38910 struct {
 	config    *Config
 	buffer    *Buffer
@@ -151,10 +151,10 @@ func (ay *AY38910) Config() *Config { return ay.config }
 // Control returns the control register
 func (ay *AY38910) Control() byte { return ay.control }
 
-// SetControl sets de control register
+// SetControl sets the control register
 func (ay *AY38910) SetControl(value byte) { ay.control = (value & 0xc0) >> 6 }
 
-// device inerface
+// device interface
 
 // Init the PSG
 func (ay *AY38910) Init() { ay.Reset() }

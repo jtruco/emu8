@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/jtruco/emu8.svg?style=flat)](https://github.com/jtruco/emu8/blob/master/LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/jtruco/emu8)](https://github.com/jtruco/emu8/releases/latest)
-[![Build Status](https://travis-ci.com/jtruco/emu8.svg?branch=master)](https://travis-ci.com/jtruco/emu8)
+[![CI](https://github.com/jtruco/emu8/actions/workflows/ci.yml/badge.svg)](https://github.com/jtruco/emu8/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jtruco/emu8)](https://goreportcard.com/report/github.com/jtruco/emu8)
 
 **The 8-bit machine emulator**
@@ -44,10 +44,7 @@ sudo apt-get install build-essential
 sudo apt-get install libsdl2-dev
 ```
 
-Then you can download and build the binding :
-```
-go get github.com/veandco/go-sdl2
-```
+The Go binding is a module dependency (see `go.mod`), downloaded automatically by `make`.
 
 For other platforms like *Windows* or *macOS*, please refer to the [go-sdl2](https://github.com/veandco/go-sdl2) compiling instructions.
 
@@ -61,9 +58,9 @@ To run the emulator and load a snapshot file into the machine just type :
 ```
 
 **emu8** looks for files in the current working directory. If it fails, then it tries in the following subdirectories by type :
-- ./rom : ROM files (*.rom)
-- ./snap : Snapshot image files (.sna, .z80, ...)
-- ./tape : Tape container files (.tap, .tzx, cdt, ...)
+- ./roms : ROM files (*.rom)
+- ./snaps : Snapshot image files (.sna, .z80, ...)
+- ./tapes : Tape container files (.tap, .tzx, cdt, ...)
 
 The default machine model is the classic *Speccy* or *ZX Spectrum 48k*.
 To select another machine model use :
@@ -75,7 +72,6 @@ To select another machine model use :
 
 ### Keyboard accelerators
 Once the emulator is running you can control it with the following keys :
-- Esc : Exits the application.
 - F2 : Takes a snapshot of the machine state and saves it.
 - F4 : Toggle audio mute.
 - F5 : Resets the machine to its initial state.
@@ -83,6 +79,8 @@ Once the emulator is running you can control it with the following keys :
 - F7 : Plays and Stops the tape.
 - F8 : Rewinds the tape.
 - F10 : Exits the application.
+
+Other keys are mapped to the emulated machine keyboard (for example Esc is the CPC ESC key, and EDIT on the Spectrum).
 - F11 : Toggle full-screen video mode.
 
 ### Command line arguments
@@ -118,8 +116,8 @@ The emulation is stable and accurate for the current supported models :
 - Contended video memory emulation.
 - Accurate border and scanline video effects.
 - Beeper emulation.
-- Snapshot formats supported : SNA, Z80.
-- Tape formats supported (read only) : TAP, TZX.
+- Snapshot formats supported : SNA, Z80 (versions 1, 2 and 3, 48K).
+- Tape formats supported (read only) : TAP, TZX (except direct recording, CSW, generalized data and call sequence blocks).
 - Kempston joystick support.
 
 ### Amstrad CPC ( Status : Stable )
@@ -130,7 +128,7 @@ The emulation is stable and accurate for the current supported model :
 - Accurate scanline and video timings emulation.
 - AY-3-8912 audio device emulation (alpha).
 - Snapshot formats supported : SNA.
-- Tape formats supported (read only) : CDT.
+- Tape formats supported (read only) : CDT (same block support as TZX).
 - Joystick support.
 
 ## Roadmap

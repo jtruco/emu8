@@ -43,7 +43,7 @@ type psgState struct {
 	PsgRegisters [16]byte
 }
 
-// NewSnapshot returns a new snapshop
+// NewSnapshot returns a new snapshot
 func NewSnapshot() *Snapshot {
 	snap := new(Snapshot)
 	snap.State.Init()
@@ -54,12 +54,12 @@ func NewSnapshot() *Snapshot {
 // Format common functions
 // -----------------------------------------------------------------------------
 
-// readWord reads a 16 bit LSB unsgined integer
+// readWord reads a 16 bit LSB unsigned integer
 func readWord(data []byte, pos int) uint16 {
 	return uint16(data[pos]) | (uint16(data[pos+1]) << 8)
 }
 
-// writeWord writes a 16 bit LSB unsgined integer
+// writeWord writes a 16 bit LSB unsigned integer
 func writeWord(data []byte, pos int, value uint16) {
 	data[pos] = byte(value)
 	data[pos+1] = byte(value >> 8)

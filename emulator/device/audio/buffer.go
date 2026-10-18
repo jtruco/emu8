@@ -1,16 +1,18 @@
 package audio
 
 // -----------------------------------------------------------------------------
-// Buffer - Stereo samples buffer
+// Buffer - Mono samples buffer
 // -----------------------------------------------------------------------------
 
 // Sample is a mono 16bit audio sample
 type Sample = uint16
 
-// Buffer is a 16bit audio doble buffer : samples and audio data
+// Buffer is a 16bit mono audio buffer : samples and audio output data.
+// Samples are in the range 0..0x7fff, so the output data is also valid
+// signed 16 bit audio (SDL AUDIO_S16LSB).
 type Buffer struct {
 	samples []Sample // sample data u16 format
-	data    []byte   // data buffer. Format : SDL AUDIO_U16LSB
+	data    []byte   // output data : 16 bit little endian samples
 	filter  Filter   // audio sample filter
 }
 
@@ -37,7 +39,7 @@ func (buffer *Buffer) Reset() {
 	}
 }
 
-// Filter returns the curren audio filter
+// Filter returns the current audio filter
 func (buffer *Buffer) Filter() Filter { return buffer.filter }
 
 // SetFilter sets the audio filter
@@ -55,8 +57,13 @@ func (buffer *Buffer) SetSample(index int, sample Sample) {
 	buffer.samples[index] = sample
 }
 
-// AddSample adds (and apply filter) an audio sample at buffer
+// AddSample adds (and apply filter) an audio sample at buffer. Samples past
+// the end of the buffer (the last instruction of a frame may overrun it) are
+// dropped.
 func (buffer *Buffer) AddSample(index int, sample Sample) {
+	if index < 0 || index >= len(buffer.samples) {
+		return
+	}
 	if buffer.filter != nil {
 		sample = buffer.filter.Add(sample)
 	}
@@ -65,7 +72,7 @@ func (buffer *Buffer) AddSample(index int, sample Sample) {
 
 // Audio data buffer
 
-// Data gets the audio data buffer. SDL AUDIO_U16LSB format.
+// Data gets the audio output data : 16 bit little endian samples (SDL AUDIO_S16LSB).
 func (buffer *Buffer) Data() []byte {
 	return buffer.data
 }

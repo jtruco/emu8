@@ -1,4 +1,4 @@
-// Package machine contains 8bit machines and coponents
+// Package machine contains 8bit machines and components
 package machine
 
 import (
@@ -53,7 +53,7 @@ type Config struct {
 	Duration time.Duration // Duration of a frame
 }
 
-// SetTimings sets machine timmings (TStates, Fps, Duration)
+// SetTimings sets machine timings (TStates, Fps, Duration)
 func (config *Config) SetTimings(tstates, fps int) {
 	config.TStates = tstates
 	config.Fps = fps
@@ -62,6 +62,6 @@ func (config *Config) SetTimings(tstates, fps int) {
 
 // State contains the serialized machine state
 type State struct {
-	Format string // Format extensión
+	Format string // Format extension
 	Data   []byte // Serialized data
 }

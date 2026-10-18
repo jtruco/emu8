@@ -13,7 +13,7 @@ type Key = int
 // KeyMap is a keyboard code to machine mapping
 type KeyMap = map[KeyCode][]Key
 
-// Keyboard keys avaible to map machine keyboards
+// Keyboard keys available to map machine keyboards
 // These codes are equals to SDL scancodes and USB standards
 const (
 	// Unknown

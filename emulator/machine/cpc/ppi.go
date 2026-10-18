@@ -33,7 +33,7 @@ func (ppi *Ppi) Reset() {
 	ppi.jumpers = 0x00
 }
 
-// Read read from gatearray
+// Read reads from a PPI port
 func (ppi *Ppi) Read(port byte) byte {
 	var data byte = 0xff
 	switch port {
@@ -74,7 +74,7 @@ func (ppi *Ppi) Read(port byte) byte {
 	return data
 }
 
-// Write sets current pen
+// Write writes data to a PPI port
 func (ppi *Ppi) Write(port byte, data byte) {
 	switch port {
 	case 0: // port A
