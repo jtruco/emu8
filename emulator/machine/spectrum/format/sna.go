@@ -83,7 +83,7 @@ func (snap *Snapshot) SaveSNA() []byte {
 	data[16] = snap.IYh
 	data[17] = snap.IXl
 	data[18] = snap.IXh
-	if snap.IFF1 {
+	if snap.IFF2 { // byte 19 bit 2 is IFF2
 		data[19] |= 0x04
 	}
 	data[20] = snap.R
