@@ -12,3 +12,9 @@ func TestSettingsFrequency(t *testing.T) {
 		}
 	}
 }
+
+func TestCreateUnknownModel(t *testing.T) {
+	if m, err := Create(Settings{ModelID: "nosuchmodel"}); m != nil || err == nil {
+		t.Errorf("Create(nosuchmodel) = %v, %v; want nil and an error", m, err)
+	}
+}

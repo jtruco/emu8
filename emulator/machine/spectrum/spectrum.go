@@ -53,6 +53,7 @@ type Spectrum struct {
 // New returns a new ZX Spectrum
 func New(model int, settings machine.Settings) machine.Machine {
 	spectrum := new(Spectrum)
+	spectrum.config.Settings = settings
 	spectrum.config.Model = model
 	spectrum.config.SetTimings(zxTStates, zxFPS)
 	// memory mapping
@@ -75,7 +76,7 @@ func New(model int, settings machine.Settings) machine.Machine {
 	spectrum.cpu.OnIntAck = spectrum.onInterruptAck
 	spectrum.tv = NewUlaTv(spectrum)
 	spectrum.beeper = audio.NewBeeper(
-		audio.NewConfig(settings.Frequency(), zxFPS, zxTStates))
+		audio.NewConfig(spectrum.config.Frequency(), zxFPS, zxTStates))
 	spectrum.beeper.SetMap(zxBeeperMap)
 	spectrum.keyboard = NewKeyboard()
 	spectrum.tape = tape.New(spectrum.clock)

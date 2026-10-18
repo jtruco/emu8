@@ -20,7 +20,7 @@ func TestNewDefaults(t *testing.T) {
 func TestMachineSettings(t *testing.T) {
 	conf := New()
 	conf.Audio.Frequency, conf.Machine.Options = 22050, "fr"
-	want := machine.Settings{AudioFrequency: 22050, Options: "fr"}
+	want := machine.Settings{ModelID: DefaultMachineModel, AudioFrequency: 22050, Options: "fr"}
 	if got := conf.MachineSettings(); got != want {
 		t.Errorf("MachineSettings = %+v, want %+v", got, want)
 	}

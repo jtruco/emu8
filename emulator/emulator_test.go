@@ -42,7 +42,7 @@ func TestEmulatorInstancesAreIndependent(t *testing.T) {
 	for i, in := range instances {
 		fs := vfs.NewMemFileSystem()
 		fs.SaveFile(vfs.NewFileInfoData("game.sna", in.snapshot)) // same name in each file system
-		emu, err := FromModel(in.model, machine.Settings{AudioFrequency: in.frequency}, fs)
+		emu, err := Create(machine.Settings{ModelID: in.model, AudioFrequency: in.frequency}, fs)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -52,6 +52,12 @@ func TestEmulatorInstancesAreIndependent(t *testing.T) {
 	}
 	for i, in := range instances {
 		emu := emus[i]
+		if id := emu.Machine().Config().ModelID; id != in.model {
+			t.Errorf("Config().ModelID = %q, want %q", id, in.model)
+		}
+		if emu.Machine().Config().Name == "" {
+			t.Errorf("%s: Config().Name is empty", in.model)
+		}
 		if n := emu.Control().Audio().Device().Buffer().Size(); n != in.samples {
 			t.Errorf("%s: %d audio samples per frame, want %d", in.model, n, in.samples)
 		}

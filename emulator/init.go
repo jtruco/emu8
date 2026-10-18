@@ -12,5 +12,5 @@ import (
 // FromConfig returns the emulator of the configured machine, using a file
 // system for its files
 func FromConfig(conf *config.Config, fs vfs.FileSystem) (*Emulator, error) {
-	return FromModel(conf.Machine.Model, conf.MachineSettings(), fs)
+	return Create(conf.MachineSettings(), fs)
 }

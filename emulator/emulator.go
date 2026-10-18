@@ -37,10 +37,10 @@ func New(machine machine.Machine, fs vfs.FileSystem) *Emulator {
 
 // Emulator factory
 
-// FromModel returns an emulator for a machine model name and its settings,
-// using a file system for its files
-func FromModel(model string, settings machine.Settings, fs vfs.FileSystem) (*Emulator, error) {
-	machine, err := machine.Create(model, settings)
+// Create returns an emulator of a machine built from its settings, using a
+// file system for its files
+func Create(settings machine.Settings, fs vfs.FileSystem) (*Emulator, error) {
+	machine, err := machine.Create(settings)
 	if err != nil {
 		log.Println(err.Error())
 		return nil, err

@@ -49,9 +49,9 @@ func FindModel(modelId string) *Model {
 	return nil
 }
 
-// Create returns a machine from a model name and its settings
-func Create(modelId string, settings Settings) (Machine, error) {
-	model := FindModel(modelId)
+// Create returns a machine of the settings model
+func Create(settings Settings) (Machine, error) {
+	model := FindModel(settings.ModelID)
 	if model == nil {
 		return nil, errors.New("Machine : unknown machine model")
 	}

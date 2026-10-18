@@ -44,8 +44,28 @@ type Control interface {
 	RegisterTape(string, tape.Builder) // RegisterTape ads a tape format and its builder
 }
 
-// Config is the machine configuration
+// DefaultAudioFrequency is the default audio output frequency (48 KHz)
+const DefaultAudioFrequency = 48000
+
+// Settings are the machine construction settings
+type Settings struct {
+	ModelID        string // Model ID or name (e.g. "zx48k", "cpc464"), case insensitive
+	AudioFrequency int    // Audio output frequency in Hz (0 : DefaultAudioFrequency)
+	Options        string // Machine specific options (e.g. CPC "es", "fr" ROMs)
+}
+
+// Frequency returns the audio output frequency, or the default if not set
+func (settings Settings) Frequency() int {
+	if settings.AudioFrequency > 0 {
+		return settings.AudioFrequency
+	}
+	return DefaultAudioFrequency
+}
+
+// Config is the machine configuration : its construction settings, and the
+// model information and timings set by the machine
 type Config struct {
+	Settings               // Construction settings (audio frequency, options)
 	Name     string        // Machine model name
 	Model    int           // Machine model (internal)
 	TStates  int           // TStates per frame
@@ -58,23 +78,6 @@ func (config *Config) SetTimings(tstates, fps int) {
 	config.TStates = tstates
 	config.Fps = fps
 	config.Duration = time.Duration(1e9 / fps)
-}
-
-// DefaultAudioFrequency is the default audio output frequency (48 KHz)
-const DefaultAudioFrequency = 48000
-
-// Settings are the machine construction settings
-type Settings struct {
-	AudioFrequency int    // Audio output frequency in Hz (0 : DefaultAudioFrequency)
-	Options        string // Machine specific options (e.g. CPC "es", "fr" ROMs)
-}
-
-// Frequency returns the audio output frequency, or the default if not set
-func (settings Settings) Frequency() int {
-	if settings.AudioFrequency > 0 {
-		return settings.AudioFrequency
-	}
-	return DefaultAudioFrequency
 }
 
 // State contains the serialized machine state

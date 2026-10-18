@@ -31,5 +31,8 @@ func TestCpcOptionsSelectOSRom(t *testing.T) {
 		if got := m.memory.Bank(cpcLowerROM).Data()[0]; got != c.marker {
 			t.Errorf("options %q: OS ROM marker %#02x, want %#02x", c.options, got, c.marker)
 		}
+		if got := m.Config().Options; got != c.options {
+			t.Errorf("Config().Options = %q, want %q", got, c.options)
+		}
 	}
 }

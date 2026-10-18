@@ -15,5 +15,8 @@ func TestSpectrumAudioFrequency(t *testing.T) {
 		if n := m.beeper.Buffer().Size(); n != c.samples {
 			t.Errorf("frequency %d: %d samples per frame, want %d", c.frequency, n, c.samples)
 		}
+		if f := m.Config().AudioFrequency; f != c.frequency {
+			t.Errorf("Config().AudioFrequency = %d, want the setting %d", f, c.frequency)
+		}
 	}
 }

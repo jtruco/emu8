@@ -68,6 +68,7 @@ func New() *Config {
 // MachineSettings returns the machine construction settings
 func (config *Config) MachineSettings() machine.Settings {
 	return machine.Settings{
+		ModelID:        config.Machine.Model,
 		AudioFrequency: config.Audio.Frequency,
 		Options:        config.Machine.Options}
 }
