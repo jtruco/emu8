@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/jtruco/emu8.svg?style=flat)](https://github.com/jtruco/emu8/blob/master/LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/jtruco/emu8)](https://github.com/jtruco/emu8/releases/latest)
-[![Build Status](https://travis-ci.com/jtruco/emu8.svg?branch=master)](https://travis-ci.com/jtruco/emu8)
+[![CI](https://github.com/jtruco/emu8/actions/workflows/ci.yml/badge.svg)](https://github.com/jtruco/emu8/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jtruco/emu8)](https://goreportcard.com/report/github.com/jtruco/emu8)
 
 **The 8-bit machine emulator**
