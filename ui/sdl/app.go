@@ -19,7 +19,6 @@ type App struct {
 	emulator *emulator.Emulator
 	video    *Video
 	audio    *Audio
-	filename string
 	running  bool
 }
 
@@ -33,7 +32,6 @@ func NewApp(conf *config.Config) *App {
 }
 
 func (app *App) configure(conf *config.Config) {
-	app.filename = conf.App.File
 	app.video.Title = conf.App.Title
 	app.video.FullScreen = conf.Video.FullScreen
 	app.video.Scale = float32(conf.Video.Scale)
@@ -77,13 +75,8 @@ func (app *App) Init() error {
 	return nil
 }
 
-// Run the SDL App
+// Run the SDL App : starts the emulation and runs the event loop
 func (app *App) Run() {
-	// init emulator
-	app.emulator.Init()
-	if app.filename != "" {
-		app.emulator.LoadFile(app.filename)
-	}
 	app.emulator.Start()
 	// event loop
 	app.running = true

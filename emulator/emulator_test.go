@@ -46,7 +46,6 @@ func TestEmulatorInstancesAreIndependent(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		emu.Init()
 		emu.LoadFile("game.sna")
 		emus[i] = emu
 	}
@@ -80,4 +79,25 @@ func TestEmulatorInstancesAreIndependent(t *testing.T) {
 		}(emu)
 	}
 	wg.Wait()
+}
+
+// Create returns a ready to use emulator : the machine is initialized with
+// its ROM loaded from the file system, and the emulation timings are set.
+func TestCreateReadyEmulator(t *testing.T) {
+	// ROM : LD A,0x42 ; LD (0x8000),A ; JR $
+	rom := make([]byte, 0x4000)
+	copy(rom, []byte{0x3e, 0x42, 0x32, 0x00, 0x80, 0x18, 0xfe})
+	fs := vfs.NewMemFileSystem()
+	fs.SaveFile(vfs.NewFileInfoData("zxspectrum.rom", rom))
+	emu, err := Create(machine.Settings{ModelID: "zx48k"}, fs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	emu.Start()
+	emu.Emulate() // one frame
+	emu.Stop()
+	data := emu.Machine().SaveState().Data // SNA : RAM from offset 27 (0x4000)
+	if got := data[27+0x8000-0x4000]; got != 0x42 {
+		t.Errorf("RAM 0x8000 = %#02x, want 0x42 written by the ROM", got)
+	}
 }
