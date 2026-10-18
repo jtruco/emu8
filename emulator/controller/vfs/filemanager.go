@@ -64,7 +64,8 @@ func (manager *FileManager) RegisterFormats(format int, extensions []string) {
 func (manager *FileManager) LoadROM(filename string) ([]byte, error) {
 	info := NewFileInfo(filename)
 	info.Format = FormatRom
-	return info.Data, manager.vfs.LoadFile(info)
+	err := manager.vfs.LoadFile(info)
+	return info.Data, err
 }
 
 // LoadFile loads a base filename from its format default location
