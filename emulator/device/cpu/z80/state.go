@@ -132,5 +132,7 @@ func (state *State) Copy(value *State) {
 	state.IFF1 = value.IFF1
 	state.IFF2 = value.IFF2
 	state.ActiveEI = value.ActiveEI
-	state.ReadIFF2 = value.ActiveEI
+	state.ReadIFF2 = value.ReadIFF2
+	state.IntRq = value.IntRq
+	state.NmiRq = value.NmiRq
 }
