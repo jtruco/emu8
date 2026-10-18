@@ -24,8 +24,8 @@ func TestCpcInstructionTimings(t *testing.T) {
 		{"LD A,(HL)", []byte{0x7e}, 2, ""},
 		{"POP BC", []byte{0xc1}, 3, ""},
 		{"PUSH BC", []byte{0xc5}, 4, "D7"},
-		{"OUT (n),A", []byte{0xd3, 0x10}, 3, "B17"},
-		{"IN A,(n)", []byte{0xdb, 0x10}, 3, "B17"},
+		{"OUT (n),A", []byte{0xd3, 0x10}, 3, ""},
+		{"IN A,(n)", []byte{0xdb, 0x10}, 3, ""},
 		{"OUT (C),A", []byte{0xed, 0x79}, 4, "B17"},
 		{"IN A,(C)", []byte{0xed, 0x78}, 4, "B17"},
 	}

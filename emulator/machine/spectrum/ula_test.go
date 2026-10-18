@@ -66,33 +66,43 @@ func TestUlaIOContention(t *testing.T) {
 		tstate int
 		end    int
 	}{
-		{"ULA port, idle", 0x00fe, 0, 4},
-		{"other port, idle", 0x00ff, 0, 4},
-		{"ULA port contended high, idle", 0x40fe, 0, 4},
-		{"other port contended high, idle", 0x40ff, 0, 4},
+		{"ULA port, idle", 0x00fe, 1000, 1004},
+		{"other port, idle", 0x00ff, 1000, 1004},
+		{"ULA port contended high, idle", 0x40fe, 1000, 1004},
+		{"other port contended high, idle", 0x40ff, 1000, 1004},
 		{"ULA port N:1 C:3", 0x00fe, 14335, 14344},
 		{"other port N:4", 0x00ff, 14335, 14339},
 		{"ULA port contended high C:1 C:3", 0x40fe, 14335, 14345},
 		{"other port contended high C:1 x4", 0x40ff, 14335, 14351},
 	}
+	// I/O cycle of IN A,(C) / OUT (C),A run by the CPU : the code is in
+	// uncontended RAM, so the I/O cycle starts 8 Ts after the instruction
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			m := newTestSpectrum(t)
-			m.at(c.tstate).ula.Read(c.port)
-			if got := m.clock.Tstates(); got != c.end {
-				t.Errorf("read ends at %d, want %d", got, c.end)
-			}
-			m.at(c.tstate).ula.Write(c.port, 7)
-			if got := m.clock.Tstates(); got != c.end {
-				t.Errorf("write ends at %d, want %d", got, c.end)
+			for _, op := range []struct {
+				name string
+				code []byte
+			}{{"read", []byte{0xed, 0x78}}, {"write", []byte{0xed, 0x79}}} {
+				m := newTestSpectrum(t)
+				m.memory.Bank(2).Load(0, op.code)
+				m.cpu.PC, m.cpu.A = 0x8000, 7
+				m.cpu.BC.Set(c.port)
+				m.at(c.tstate - 8).cpu.Execute()
+				if got := m.clock.Tstates(); got != c.end {
+					t.Errorf("%s cycle ends at %d, want %d", op.name, got, c.end)
+				}
 			}
 		})
 	}
 }
 
 func TestUlaWriteBorder(t *testing.T) {
+	// OUT (C),A run by the CPU : I/O cycle at 14335 (code in uncontended RAM)
 	m := newTestSpectrum(t)
-	m.at(14335).ula.Write(0x00fe, 0x02)
+	m.memory.Bank(2).Load(0, []byte{0xed, 0x79})
+	m.cpu.PC, m.cpu.A = 0x8000, 0x02
+	m.cpu.BC.Set(0x00fe)
+	m.at(14335 - 8).cpu.Execute()
 	if m.tv.border != 2 {
 		t.Errorf("border = %d, want 2", m.tv.border)
 	}

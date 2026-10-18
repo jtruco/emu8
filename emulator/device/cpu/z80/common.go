@@ -130,10 +130,12 @@ func (z80 *Z80) readNoReq(address uint16, n int) {
 	}
 }
 
-// readPort reads a byte from a port : an I/O read cycle. The I/O device adds
-// the I/O cycle time (4 Ts and its wait states); the core adds none.
+// readPort reads a byte from a port : a 4 Ts I/O read cycle. The I/O device
+// is accessed after the first T-state (IORQ) and adds its wait states.
 func (z80 *Z80) readPort(port uint16) byte {
+	z80.clock.Inc() // T1 : address on the bus
 	value := z80.io.Read(port)
+	z80.clock.Add(3) // T2, TW, T3
 	return value
 }
 
@@ -155,10 +157,12 @@ func (z80 *Z80) writeNoReq(address uint16, n int) {
 	}
 }
 
-// writePort writes a byte to a port : an I/O write cycle. The I/O device adds
-// the I/O cycle time (4 Ts and its wait states); the core adds none.
+// writePort writes a byte to a port : a 4 Ts I/O write cycle. The I/O device
+// is accessed after the first T-state (IORQ) and adds its wait states.
 func (z80 *Z80) writePort(port uint16, value byte) {
+	z80.clock.Inc() // T1 : address on the bus
 	z80.io.Write(port, value)
+	z80.clock.Add(3) // T2, TW, T3
 }
 
 // -----------------------------------------------------------------------------

@@ -98,8 +98,8 @@ func (ula *ULA) Reset() {
 
 // DataBus
 
-// Read bus at address : the ULA adds the whole I/O cycle time (preIO and
-// postIO : 4 Ts with the contention pattern of the port)
+// Read bus at address. The Z80 core adds the 4 Ts of the I/O cycle; the ULA
+// adds the contention of the port (preIO and postIO).
 func (ula *ULA) Read(address uint16) byte {
 	var result byte = 0xff
 	ula.preIO(address)
@@ -120,8 +120,8 @@ func (ula *ULA) Read(address uint16) byte {
 	return result
 }
 
-// Write bus at address : the ULA adds the whole I/O cycle time (preIO and
-// postIO : 4 Ts with the contention pattern of the port)
+// Write bus at address. The Z80 core adds the 4 Ts of the I/O cycle; the ULA
+// adds the contention of the port (preIO and postIO).
 func (ula *ULA) Write(address uint16, data byte) {
 	ula.preIO(address)
 	defer ula.postIO(address)
@@ -143,27 +143,41 @@ func (ula *ULA) Write(address uint16, data byte) {
 	}
 }
 
-// preIO contention
+// I/O contention patterns (C : contended T-state, N : not contended), by
+// high byte (contended or not) and bit 0 (ULA port when 0) :
+//
+//	not contended, bit 0 = 1 : N:4
+//	not contended, bit 0 = 0 : N:1, C:3
+//	contended,     bit 0 = 1 : C:1, C:1, C:1, C:1
+//	contended,     bit 0 = 0 : C:1, C:3
+//
+// The Z80 core adds the 4 Ts of the cycle (1 T before the device access, 3 Ts
+// after); preIO and postIO only add the wait states.
+
+// preIO contention : wait states of the first T-state (the core has already
+// added it, so the cycle started 1 T before)
 func (ula *ULA) preIO(address uint16) {
 	if ula.isContended(address) {
-		ula.doContention(1)
-	} else {
-		ula.spectrum.clock.Add(1)
+		start := ula.spectrum.clock.Tstates() - 1
+		ula.spectrum.clock.Add(ulaDelayTable[start])
 	}
 }
 
-// postIO contention
+// postIO contention : wait states of the last 3 T-states (added by the core
+// after the device access)
 func (ula *ULA) postIO(address uint16) {
-	if (address & 0x0001) != 0 {
-		if ula.isContended(address) {
-			ula.doContention(1)
-			ula.doContention(1)
-			ula.doContention(1)
-		} else {
-			ula.spectrum.clock.Add(3)
+	clock := ula.spectrum.clock
+	switch {
+	case (address & 0x0001) == 0: // C:3
+		clock.Add(ulaDelayTable[clock.Tstates()])
+	case ula.isContended(address): // C:1, C:1, C:1
+		tstate, wait := clock.Tstates(), 0
+		for i := 0; i < 3; i++ {
+			delay := ulaDelayTable[tstate]
+			wait += delay
+			tstate += delay + 1
 		}
-	} else {
-		ula.doContention(3)
+		clock.Add(wait)
 	}
 }
 
