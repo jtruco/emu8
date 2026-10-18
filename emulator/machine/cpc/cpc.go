@@ -180,7 +180,9 @@ func (cpc *AmstradCPC) InitControl(control machine.Control) {
 // -----------------------------------------------------------------------------
 
 // BeginFrame begin emulation frame tasks
-func (cpc *AmstradCPC) BeginFrame() {} // nothing to do
+func (cpc *AmstradCPC) BeginFrame() {
+	cpc.psg.BeginFrame()
+}
 
 // Emulate one machine step
 func (cpc *AmstradCPC) Emulate() {
@@ -202,7 +204,10 @@ func (cpc *AmstradCPC) Emulate() {
 }
 
 // EndFrame end emulation frame tasks
-func (cpc *AmstradCPC) EndFrame() {} // nothing to do
+func (cpc *AmstradCPC) EndFrame() {
+	cpc.video.EndFrame()
+	cpc.psg.EndFrame()
+}
 
 // CPC IO bus
 // -----------------------------------------------------------------------------

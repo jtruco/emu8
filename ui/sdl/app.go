@@ -20,7 +20,6 @@ type App struct {
 	video    *Video
 	audio    *Audio
 	filename string
-	async    bool
 	running  bool
 }
 
@@ -35,14 +34,11 @@ func NewApp() *App {
 
 func (app *App) configure(conf *config.Config) {
 	app.filename = conf.App.File
-	app.async = conf.Emulator.Async
 	app.video.Title = conf.App.Title
 	app.video.FullScreen = conf.Video.FullScreen
 	app.video.Scale = float32(conf.Video.Scale)
-	app.video.Async = conf.Emulator.Async
 	app.audio.Frequency = int32(conf.Audio.Frequency)
 	app.audio.Mute = conf.Audio.Mute
-	app.audio.Async = conf.Emulator.Async
 }
 
 // Connect connects the Emulator
@@ -84,7 +80,6 @@ func (app *App) Init() error {
 // Run the SDL App
 func (app *App) Run() {
 	// init emulator
-	app.emulator.SetAsync(app.async)
 	app.emulator.Init()
 	if app.filename != "" {
 		app.emulator.LoadFile(app.filename)
@@ -94,14 +89,7 @@ func (app *App) Run() {
 	app.running = true
 	for app.running {
 		app.pollEvents() // Poll SDL events
-		if app.async {   // Async emulation
-			select {
-			case <-app.video.UpdateUi:
-				app.video.OnUpdate(false)
-			default:
-				sdl.Delay(loopSleepMillis)
-			}
-		} else if app.emulator.IsRunning() { // Sync emulation
+		if app.emulator.IsRunning() {
 			app.emulator.Emulate()
 			app.emulator.Sync()
 		} else { // Paused

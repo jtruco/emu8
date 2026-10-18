@@ -12,7 +12,6 @@ func init() {
 
 	// parse config parameters
 	flag.StringVar(&conf.App.File, "file", "", "Load file")
-	flag.BoolVar(&conf.Emulator.Async, "async", config.DefaultEmulatorAsync, "Asynchronous emulation")
 	flag.StringVar(&conf.Machine.Model, "model", config.DefaultMachineModel, "Machine model")
 	flag.StringVar(&conf.Machine.Options, "options", "", "Machine options")
 	flag.IntVar(&conf.Video.Scale, "scale", config.DefaultVideoScale, "Video scale (1..3)")

@@ -91,14 +91,13 @@ Once the emulator is running you can control it with the following keys :
 - file : Path of the file to load into the emulator.
 - model : Machine model (case insensitive).
 - options : Extra machine options.
-- async : Asyncrhonous emulation.
 - scale : Video scale factor (1..3). Default 2.
 - fullscreen : Start video in full screen mode.
 - mute : Audio mute.
 
 Here is an example of use of various command line arguments:
 ```
-./emu8 -model speccy -async -fullscreen tapes/pyjamarama.tzx
+./emu8 -model speccy -fullscreen tapes/pyjamarama.tzx
 ```
 
 ## Features

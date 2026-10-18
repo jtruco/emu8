@@ -5,7 +5,6 @@ package config
 const (
 	DefaultAppTitle        = "emu8"
 	DefaultAppFile         = ""
-	DefaultEmulatorAsync   = false
 	DefaultMachineModel    = "Speccy"
 	DefaultMachineOptions  = ""
 	DefaultVideoScale      = 2
@@ -20,22 +19,16 @@ const (
 
 // Config is the main configuration
 type Config struct {
-	App      AppConfig
-	Emulator EmulatorConfig
-	Machine  MachineConfig
-	Video    VideoConfig
-	Audio    AudioConfig
+	App     AppConfig
+	Machine MachineConfig
+	Video   VideoConfig
+	Audio   AudioConfig
 }
 
 // AppConfig is the application configuration
 type AppConfig struct {
 	Title string // Application base title
 	File  string // File to load
-}
-
-// EmulatorConfig is the emulation configuration
-type EmulatorConfig struct {
-	Async bool // Async emulation
 }
 
 // MachineConfig is the machine configuration
@@ -70,7 +63,6 @@ func Get() *Config { return config }
 func init() {
 	config.App.Title = DefaultAppTitle
 	config.App.File = DefaultAppFile
-	config.Emulator.Async = DefaultEmulatorAsync
 	config.Machine.Model = DefaultMachineModel
 	config.Machine.Options = DefaultMachineOptions
 	config.Video.Scale = DefaultVideoScale

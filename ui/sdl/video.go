@@ -2,7 +2,6 @@ package sdl
 
 import (
 	"log"
-	"sync"
 	"unsafe"
 
 	"github.com/jtruco/emu8/emulator/device/video"
@@ -15,8 +14,6 @@ type Video struct {
 	Title      string        // Window title
 	FullScreen bool          // Fullscreen state
 	Scale      float32       // Video scale
-	Async      bool          // Asynchronous mode
-	UpdateUi   chan bool     // Update UI channel
 	window     *sdl.Window   // Main window
 	renderer   *sdl.Renderer // Window renderer
 	surface    *sdl.Surface  // Emulator screen surface
@@ -25,7 +22,6 @@ type Video struct {
 	srcRects   []sdl.Rect    // The source regions cache
 	dstRects   []sdl.Rect    // The dest regions cache
 	hwAccel    bool          // Hardware accelerated renderer
-	_sync      sync.Mutex    // Sync object
 }
 
 // NewVideo creates a new video UI
@@ -33,15 +29,11 @@ func NewVideo() *Video {
 	video := new(Video)
 	video.Title = "SDL UI"
 	video.Scale = 1
-	video.UpdateUi = make(chan bool, 2) // 2-slot channel
 	return video
 }
 
 // Init initialices video
 func (video *Video) Init() bool {
-	video._sync.Lock()
-	defer video._sync.Unlock()
-
 	if !video.sdlCreateWindow() {
 		return false
 	}
@@ -55,9 +47,6 @@ func (video *Video) Init() bool {
 
 // Destroy free video resources
 func (video *Video) Destroy() {
-	video._sync.Lock()
-	defer video._sync.Unlock()
-
 	log.Println("SDL : Closing video resources")
 	video.surface.Free()
 	video.renderer.Destroy()
@@ -66,27 +55,17 @@ func (video *Video) Destroy() {
 
 // ToggleFullscreen enable / disable fullscreen mode
 func (video *Video) ToggleFullscreen() {
-	video._sync.Lock()
-	defer video._sync.Unlock()
-
 	video.FullScreen = !video.FullScreen
 	video.updateScreen()
 }
 
 // Update display
 func (video *Video) Update(screen *video.Screen) {
-	if video.Async {
-		video.UpdateUi <- true // Notify SDL main thread
-		return
-	}
 	video.OnUpdate(false)
 }
 
 // OnUpdate updates screen changes to video display
 func (video *Video) OnUpdate(refresh bool) {
-	video._sync.Lock()
-	defer video._sync.Unlock()
-
 	// create texture from screen surface
 	texture, err := video.renderer.CreateTextureFromSurface(video.surface)
 	if err != nil {
