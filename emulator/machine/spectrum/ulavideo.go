@@ -40,6 +40,8 @@ const (
 	tvColPaper         = tvLeftTstates                   // line Ts : first paper
 	tvColBorderRight   = tvColPaper + tvPaperTstates     // line Ts : first right border
 	tvColEndVisible    = tvColBorderRight + tvBorderTstates
+	tvBlockTstates     = 4 // beam block : 1 paper byte fetch
+	tvBlockPixels      = tvBlockTstates * 2
 )
 
 // Video memory constants
@@ -70,6 +72,11 @@ var (
 // Tstate up to the current clock Tstate. It must be called before any change
 // that affects the output (border, video memory) and at the end of the frame,
 // so the beam position is always derived from the machine clock.
+//
+// The beam advances in 4 Ts (8 px) blocks aligned with the paper byte fetch:
+// each paper block reads its bitmap and attribute once, and a border or video
+// memory change takes effect from the block where it happens, as in FUSE
+// (48K border 4 Ts granularity).
 type UlaTv struct {
 	screen    *video.Screen // The video screen
 	clock     device.Clock  // The machine clock
@@ -79,9 +86,6 @@ type UlaTv struct {
 	flash     bool          // Flash state
 	frames    int           // Frame count
 	tstate    int           // Frame Tstate rendered so far (beam position)
-	scrByte   byte          // Current paper bitmap byte
-	attInk    uint32        // Current paper ink colour
-	attPaper  uint32        // Current paper paper colour
 }
 
 // NewUlaTv creates the ULA TV video device
@@ -132,17 +136,19 @@ func (tv *UlaTv) EndFrame() {
 // Resync sets the beam position to the clock without rendering (i.e. after
 // the clock has been set by a snapshot load)
 func (tv *UlaTv) Resync() {
-	tv.tstate = tv.clock.Tstates()
+	tv.tstate = tv.clock.Tstates() &^ (tvBlockTstates - 1)
 	if tv.tstate > tvFrameTstates {
 		tv.tstate = tvFrameTstates
 	}
 }
 
-// Update renders the TV beam up to frame Tstate (exclusive)
+// Update renders the TV beam blocks completed before frame Tstate. The block
+// containing tstate is left pending, so a change at tstate applies from it.
 func (tv *UlaTv) Update(tstate int) {
 	if tstate > tvFrameTstates {
 		tstate = tvFrameTstates
 	}
+	tstate &^= tvBlockTstates - 1
 	for tv.tstate < tstate {
 		pos := tv.tstate + tvLeftTstates
 		line, col := pos/tvLineTstates, pos%tvLineTstates
@@ -157,7 +163,7 @@ func (tv *UlaTv) Update(tstate int) {
 	}
 }
 
-// renderLine renders line Tstates [col, end)
+// renderLine renders line blocks in Tstates [col, end)
 func (tv *UlaTv) renderLine(line, col, end int) {
 	if col < tvColVisible {
 		col = tvColVisible
@@ -168,39 +174,27 @@ func (tv *UlaTv) renderLine(line, col, end int) {
 	y := line - tvFirstVisibleLine
 	paperY := line - tvPaperLine
 	isPaper := paperY >= 0 && paperY < tvPaperHeight
-	for ; col < end; col++ {
+	for ; col < end; col += tvBlockTstates {
 		x := (col - tvColVisible) << 1
 		if isPaper && col >= tvColPaper && col < tvColBorderRight {
-			tv.paintPaper(x, y, paperY, col-tvColPaper)
+			tv.paintPaper(x, y, paperY, (col-tvColPaper)/tvBlockTstates)
 		} else {
-			tv.screen.SetPixel(x, y, tv.borderRgb)
-			tv.screen.SetPixel(x+1, y, tv.borderRgb)
+			tv.paintBorder(x, y)
 		}
 	}
 }
 
-// paintPaper paints the 2 pixels of a paper Tstate (4 Ts per byte)
-func (tv *UlaTv) paintPaper(x, y, paperY, paperTs int) {
-	if paperTs&0x03 == 0 {
-		tv.fetch(paperY, paperTs>>2)
-	}
-	mask := byte(0x80) >> ((paperTs & 0x03) << 1)
-	tv.paintPixel(x, y, tv.scrByte&mask)
-	tv.paintPixel(x+1, y, tv.scrByte&(mask>>1))
-}
-
-func (tv *UlaTv) paintPixel(x, y int, bit byte) {
-	if bit != 0 {
-		tv.screen.SetPixel(x, y, tv.attInk)
-	} else {
-		tv.screen.SetPixel(x, y, tv.attPaper)
+// paintBorder paints a border block
+func (tv *UlaTv) paintBorder(x, y int) {
+	for i := 0; i < tvBlockPixels; i++ {
+		tv.screen.SetPixel(x+i, y, tv.borderRgb)
 	}
 }
 
-// fetch reads the bitmap & attribute bytes of a paper column
-func (tv *UlaTv) fetch(paperY, column int) {
+// paintPaper fetches and paints a paper block (column byte)
+func (tv *UlaTv) paintPaper(x, y, paperY, column int) {
 	addrs := tvPaperAddr[paperY]
-	tv.scrByte = tv.scrdata[addrs[0]+column]
+	scrByte := tv.scrdata[addrs[0]+column]
 	attByte := tv.scrdata[addrs[1]+column]
 	ink := attByte & 0x07
 	paper := (attByte >> 3) & 0x07
@@ -211,8 +205,16 @@ func (tv *UlaTv) fetch(paperY, column int) {
 	if (attByte&0x80) != 0 && tv.flash {
 		ink, paper = paper, ink
 	}
-	tv.attInk = tv.screen.GetColor(int(ink))
-	tv.attPaper = tv.screen.GetColor(int(paper))
+	inkRgb := tv.screen.GetColor(int(ink))
+	paperRgb := tv.screen.GetColor(int(paper))
+	for mask := byte(0x80); mask != 0; mask >>= 1 {
+		if scrByte&mask != 0 {
+			tv.screen.SetPixel(x, y, inkRgb)
+		} else {
+			tv.screen.SetPixel(x, y, paperRgb)
+		}
+		x++
+	}
 }
 
 func init() {

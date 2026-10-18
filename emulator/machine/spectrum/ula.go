@@ -25,6 +25,14 @@ const (
 
 var zxBeeperMap = []uint16{0, amplTape, amplBeeper, (amplBeeper + amplTape)}
 
+// Memory timing
+
+// ulaMemWriteTstates is the delay from the start of a CPU memory write cycle
+// until the RAM is written. The Z80 write cycle lasts 3 Ts and the data lands
+// at its end (as in FUSE), but the bus access hooks run at the cycle start,
+// before the CPU adds the 3 Ts. The TV beam must be rendered up to that point.
+const ulaMemWriteTstates = 3
+
 // Contention table
 
 // IO contention pages
@@ -70,9 +78,9 @@ func NewULA(spectrum *Spectrum) *ULA {
 // onVideoAccess processes the bus event
 func (ula *ULA) onVideoAccess(code int, address uint16) {
 	ula.doContention(0)
-	// render the TV beam before video memory changes
+	// render the TV beam up to the write, while video memory holds the old byte
 	if code == bus.EventWrite && address < tvVideoSize {
-		ula.spectrum.tv.Update(ula.spectrum.clock.Tstates())
+		ula.spectrum.tv.Update(ula.spectrum.clock.Tstates() + ulaMemWriteTstates)
 	}
 }
 
