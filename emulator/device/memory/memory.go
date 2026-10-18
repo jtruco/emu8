@@ -61,16 +61,28 @@ func (memory *Memory) Bank(index int) *Bank {
 	return memory.Map(index).Device().(*Bank)
 }
 
-// LoadRAM loads a data chunk of bytes into memory starting at address
+// LoadRAM loads a data chunk of bytes into memory starting at address. Data
+// may start at any address and span several banks; read-only banks are
+// skipped and it stops at the end of the mapped memory.
 func (memory *Memory) LoadRAM(address uint16, data []byte) {
-	var offset, last uint
-	length := uint(len(data))
-	for offset < length {
-		bankaddr := address + uint16(offset)
-		m, rel := memory.Mapper().SelectWrite(bankaddr)
-		last = offset + uint(m.Size())
-		bank := m.Device().(*Bank)
-		if bank != nil {
+	for offset := 0; offset < len(data); {
+		bankaddr := int(address) + offset
+		if bankaddr > 0xffff {
+			return
+		}
+		m, rel := memory.Mapper().SelectWrite(uint16(bankaddr))
+		if m == nil {
+			return
+		}
+		bank, ok := m.Device().(*Bank)
+		if !ok {
+			return
+		}
+		last := offset + int(m.Size()-rel)
+		if last > len(data) {
+			last = len(data)
+		}
+		if !bank.IsReadOnly() {
 			bank.Load(rel, data[offset:last])
 		}
 		offset = last
