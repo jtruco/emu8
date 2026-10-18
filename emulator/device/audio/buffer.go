@@ -57,8 +57,13 @@ func (buffer *Buffer) SetSample(index int, sample Sample) {
 	buffer.samples[index] = sample
 }
 
-// AddSample adds (and apply filter) an audio sample at buffer
+// AddSample adds (and apply filter) an audio sample at buffer. Samples past
+// the end of the buffer (the last instruction of a frame may overrun it) are
+// dropped.
 func (buffer *Buffer) AddSample(index int, sample Sample) {
+	if index < 0 || index >= len(buffer.samples) {
+		return
+	}
 	if buffer.filter != nil {
 		sample = buffer.filter.Add(sample)
 	}
