@@ -7,7 +7,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -55,7 +54,7 @@ func (dfs *DesktopFileSystem) LoadFile(info *FileInfo) error {
 		return err
 	}
 	// read and unzip data
-	data, err := ioutil.ReadFile(info.Path)
+	data, err := os.ReadFile(info.Path)
 	if err == nil {
 		info.Data = data
 		if info.IsZip {
@@ -69,7 +68,7 @@ func (dfs *DesktopFileSystem) LoadFile(info *FileInfo) error {
 func (dfs *DesktopFileSystem) SaveFile(info *FileInfo) error {
 	const fileMode = 0664
 	dfs.formatPath(info)
-	return ioutil.WriteFile(info.Path, info.Data, fileMode)
+	return os.WriteFile(info.Path, info.Data, fileMode)
 }
 
 // stat checks exists file in default folders
