@@ -14,7 +14,7 @@ const (
 	FormatMax // limit count
 )
 
-// Commont extensions
+// Common extensions
 const (
 	ExtRom = "rom"
 	ExtZip = "zip"
@@ -93,7 +93,7 @@ func (manager *FileManager) CreateFileInfo(filename string) *FileInfo {
 	return info
 }
 
-// NewName helper funcion to obtain a new filename
+// NewName helper function to obtain a new filename
 func (manager *FileManager) NewName(prefix, ext string) string {
 	now := time.Now().Format("20060102030405")
 	return (prefix + "_" + now + "." + ext)

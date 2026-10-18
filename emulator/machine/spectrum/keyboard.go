@@ -158,7 +158,7 @@ var keyStates = map[keyboard.Key][2]byte{
 
 // ZX Keyboard map
 var zxKeyboardMap = map[keyboard.KeyCode][]keyboard.Key{
-	// standar mapping
+	// standard mapping
 	keyboard.Key0: {ZxKey0},
 	keyboard.Key1: {ZxKey1},
 	keyboard.Key2: {ZxKey2},

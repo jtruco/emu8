@@ -64,7 +64,7 @@ type Tzx struct {
 	bitsLastByte  byte         // Number of bits of last byte
 	endBlockPause int          // Pause at end of block
 	bitMask       byte         // Current bit mask
-	bitTime       int          // Curent bit time
+	bitTime       int          // Current bit time
 	lastBit       byte         // Last bit of current byte
 	loopCount     int          // Control loop count
 	loopStart     int          // Control loop start
@@ -374,7 +374,7 @@ func (tzx *Tzx) parseHeader(control *tape.Control) {
 		}
 		control.State = tapeStatePilotNc
 		control.BlockIndex++
-		// log : standar data block
+		// log : standard data block
 		if tzx.blockLength >= tapHeaderLength && data[5] == 0 {
 			switch data[6] {
 			case 0:

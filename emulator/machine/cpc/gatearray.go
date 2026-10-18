@@ -107,7 +107,7 @@ func (ga *GateArray) Write(data byte) {
 		} else {
 			ga.SetPen(gaBorderPen) // border
 		}
-	case 1: // set colur
+	case 1: // set colour
 		ga.SetInk(data & 0x1f)
 	case 2: // Video Mode & ROM
 		// mode

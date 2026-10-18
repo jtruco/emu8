@@ -41,7 +41,7 @@ func NewDesktopFileSystem(path string) *DesktopFileSystem {
 	return fs
 }
 
-// InitDesktop initialices the desktop filesystem
+// InitDesktop initializes the desktop filesystem
 func InitDesktop() {
 	cwd, _ := os.Getwd()
 	SetFileSystem(NewDesktopFileSystem(cwd))
@@ -65,7 +65,7 @@ func (dfs *DesktopFileSystem) LoadFile(info *FileInfo) error {
 	return err
 }
 
-// SaveFile saves fhe file data to it's storage location.
+// SaveFile saves the file data to its storage location.
 func (dfs *DesktopFileSystem) SaveFile(info *FileInfo) error {
 	const fileMode = 0664
 	dfs.formatPath(info)

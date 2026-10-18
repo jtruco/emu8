@@ -39,7 +39,7 @@ func (buffer *Buffer) Reset() {
 	}
 }
 
-// Filter returns the curren audio filter
+// Filter returns the current audio filter
 func (buffer *Buffer) Filter() Filter { return buffer.filter }
 
 // SetFilter sets the audio filter

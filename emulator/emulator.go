@@ -106,7 +106,7 @@ func (emulator *Emulator) LoadFile(name string) {
 	emulator.control.LoadFile(name)
 }
 
-// TakeSnapshot takes and saves snapshop of the machine state
+// TakeSnapshot takes and saves snapshot of the machine state
 func (emulator *Emulator) TakeSnapshot() {
 	if emulator.running {
 		emulator.Stop()

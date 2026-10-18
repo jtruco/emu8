@@ -10,7 +10,7 @@ import "errors"
 type FileSystem interface {
 	// LoadFile loads the file data from the storage location.
 	LoadFile(info *FileInfo) error
-	// SaveFile saves fhe file data to the storage location.
+	// SaveFile saves the file data to the storage location.
 	SaveFile(info *FileInfo) error
 }
 
@@ -53,7 +53,7 @@ func (mfs *MemFileSystem) LoadFile(info *FileInfo) error {
 	return nil
 }
 
-// SaveFile stores fhe file data into memory
+// SaveFile stores the file data into memory
 func (mfs *MemFileSystem) SaveFile(info *FileInfo) error {
 	mfs.files[info.Path] = info.Data
 	return nil

@@ -7,7 +7,7 @@ import (
 
 // -----------------------------------------------------------------------------
 // Z80 snapshot format
-// Versions : 1..3. Only 48k mode suppported
+// Versions : 1..3. Only 48k mode supported
 // -----------------------------------------------------------------------------
 
 // Z80 format extension
@@ -122,7 +122,7 @@ func z80LoadFileV23(data []byte, snap *Snapshot) bool {
 		log.Println("Z80 : Invalid file format")
 		return false
 	}
-	if data[34] != 0 { // hadware mode : only 48k mode supported
+	if data[34] != 0 { // hardware mode : only 48k mode supported
 		log.Println("Z80 : Unsupported machine hardware mode")
 	}
 	if data[37]>>7 == 1 { // machine modification not supported

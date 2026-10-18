@@ -42,17 +42,17 @@ const (
 // Format common functions
 // -----------------------------------------------------------------------------
 
-// readInt reads a 16 bit LSB unsgined integer as integer
+// readInt reads a 16 bit LSB unsigned integer as integer
 func readInt(data []byte, pos int) int {
 	return int(readWord(data, pos))
 }
 
-// readWord reads a 16 bit LSB unsgined integer
+// readWord reads a 16 bit LSB unsigned integer
 func readWord(data []byte, pos int) uint16 {
 	return uint16(data[pos]) | (uint16(data[pos+1]) << 8)
 }
 
-// writeWord writes a 16 bit LSB unsgined integer
+// writeWord writes a 16 bit LSB unsigned integer
 func writeWord(data []byte, pos int, value uint16) {
 	data[pos] = byte(value)
 	data[pos+1] = byte(value >> 8)

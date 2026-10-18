@@ -29,7 +29,7 @@ func LoadSNA(data []byte) *Snapshot {
 	// Check men size
 	memsize := int(readWord(data, 0x6b))
 	if memsize > 64 {
-		log.Println("SNA : Only 64K snapshopts supported")
+		log.Println("SNA : Only 64K snapshots supported")
 		return nil
 	}
 	memsize *= 0x400 // 1k

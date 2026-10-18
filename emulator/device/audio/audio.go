@@ -29,9 +29,9 @@ type Config struct {
 }
 
 // NewConfig creates audio config
-func NewConfig(frecuency, fps, tstates int) *Config {
+func NewConfig(frequency, fps, tstates int) *Config {
 	c := new(Config)
-	c.Frequency = frecuency
+	c.Frequency = frequency
 	c.Fps = fps
 	c.TStates = tstates
 	c.Samples = c.Frequency / c.Fps

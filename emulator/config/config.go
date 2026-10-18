@@ -9,7 +9,7 @@ const (
 	DefaultMachineOptions  = ""
 	DefaultVideoScale      = 2
 	DefaultVideoFullScreen = false
-	DefaultAudioFrecuency  = 48000 // 48 KHz
+	DefaultAudioFrequency  = 48000 // 48 KHz
 	DefaultAudioMute       = false
 )
 
@@ -45,8 +45,8 @@ type VideoConfig struct {
 
 // AudioConfig is the audio configuration
 type AudioConfig struct {
-	Frequency int  // Audio frecuency
-	Mute      bool // Mute autio
+	Frequency int  // Audio frequency
+	Mute      bool // Mute audio
 }
 
 // -----------------------------------------------------------------------------
@@ -67,6 +67,6 @@ func init() {
 	config.Machine.Options = DefaultMachineOptions
 	config.Video.Scale = DefaultVideoScale
 	config.Video.FullScreen = DefaultVideoFullScreen
-	config.Audio.Frequency = DefaultAudioFrecuency
+	config.Audio.Frequency = DefaultAudioFrequency
 	config.Audio.Mute = DefaultAudioMute
 }

@@ -28,7 +28,7 @@ func New(clock device.Clock) *Drive {
 	return drive
 }
 
-// Init intializes tape drive
+// Init initializes tape drive
 func (drive *Drive) Init() { drive.Reset() }
 
 // Reset resets tape drive
@@ -89,7 +89,7 @@ func (drive *Drive) Stop() {
 // Rewind rewinds the tape to start
 func (drive *Drive) Rewind() {
 	drive.Reset()
-	log.Println("Tape : Tape rewinded")
+	log.Println("Tape : Tape rewound")
 }
 
 // Emulate emulates the tape drive
