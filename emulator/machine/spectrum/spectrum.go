@@ -44,7 +44,7 @@ type Spectrum struct {
 	cpu        *z80.Z80            // The Zilog Z80A CPU
 	memory     *memory.Memory      // The machine memory
 	ula        *ULA                // The spectrum ULA
-	tv         *TvVideo            // The spectrum TV video output
+	tv         *UlaTv              // The spectrum ULA TV video
 	beeper     *audio.Beeper       // The spectrum Beeper
 	keyboard   *Keyboard           // The spectrum Keyboard
 	tape       *tape.Drive         // The spectrum Tape drive
@@ -74,7 +74,7 @@ func New(model int) machine.Machine {
 	spectrum.ula = NewULA(spectrum)
 	spectrum.cpu = z80.New(spectrum.clock, spectrum.memory, spectrum.ula)
 	spectrum.cpu.OnIntAck = spectrum.onInterruptAck
-	spectrum.tv = NewTVVideo(spectrum)
+	spectrum.tv = NewUlaTv(spectrum)
 	spectrum.beeper = audio.NewBeeper(
 		audio.NewConfig(config.Get().Audio.Frequency, zxFPS, zxTStates))
 	spectrum.beeper.SetMap(zxBeeperMap)
@@ -176,13 +176,13 @@ func (spectrum *Spectrum) Emulate() {
 	// Executes a CPU instruction
 	tstates := spectrum.cpu.Execute()
 
+	// Tape emulation
+	spectrum.tape.Emulate(tstates)
+
 	// Maskable interrupt request length
 	if spectrum.cpu.IntRq && spectrum.clock.Tstates() >= zxIntTstates {
 		spectrum.cpu.InterruptRequest(false)
 	}
-
-	// Tape emulation
-	spectrum.tape.Emulate(tstates)
 }
 
 // EndFrame end emulation frame tasks
@@ -214,6 +214,7 @@ func (spectrum *Spectrum) LoadState(state machine.State) {
 func (spectrum *Spectrum) loadSnapshot(snap *format.Snapshot) {
 	spectrum.cpu.State.Copy(&snap.State)    // CPU
 	spectrum.clock.SetTstates(snap.Tstates) // TStates
+	spectrum.tv.Resync()                    // TV beam follows the clock
 	spectrum.tv.SetBorder(snap.Border)      // Border
 	// Memory banks (16k, 48k)
 	if spectrum.config.Model == ZXSpectrum16K {

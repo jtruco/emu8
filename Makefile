@@ -52,8 +52,11 @@ deps:
 
 # tests
 
-.PHONY: test test-z80
-test: test-z80
+.PHONY: test test-z80 test-spectrum
+test: test-spectrum test-z80
+
+test-spectrum:
+	$(GO_TEST) ./emulator/machine/spectrum/...
 
 test-z80:
 	$(GO_TEST) ./emulator/device/cpu/z80/test

@@ -1,5 +1,7 @@
 package spectrum
 
+import "github.com/jtruco/emu8/emulator/device/bus"
+
 // -----------------------------------------------------------------------------
 // ULA constants & vars
 // -----------------------------------------------------------------------------
@@ -23,6 +25,14 @@ const (
 
 var zxBeeperMap = []uint16{0, amplTape, amplBeeper, (amplBeeper + amplTape)}
 
+// Memory timing
+
+// ulaMemWriteTstates is the delay from the start of a CPU memory write cycle
+// until the RAM is written. The Z80 write cycle lasts 3 Ts and the data lands
+// at its end (as in FUSE), but the bus access hooks run at the cycle start,
+// before the CPU adds the 3 Ts. The TV beam must be rendered up to that point.
+const ulaMemWriteTstates = 3
+
 // Contention table
 
 // IO contention pages
@@ -33,16 +43,15 @@ var ulaDelayTable [zxTStates + tvLineTstates]int
 
 func init() {
 	// contention table
-	tstate := tvFirstScreenTstate - 1
-	for y := 0; y < tvScreenHeight; y++ {
-		for x := 0; x < tvScreenWidth; x += 16 {
-			tstatex := x / tvTstatePixels
-			ulaDelayTable[tstate+tstatex+0] = 6
-			ulaDelayTable[tstate+tstatex+1] = 5
-			ulaDelayTable[tstate+tstatex+2] = 4
-			ulaDelayTable[tstate+tstatex+3] = 3
-			ulaDelayTable[tstate+tstatex+4] = 2
-			ulaDelayTable[tstate+tstatex+5] = 1
+	tstate := tvScreenTstate - 1
+	for y := 0; y < tvPaperHeight; y++ {
+		for x := 0; x < tvPaperTstates; x += 8 {
+			ulaDelayTable[tstate+x+0] = 6
+			ulaDelayTable[tstate+x+1] = 5
+			ulaDelayTable[tstate+x+2] = 4
+			ulaDelayTable[tstate+x+3] = 3
+			ulaDelayTable[tstate+x+4] = 2
+			ulaDelayTable[tstate+x+5] = 1
 		}
 		tstate += tvLineTstates
 	}
@@ -69,6 +78,10 @@ func NewULA(spectrum *Spectrum) *ULA {
 // onVideoAccess processes the bus event
 func (ula *ULA) onVideoAccess(code int, address uint16) {
 	ula.doContention(0)
+	// render the TV beam up to the write, while video memory holds the old byte
+	if code == bus.EventWrite && address < tvVideoSize {
+		ula.spectrum.tv.Update(ula.spectrum.clock.Tstates() + ulaMemWriteTstates)
+	}
 }
 
 // Device
