@@ -1,6 +1,7 @@
 package emulator
 
 import (
+	"strings"
 	"sync"
 	"testing"
 
@@ -55,7 +56,9 @@ func TestEmulatorInstancesAreIndependent(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		emu.LoadFile("game.sna")
+		if err := emu.LoadFile("game.sna"); err != nil {
+			t.Fatal(err)
+		}
 		emus[i] = emu
 	}
 	for i, in := range instances {
@@ -117,6 +120,40 @@ func TestCreateMissingROM(t *testing.T) {
 		emu, err := Create(machine.Settings{ModelID: model}, vfs.NewMemFileSystem())
 		if emu != nil || err == nil {
 			t.Errorf("%s: Create without ROMs = %v, %v; want nil and an error", model, emu, err)
+		}
+	}
+}
+
+// LoadFile returns an error, naming the file, when it can't be loaded
+func TestLoadFileErrors(t *testing.T) {
+	cases := []struct {
+		model, name string
+		data        []byte // nil : missing file
+		reason      string // expected in the error
+	}{
+		{"zx48k", "game.sna", nil, "not found"},
+		{"zx48k", "game.xyz", []byte{0}, "not supported format"},
+		{"zx48k", "game.dsk", []byte{0}, "not supported format"},
+		{"zx48k", "game.sna", make([]byte, 100), "invalid sna snapshot"},
+		{"zx48k", "game.z80", make([]byte, 10), "invalid z80 snapshot"},
+		{"zx48k", "game.tap", []byte{0x10, 0x00, 0x00}, "invalid tap tape"},
+		{"zx48k", "game.tzx", []byte("ZXTape?"), "invalid tzx tape"},
+		{"cpc464", "game.sna", make([]byte, 100), "invalid sna snapshot"},
+		{"cpc464", "game.cdt", []byte("ZXTape?"), "invalid cdt tape"},
+		{"cpc464", "game.z80", []byte{0}, "not supported format"},
+	}
+	for _, c := range cases {
+		fs := romFileSystem()
+		if c.data != nil {
+			fs.SaveFile(vfs.NewFileInfoData(c.name, c.data))
+		}
+		emu, err := Create(machine.Settings{ModelID: c.model}, fs)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = emu.LoadFile(c.name)
+		if err == nil || !strings.Contains(err.Error(), c.name) || !strings.Contains(err.Error(), c.reason) {
+			t.Errorf("%s: LoadFile(%s) = %v, want an error naming the file and %q", c.model, c.name, err, c.reason)
 		}
 	}
 }

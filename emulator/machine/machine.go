@@ -29,7 +29,7 @@ type Machine interface {
 	Emulate()                       // Emulate one machine step
 	BeginFrame()                    // BeginFrame begins the frame of the machine and its devices
 	EndFrame()                      // EndFrame ends the frame of the machine and its devices (video and audio output ready)
-	LoadState(State)                // LoadState loads machine state
+	LoadState(State) error          // LoadState loads machine state
 	SaveState() State               // SaveState saves machine state
 }
 

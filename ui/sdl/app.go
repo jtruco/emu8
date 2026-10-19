@@ -141,7 +141,9 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 		switch e.Keysym.Sym {
 		// Snaps
 		case sdl.K_F2:
-			app.emulator.TakeSnapshot()
+			if err := app.emulator.TakeSnapshot(); err != nil {
+				log.Println("App : Error taking snapshot:", err.Error())
+			}
 		// Emulator
 		case sdl.K_F5:
 			app.emulator.Reset()

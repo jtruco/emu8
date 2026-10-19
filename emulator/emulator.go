@@ -106,22 +106,22 @@ func (emulator *Emulator) Stop() {
 	}
 }
 
-// LoadFile loads file into the emulator
-func (emulator *Emulator) LoadFile(name string) {
+// LoadFile loads a snapshot or tape file into the emulator
+func (emulator *Emulator) LoadFile(name string) error {
 	if emulator.running {
 		emulator.Stop()
 		defer emulator.Start()
 	}
-	emulator.control.LoadFile(name)
+	return emulator.control.LoadFile(name)
 }
 
 // TakeSnapshot takes and saves snapshot of the machine state
-func (emulator *Emulator) TakeSnapshot() {
+func (emulator *Emulator) TakeSnapshot() error {
 	if emulator.running {
 		emulator.Stop()
 		defer emulator.Start()
 	}
-	emulator.control.TakeSnapshot()
+	return emulator.control.TakeSnapshot()
 }
 
 // Emulation

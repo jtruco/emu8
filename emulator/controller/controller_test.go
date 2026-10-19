@@ -24,7 +24,10 @@ func (m *panicMachine) Emulate()                       {}
 func (m *panicMachine) BeginFrame()                    {}
 func (m *panicMachine) EndFrame()                      {}
 func (m *panicMachine) SaveState() machine.State       { return machine.State{} }
-func (m *panicMachine) LoadState(state machine.State)  { m.loads++; panic("malformed snapshot") }
+func (m *panicMachine) LoadState(state machine.State) error {
+	m.loads++
+	panic("malformed snapshot")
+}
 func (m *panicMachine) InitControl(ctl machine.Control) {
 	ctl.BindTapeDrive(tape.New(device.NewClock()))
 	ctl.RegisterSnapshot("snp")
@@ -46,7 +49,9 @@ func TestLoadFileRecoversFromPanics(t *testing.T) {
 		if err := fs.SaveFile(vfs.NewFileInfoData(name, []byte{0x00})); err != nil {
 			t.Fatal(err)
 		}
-		controller.LoadFile(name) // must not panic
+		if err := controller.LoadFile(name); err == nil { // must not panic
+			t.Errorf("LoadFile(%s) = nil, want the recovered panic error", name)
+		}
 	}
 	if m.loads != 1 {
 		t.Errorf("snapshot loads = %d, want 1", m.loads)

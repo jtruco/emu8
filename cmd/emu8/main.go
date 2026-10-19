@@ -35,7 +35,9 @@ func main() {
 	}
 	log.Println("Main : Emulator for machine:", emu.Machine().Config().Name)
 	if conf.App.File != "" {
-		emu.LoadFile(conf.App.File)
+		if err := emu.LoadFile(conf.App.File); err != nil {
+			log.Fatal("Main : Could not load file: ", err.Error())
+		}
 	}
 
 	// initialize UI application

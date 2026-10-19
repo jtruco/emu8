@@ -1,6 +1,8 @@
 package io
 
 import (
+	"errors"
+	"fmt"
 	"log"
 
 	"github.com/jtruco/emu8/emulator/controller/vfs"
@@ -51,20 +53,21 @@ func (controller *TapeController) CreateTape(format string) tape.Tape {
 
 // Tape control
 
-// Load loads the Tape from file data
-func (controller *TapeController) Load(info *vfs.FileInfo) {
-	tape := controller.CreateTape(info.Ext)
-	if tape != nil {
-		loaded := tape.Load(info.Data)
-		if loaded {
-			tape.Info().Name = info.Name
-			controller.Drive().Insert(tape)
-		} else {
-			log.Println("Emulator : Error loading tape file")
-		}
-	} else {
-		log.Println("Emulator : Not implemented tape format : ", info.Ext)
+// Load loads the Tape from file data and inserts it into the drive
+func (controller *TapeController) Load(info *vfs.FileInfo) error {
+	if !controller.HasDrive() {
+		return errors.New("no tape drive")
 	}
+	tape := controller.CreateTape(info.Ext)
+	if tape == nil {
+		return fmt.Errorf("not supported tape format %q", info.Ext)
+	}
+	if !tape.Load(info.Data) {
+		return fmt.Errorf("invalid %s tape", info.Ext)
+	}
+	tape.Info().Name = info.Name
+	controller.Drive().Insert(tape)
+	return nil
 }
 
 // TogglePlay toggle tape play state

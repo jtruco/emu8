@@ -2,7 +2,7 @@
 package cpc
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
@@ -241,17 +241,19 @@ func (cpc *AmstradCPC) onPsgReadPortA() byte {
 // -----------------------------------------------------------------------------
 
 // LoadState loads an Amstrad CPC snapshot
-func (cpc *AmstradCPC) LoadState(state machine.State) {
+func (cpc *AmstradCPC) LoadState(state machine.State) error {
 	var snap *format.Snapshot
 	switch state.Format {
 	case format.SNA:
 		snap = format.LoadSNA(state.Data)
 	default:
-		log.Println("CPC : Not implemented snap format:", state.Format)
+		return fmt.Errorf("not supported snapshot format %q", state.Format)
 	}
-	if snap != nil {
-		cpc.loadSnapshot(snap)
+	if snap == nil {
+		return fmt.Errorf("invalid %s snapshot", state.Format)
 	}
+	cpc.loadSnapshot(snap)
+	return nil
 }
 
 func (cpc *AmstradCPC) loadSnapshot(snap *format.Snapshot) {

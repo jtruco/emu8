@@ -2,7 +2,7 @@
 package spectrum
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
@@ -185,7 +185,7 @@ func (spectrum *Spectrum) onInterruptAck() bool {
 // Snapshots : load & save state
 
 // LoadState loads a ZX Spectrum snapshot
-func (spectrum *Spectrum) LoadState(state machine.State) {
+func (spectrum *Spectrum) LoadState(state machine.State) error {
 	var snap *format.Snapshot
 	switch state.Format {
 	case format.SNA:
@@ -193,11 +193,13 @@ func (spectrum *Spectrum) LoadState(state machine.State) {
 	case format.Z80:
 		snap = format.LoadZ80(state.Data)
 	default:
-		log.Println("Spectrum : Not implemented snap format:", state.Format)
+		return fmt.Errorf("not supported snapshot format %q", state.Format)
 	}
-	if snap != nil {
-		spectrum.loadSnapshot(snap)
+	if snap == nil {
+		return fmt.Errorf("invalid %s snapshot", state.Format)
 	}
+	spectrum.loadSnapshot(snap)
+	return nil
 }
 
 func (spectrum *Spectrum) loadSnapshot(snap *format.Snapshot) {
