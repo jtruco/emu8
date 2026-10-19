@@ -17,7 +17,7 @@ type Video struct {
 	Scale      float32       // Video scale
 	window     *sdl.Window   // Main window
 	renderer   *sdl.Renderer // Window renderer
-	surface    *sdl.Surface  // Emulator screen surface
+	texture    *sdl.Texture  // Emulator screen texture (streaming)
 	wRect      sdl.Rect      // Window rect
 	sRect      sdl.Rect      // Surface rect
 	srcRects   []sdl.Rect    // The source regions cache
@@ -38,7 +38,7 @@ func (video *Video) Init() error {
 	if err := video.sdlCreateWindow(); err != nil {
 		return err
 	}
-	if err := video.sdlCreateSurface(); err != nil {
+	if err := video.sdlCreateTexture(); err != nil {
 		return err
 	}
 	video.createRegions()
@@ -49,8 +49,8 @@ func (video *Video) Init() error {
 // Destroy free video resources
 func (video *Video) Destroy() {
 	log.Println("SDL : Closing video resources")
-	if video.surface != nil {
-		video.surface.Free()
+	if video.texture != nil {
+		video.texture.Destroy()
 	}
 	if video.renderer != nil {
 		video.renderer.Destroy()
@@ -73,25 +73,46 @@ func (video *Video) Update(screen *video.Screen) {
 
 // OnUpdate updates screen changes to video display
 func (video *Video) OnUpdate(refresh bool) {
-	// create texture from screen surface
-	texture, err := video.renderer.CreateTextureFromSurface(video.surface)
-	if err != nil {
-		return
+	rects := video.Screen.DirtyRects() // none : all the screen
+	if refresh {
+		rects = nil
 	}
-	defer texture.Destroy()
-
-	// copy texture region/s
-	rects := video.Screen.DirtyRects()
-	if refresh || video.hwAccel || len(rects) == 0 {
-		video.renderer.Copy(texture, &video.sRect, &video.wRect)
+	video.updateTexture(rects)
+	// copy texture region/s : the accelerated renderer redraws the whole window
+	if video.hwAccel || len(rects) == 0 {
+		video.renderer.Copy(video.texture, &video.sRect, &video.wRect)
 	} else {
 		for _, r := range rects {
-			video.renderer.Copy(texture, &video.srcRects[r], &video.dstRects[r])
+			video.renderer.Copy(video.texture, &video.srcRects[r], &video.dstRects[r])
 		}
 	}
-
-	// update changes
 	video.renderer.Present()
+}
+
+// updateTexture uploads the band of screen rows with dirty regions to the
+// screen texture, or the whole screen if there are no regions
+func (video *Video) updateTexture(rects []int) {
+	width := video.Screen.Width()
+	y0, y1 := 0, video.Screen.Height()
+	if len(rects) > 0 {
+		y0, y1 = y1, 0
+		for _, r := range rects {
+			rect := &video.srcRects[r]
+			if int(rect.Y) < y0 {
+				y0 = int(rect.Y)
+			}
+			if int(rect.Y+rect.H) > y1 {
+				y1 = int(rect.Y + rect.H)
+			}
+		}
+	}
+	if y1 <= y0 {
+		return
+	}
+	// SDL copies the pixels : no Go memory is kept by C
+	pixels := video.Screen.Data()[y0*width:]
+	band := sdl.Rect{X: 0, Y: int32(y0), W: int32(width), H: int32(y1 - y0)}
+	video.texture.Update(&band, unsafe.Pointer(&pixels[0]), 4*width)
 }
 
 func (video *Video) sdlCreateWindow() error {
@@ -121,18 +142,17 @@ func (video *Video) sdlCreateWindow() error {
 	return nil
 }
 
-func (video *Video) sdlCreateSurface() error {
+func (video *Video) sdlCreateTexture() error {
 	var err error
-	pixels := unsafe.Pointer(&video.Screen.Data()[0])
-	video.surface, err = sdl.CreateRGBSurfaceWithFormatFrom(
-		pixels, int32(video.Screen.Width()), int32(video.Screen.Height()),
-		32, 4*int32(video.Screen.Width()), uint32(sdl.PIXELFORMAT_RGBA32))
+	video.texture, err = video.renderer.CreateTexture(
+		uint32(sdl.PIXELFORMAT_RGBA32), sdl.TEXTUREACCESS_STREAMING,
+		int32(video.Screen.Width()), int32(video.Screen.Height()))
+	if err != nil {
+		return fmt.Errorf("creating screen texture : %w", err)
+	}
 	video.sRect = sdl.Rect{
 		X: int32(video.Screen.View().X), Y: int32(video.Screen.View().Y),
 		W: int32(video.Screen.View().W), H: int32(video.Screen.View().H)}
-	if err != nil {
-		return fmt.Errorf("creating screen surface : %w", err)
-	}
 	return nil
 }
 
