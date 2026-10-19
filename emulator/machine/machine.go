@@ -2,6 +2,7 @@
 package machine
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/jtruco/emu8/emulator/device"
@@ -9,6 +10,7 @@ import (
 	"github.com/jtruco/emu8/emulator/device/io/joystick"
 	"github.com/jtruco/emu8/emulator/device/io/keyboard"
 	"github.com/jtruco/emu8/emulator/device/io/tape"
+	"github.com/jtruco/emu8/emulator/device/memory"
 	"github.com/jtruco/emu8/emulator/device/video"
 )
 
@@ -18,7 +20,8 @@ import (
 
 // Machine is a 8bit machine
 type Machine interface {
-	device.Device                   // Is a device
+	Init() error                    // Init initializes the machine and loads its ROMs
+	Reset()                         // Reset resets the machine (ROMs are kept)
 	Config() *Config                // Config gets the machine configuration
 	Clock() device.Clock            // Clock the machine main clock
 	Components() *device.Components // Components the machine components
@@ -26,7 +29,7 @@ type Machine interface {
 	Emulate()                       // Emulate one machine step
 	BeginFrame()                    // BeginFrame begins the frame of the machine and its devices
 	EndFrame()                      // EndFrame ends the frame of the machine and its devices (video and audio output ready)
-	LoadState(State)                // LoadState loads machine state
+	LoadState(State) error          // LoadState loads machine state
 	SaveState() State               // SaveState saves machine state
 }
 
@@ -44,8 +47,42 @@ type Control interface {
 	RegisterTape(string, tape.Builder) // RegisterTape ads a tape format and its builder
 }
 
-// Config is the machine configuration
+// LoadROM loads a ROM file into a read only memory bank. The file must fill
+// the bank; bigger files are truncated.
+func LoadROM(control Control, name string, bank *memory.Bank) error {
+	data, err := control.LoadROM(name)
+	if err != nil {
+		return fmt.Errorf("ROM %s : %w", name, err)
+	}
+	if size := int(bank.Size()); len(data) < size {
+		return fmt.Errorf("ROM %s : %d bytes, want %d", name, len(data), size)
+	}
+	bank.Load(0, data[:bank.Size()])
+	return nil
+}
+
+// DefaultAudioFrequency is the default audio output frequency (48 KHz)
+const DefaultAudioFrequency = 48000
+
+// Settings are the machine construction settings
+type Settings struct {
+	ModelID        string // Model ID or name (e.g. "zx48k", "cpc464"), case insensitive
+	AudioFrequency int    // Audio output frequency in Hz (0 : DefaultAudioFrequency)
+	Options        string // Machine specific options (e.g. CPC "es", "fr" ROMs)
+}
+
+// Frequency returns the audio output frequency, or the default if not set
+func (settings Settings) Frequency() int {
+	if settings.AudioFrequency > 0 {
+		return settings.AudioFrequency
+	}
+	return DefaultAudioFrequency
+}
+
+// Config is the machine configuration : its construction settings, and the
+// model information and timings set by the machine
 type Config struct {
+	Settings               // Construction settings (audio frequency, options)
 	Name     string        // Machine model name
 	Model    int           // Machine model (internal)
 	TStates  int           // TStates per frame

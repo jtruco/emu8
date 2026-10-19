@@ -30,10 +30,10 @@ type FileManager struct {
 	formats map[string]int // The format extension mapping
 }
 
-// NewFileManager returns a new file manager
-func NewFileManager() *FileManager {
+// NewFileManager returns a new file manager of a file system
+func NewFileManager(fs FileSystem) *FileManager {
 	manager := new(FileManager)
-	manager.vfs = GetFileSystem()
+	manager.vfs = fs
 	manager.formats = make(map[string]int)
 	manager.RegisterFormat(FormatRom, ExtRom)
 	return manager

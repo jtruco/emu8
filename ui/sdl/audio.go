@@ -1,7 +1,10 @@
 package sdl
 
 import (
+	"fmt"
 	"log"
+
+	"github.com/jtruco/emu8/config"
 
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/veandco/go-sdl2/sdl"
@@ -17,13 +20,13 @@ type Audio struct {
 // NewAudio the SDL audio
 func NewAudio() *Audio {
 	audio := new(Audio)
-	audio.Frequency = 48000
+	audio.Frequency = config.DefaultAudioFrequency
 	audio.Channels = 1 // mono
 	return audio
 }
 
 // Init the SDL audio
-func (audio *Audio) Init() bool {
+func (audio *Audio) Init() error {
 	var want, spec sdl.AudioSpec
 	want.Freq = audio.Frequency
 	want.Format = sdl.AUDIO_S16LSB
@@ -31,13 +34,11 @@ func (audio *Audio) Init() bool {
 	want.Samples = 1024
 	err := sdl.OpenAudio(&want, &spec)
 	if err != nil {
-		log.Println("SDL : Error initializing SDL audio:", err.Error())
-		return false
-
+		return fmt.Errorf("opening audio : %w", err)
 	}
 	sdl.PauseAudio(false)
 	log.Println("SDL : Audio initialized:", want.Freq, "Hz")
-	return true
+	return nil
 }
 
 // Close closes audio resources

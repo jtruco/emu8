@@ -52,7 +52,7 @@ deps:
 
 # tests
 
-.PHONY: test test-short
+.PHONY: test test-short test-sdl bench-sdl
 
 # all tests (including the slow Z80 zexall test)
 test:
@@ -61,3 +61,15 @@ test:
 # fast tests (slow tests are skipped with testing.Short)
 test-short:
 	$(GO_TEST) -short ./...
+
+# SDL video output tests and benchmarks (build tag sdltest, see ui/sdl/README.md).
+# -count=1 : SDL environment variables are not part of the go test cache key
+SDL_TEST = $(GO) test -count=1 -tags sdltest
+
+# correctness test, headless (dummy video driver, software renderer)
+test-sdl:
+	SDL_VIDEODRIVER=dummy $(SDL_TEST) -v ./ui/sdl/
+
+# benchmarks on the display (renderer : SDL_RENDER_DRIVER=software|opengl...)
+bench-sdl:
+	$(SDL_TEST) -run '^$$' -bench . ./ui/sdl/

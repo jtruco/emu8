@@ -22,12 +22,11 @@ func TestNewNameUses24HourClock(t *testing.T) {
 
 func TestLoadROM(t *testing.T) {
 	fs := NewMemFileSystem()
-	SetFileSystem(fs)
 	rom := []byte{0xf3, 0xaf, 0x11}
 	if err := fs.SaveFile(NewFileInfoData("test.rom", rom)); err != nil {
 		t.Fatal(err)
 	}
-	manager := NewFileManager()
+	manager := NewFileManager(fs)
 	data, err := manager.LoadROM("test.rom")
 	if err != nil || string(data) != string(rom) {
 		t.Errorf("LoadROM = % x, %v; want % x, nil", data, err, rom)

@@ -2,6 +2,7 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/jtruco/emu8/emulator/controller/io"
@@ -30,12 +31,13 @@ type Controller struct {
 	tape     *io.TapeController     // The tape controller
 }
 
-// New returns a new emulator controller.
-func New(machine machine.Machine) *Controller {
+// New returns a new emulator controller of a machine, using a file system
+// for its files (ROMs, snapshots and tapes).
+func New(machine machine.Machine, fs vfs.FileSystem) *Controller {
 	controller := new(Controller)
 	controller.machine = machine
 	defer machine.InitControl(controller)
-	controller.file = vfs.NewFileManager()
+	controller.file = vfs.NewFileManager(fs)
 	controller.video = ui.NewVideoController()
 	controller.audio = ui.NewAudioController()
 	controller.keyboard = io.NewKeyboardController()
@@ -137,43 +139,40 @@ func (controller *Controller) Refresh() {
 
 // Load / Save control
 
-// LoadFile loads file into machine
-func (controller *Controller) LoadFile(filename string) {
+// LoadFile loads a snapshot or tape file into the machine
+func (controller *Controller) LoadFile(filename string) (err error) {
 	info := controller.file.CreateFileInfo(filename)
 	// safety net : a malformed file must not crash the emulator
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("Emulator : Error loading file:", info.Name, ":", r)
+			err = fmt.Errorf("file %s : %v", info.Name, r)
 		}
 	}()
-	if info.Format == vfs.FormatUnknown {
-		log.Println("Emulator : Not supported format:", info.Ext)
-		return
+	if info.Format != vfs.FormatSnapshot && info.Format != vfs.FormatTape {
+		return fmt.Errorf("file %s : not supported format %q", info.Name, info.Ext)
 	}
-	err := controller.file.LoadFile(info)
+	if err := controller.file.LoadFile(info); err != nil {
+		return fmt.Errorf("file %s : %w", info.Name, err)
+	}
+	if info.Format == vfs.FormatSnapshot {
+		err = controller.machine.LoadState(machine.State{Format: info.Ext, Data: info.Data})
+	} else {
+		err = controller.tape.Load(info)
+	}
 	if err != nil {
-		log.Println("Emulator : Error loading file:", info.Name)
-		return
+		return fmt.Errorf("file %s : %w", info.Name, err)
 	}
-	switch info.Format {
-	case vfs.FormatSnapshot:
-		controller.machine.LoadState(
-			machine.State{Format: info.Ext, Data: info.Data})
-	case vfs.FormatTape:
-		controller.tape.Load(info)
-	default:
-		log.Println("Emulator : Unknown format:", info.Format)
-	}
+	log.Println("Emulator : File loaded:", info.Name)
+	return nil
 }
 
 // TakeSnapshot saves a snapshot file from machine state
-func (controller *Controller) TakeSnapshot() {
+func (controller *Controller) TakeSnapshot() error {
 	state := controller.machine.SaveState()
 	name := controller.file.NewName("snap", state.Format)
-	err := controller.file.SaveFile(name, vfs.FormatSnapshot, state.Data)
-	if err == nil {
-		log.Println("Emulator : Snapshot saved:", name)
-	} else {
-		log.Println("Emulator : Error saving snapshot:", name)
+	if err := controller.file.SaveFile(name, vfs.FormatSnapshot, state.Data); err != nil {
+		return fmt.Errorf("snapshot %s : %w", name, err)
 	}
+	log.Println("Emulator : Snapshot saved:", name)
+	return nil
 }

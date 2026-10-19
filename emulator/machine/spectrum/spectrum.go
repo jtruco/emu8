@@ -2,9 +2,8 @@
 package spectrum
 
 import (
-	"log"
+	"fmt"
 
-	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
 	"github.com/jtruco/emu8/emulator/device/bus"
@@ -52,8 +51,9 @@ type Spectrum struct {
 }
 
 // New returns a new ZX Spectrum
-func New(model int) machine.Machine {
+func New(model int, settings machine.Settings) machine.Machine {
 	spectrum := new(Spectrum)
+	spectrum.config.Settings = settings
 	spectrum.config.Model = model
 	spectrum.config.SetTimings(zxTStates, zxFPS)
 	// memory mapping
@@ -76,7 +76,7 @@ func New(model int) machine.Machine {
 	spectrum.cpu.OnIntAck = spectrum.onInterruptAck
 	spectrum.tv = NewUlaTv(spectrum)
 	spectrum.beeper = audio.NewBeeper(
-		audio.NewConfig(config.Get().Audio.Frequency, zxFPS, zxTStates))
+		audio.NewConfig(spectrum.config.Frequency(), zxFPS, zxTStates))
 	spectrum.beeper.SetMap(zxBeeperMap)
 	spectrum.keyboard = NewKeyboard()
 	spectrum.tape = tape.New(spectrum.clock)
@@ -98,31 +98,15 @@ func New(model int) machine.Machine {
 
 // Device interface
 
-// Init initializes machine
-func (spectrum *Spectrum) Init() {
-	// initialize components
+// Init initializes machine and loads its ROM
+func (spectrum *Spectrum) Init() error {
 	spectrum.components.Init()
-	// initialize spectrum
-	spectrum.initSpectrum()
+	return machine.LoadROM(spectrum.control, zxRomName, spectrum.memory.Bank(0))
 }
 
 // Reset resets the machine
 func (spectrum *Spectrum) Reset() {
-	// reset components
 	spectrum.components.Reset()
-	// resets spectrum
-	spectrum.initSpectrum()
-}
-
-// initSpectrum common init tasks
-func (spectrum *Spectrum) initSpectrum() {
-	// load ROM at bank 0
-	data, err := spectrum.control.LoadROM(zxRomName)
-	if err != nil {
-		return
-	}
-	rom := spectrum.memory.Bank(0)
-	rom.Load(0, data[0:0x4000])
 }
 
 // Machine properties
@@ -201,7 +185,7 @@ func (spectrum *Spectrum) onInterruptAck() bool {
 // Snapshots : load & save state
 
 // LoadState loads a ZX Spectrum snapshot
-func (spectrum *Spectrum) LoadState(state machine.State) {
+func (spectrum *Spectrum) LoadState(state machine.State) error {
 	var snap *format.Snapshot
 	switch state.Format {
 	case format.SNA:
@@ -209,11 +193,13 @@ func (spectrum *Spectrum) LoadState(state machine.State) {
 	case format.Z80:
 		snap = format.LoadZ80(state.Data)
 	default:
-		log.Println("Spectrum : Not implemented snap format:", state.Format)
+		return fmt.Errorf("not supported snapshot format %q", state.Format)
 	}
-	if snap != nil {
-		spectrum.loadSnapshot(snap)
+	if snap == nil {
+		return fmt.Errorf("invalid %s snapshot", state.Format)
 	}
+	spectrum.loadSnapshot(snap)
+	return nil
 }
 
 func (spectrum *Spectrum) loadSnapshot(snap *format.Snapshot) {

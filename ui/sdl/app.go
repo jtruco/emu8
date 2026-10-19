@@ -1,11 +1,11 @@
 package sdl
 
 import (
-	"errors"
+	"fmt"
 	"log"
 
+	"github.com/jtruco/emu8/config"
 	"github.com/jtruco/emu8/emulator"
-	"github.com/jtruco/emu8/emulator/config"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -19,21 +19,19 @@ type App struct {
 	emulator *emulator.Emulator
 	video    *Video
 	audio    *Audio
-	filename string
 	running  bool
 }
 
-// NewApp creates a new application
-func NewApp() *App {
+// NewApp creates a new application from the configuration
+func NewApp(conf *config.Config) *App {
 	app := new(App)
 	app.video = NewVideo()
 	app.audio = NewAudio()
-	app.configure(config.Get())
+	app.configure(conf)
 	return app
 }
 
 func (app *App) configure(conf *config.Config) {
-	app.filename = conf.App.File
 	app.video.Title = conf.App.Title
 	app.video.FullScreen = conf.Video.FullScreen
 	app.video.Scale = float32(conf.Video.Scale)
@@ -53,18 +51,17 @@ func (app *App) Connect(emulator *emulator.Emulator) {
 func (app *App) Init() error {
 	// init sdl
 	if err := sdl.Init(sdl.INIT_VIDEO | sdl.INIT_AUDIO | sdl.INIT_JOYSTICK); err != nil {
-		log.Println("SDL : Error initializing SDL:", err.Error())
-		return errors.New("could not initialize SDL library")
+		return fmt.Errorf("SDL library : %w", err)
 	}
 	// init SDL video output
-	if !app.video.Init() {
+	if err := app.video.Init(); err != nil {
 		app.Quit()
-		return errors.New("could not initialize video subsystem")
+		return fmt.Errorf("SDL video : %w", err)
 	}
 	// init SDL audio
-	if !app.audio.Init() {
+	if err := app.audio.Init(); err != nil {
 		app.Quit()
-		return errors.New("could not initialize audio subsystem")
+		return fmt.Errorf("SDL audio : %w", err)
 	}
 	// open sdl joystick (only one supported)
 	if sdl.NumJoysticks() > 0 {
@@ -77,13 +74,8 @@ func (app *App) Init() error {
 	return nil
 }
 
-// Run the SDL App
+// Run the SDL App : starts the emulation and runs the event loop
 func (app *App) Run() {
-	// init emulator
-	app.emulator.Init()
-	if app.filename != "" {
-		app.emulator.LoadFile(app.filename)
-	}
 	app.emulator.Start()
 	// event loop
 	app.running = true
@@ -148,7 +140,9 @@ func (app *App) processKeyboard(e *sdl.KeyboardEvent) {
 		switch e.Keysym.Sym {
 		// Snaps
 		case sdl.K_F2:
-			app.emulator.TakeSnapshot()
+			if err := app.emulator.TakeSnapshot(); err != nil {
+				log.Println("App : Error taking snapshot:", err.Error())
+			}
 		// Emulator
 		case sdl.K_F5:
 			app.emulator.Reset()

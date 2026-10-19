@@ -1,7 +1,7 @@
 package machine
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -11,11 +11,13 @@ import (
 
 var models = map[string]*Model{} // Registered models by ID
 
-// Model contains a machine model description
+// Model contains a machine model description. Machine packages register
+// their models at init time (blank import in the emulator package); the
+// registry is read only afterwards.
 type Model struct {
-	Name  string         // Machine model
-	Ids   []string       // Model Ids
-	Build func() Machine // Build builds the machine model
+	Name  string                 // Machine model
+	Ids   []string               // Model Ids
+	Build func(Settings) Machine // Build builds the machine model
 }
 
 // Register register a machine model
@@ -47,13 +49,13 @@ func FindModel(modelId string) *Model {
 	return nil
 }
 
-// Create returns a machine from a model name
-func Create(modelId string) (Machine, error) {
-	model := FindModel(modelId)
+// Create returns a machine of the settings model
+func Create(settings Settings) (Machine, error) {
+	model := FindModel(settings.ModelID)
 	if model == nil {
-		return nil, errors.New("Machine : unknown machine model")
+		return nil, fmt.Errorf("Machine : unknown machine model : %q", settings.ModelID)
 	}
-	machine := model.Build()
+	machine := model.Build(settings)
 	machine.Config().Name = model.Name
 	return machine, nil
 }

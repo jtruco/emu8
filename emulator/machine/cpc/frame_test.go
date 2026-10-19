@@ -1,19 +1,11 @@
 package cpc
 
-import (
-	"testing"
-
-	"github.com/jtruco/emu8/emulator/controller"
-	"github.com/jtruco/emu8/emulator/controller/vfs"
-)
+import "testing"
 
 // The machine ends its devices frames : the emulation does not depend on
 // the UI controllers being refreshed.
 func TestCpcFrameLifecycleHeadless(t *testing.T) {
-	vfs.SetFileSystem(vfs.NewMemFileSystem())
-	m := New(AmstradCPC464).(*AmstradCPC)
-	controller.New(m)
-	m.Init()
+	m := newTestCPC(t)
 	m.psg.WriteRegister(7, 0x3e) // tone A
 	m.psg.WriteRegister(0, 0x40) // tone A period
 	m.psg.WriteRegister(8, 0x0f) // tone A max volume

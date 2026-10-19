@@ -5,6 +5,7 @@ import (
 
 	"github.com/jtruco/emu8/emulator/controller"
 	"github.com/jtruco/emu8/emulator/controller/vfs"
+	"github.com/jtruco/emu8/emulator/machine"
 )
 
 // Test palette colours (bright 0 / bright 1)
@@ -18,14 +19,22 @@ var (
 	colBrGreen = zxPaletteRGBA[8+4]
 )
 
-// newTestSpectrum builds and initializes a 48K Spectrum without ROM files
-// (the ROM bank stays zeroed), at frame Tstate 0.
+// romFileSystem returns a memory file system with a zeroed ROM file
+func romFileSystem() *vfs.MemFileSystem {
+	fs := vfs.NewMemFileSystem()
+	fs.SaveFile(vfs.NewFileInfoData(zxRomName, make([]byte, 0x4000)))
+	return fs
+}
+
+// newTestSpectrum builds and initializes a 48K Spectrum with a zeroed ROM,
+// at frame Tstate 0.
 func newTestSpectrum(t *testing.T) *Spectrum {
 	t.Helper()
-	vfs.SetFileSystem(vfs.NewMemFileSystem())
-	m := New(ZXSpectrum48K).(*Spectrum)
-	controller.New(m)
-	m.Init()
+	m := New(ZXSpectrum48K, machine.Settings{}).(*Spectrum)
+	controller.New(m, romFileSystem())
+	if err := m.Init(); err != nil {
+		t.Fatal(err)
+	}
 	return m
 }
 

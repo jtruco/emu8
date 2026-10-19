@@ -2,11 +2,11 @@
 package cpc
 
 import (
-	"log"
+	"fmt"
 
-	"github.com/jtruco/emu8/emulator/config"
 	"github.com/jtruco/emu8/emulator/device"
 	"github.com/jtruco/emu8/emulator/device/audio"
+	"github.com/jtruco/emu8/emulator/device/bus"
 	"github.com/jtruco/emu8/emulator/device/cpu"
 	"github.com/jtruco/emu8/emulator/device/cpu/z80"
 	"github.com/jtruco/emu8/emulator/device/io/tape"
@@ -58,8 +58,9 @@ type AmstradCPC struct {
 }
 
 // New returns a new Amstrad CPC
-func New(model int) machine.Machine {
+func New(model int, settings machine.Settings) machine.Machine {
 	cpc := new(AmstradCPC)
+	cpc.config.Settings = settings
 	cpc.config.Model = model
 	cpc.config.SetTimings(cpcTStates, cpcFPS)
 	// memory map
@@ -70,6 +71,7 @@ func New(model int) machine.Machine {
 	cpc.memory.SetMap(3, memory.NewRAM(0x8000, memory.Size16K))
 	cpc.memory.SetMap(4, memory.NewROM(0xC000, memory.Size16K)) // Upper ROM Basic
 	cpc.memory.SetMap(5, memory.NewRAM(0xC000, memory.Size16K))
+	cpc.memory.SetMapper(bus.NewPageMapper(14)) // ROMs over RAM : 16K pages
 	// devices
 	cpc.clock = device.NewClock()
 	cpc.cpu = z80.New(cpc.clock, cpc.memory, cpc)
@@ -78,7 +80,7 @@ func New(model int) machine.Machine {
 	cpc.video = NewVduVideo(cpc)
 	cpc.keyboard = NewKeyboard()
 	cpc.psg = audio.NewAY38910(
-		audio.NewConfig(config.Get().Audio.Frequency, cpcFPS, cpcAudioTStates))
+		audio.NewConfig(cpc.config.Frequency(), cpcFPS, cpcAudioTStates))
 	cpc.psg.OnReadPortA = cpc.onPsgReadPortA
 	cpc.ppi = NewPpi(cpc)
 	cpc.tape = tape.New(cpc.clock)
@@ -102,41 +104,25 @@ func New(model int) machine.Machine {
 // Device interface
 // -----------------------------------------------------------------------------
 
-// Init initializes machine
-func (cpc *AmstradCPC) Init() {
+// Init initializes machine and loads its ROMs
+func (cpc *AmstradCPC) Init() error {
 	cpc.components.Init()
-	cpc.initAmstrad()
+	osrom := cpcOsRomName
+	switch cpc.config.Options { // OS ROM language
+	case "es":
+		osrom = cpcOsRomNameES
+	case "fr":
+		osrom = cpcOsRomNameFR
+	}
+	if err := machine.LoadROM(cpc.control, osrom, cpc.memory.Bank(cpcLowerROM)); err != nil {
+		return err
+	}
+	return machine.LoadROM(cpc.control, cpcBasicRomName, cpc.memory.Bank(cpcUpperROM))
 }
 
 // Reset resets the machine
 func (cpc *AmstradCPC) Reset() {
 	cpc.components.Reset()
-	cpc.initAmstrad()
-}
-
-// initAmstrad common init tasks
-func (cpc *AmstradCPC) initAmstrad() {
-	// load lower rom (os)
-	romname := cpcOsRomName
-	switch config.Get().Machine.Options {
-	case "es":
-		romname = cpcOsRomNameES
-	case "fr":
-		romname = cpcOsRomNameFR
-	}
-	data, err := cpc.control.LoadROM(romname)
-	if err != nil {
-		return
-	}
-	cpc.memory.Bank(cpcLowerROM).Load(0, data[:0x4000]) // lower rom
-	// load upper rom (basic)
-	data, err = cpc.control.LoadROM(cpcBasicRomName)
-	if err != nil {
-		return
-	}
-	cpc.memory.Bank(cpcUpperROM).Load(0, data[:0x4000]) // upper rom
-	// devices
-	cpc.ppi.jumpers = cpcJumpers
 }
 
 // Machine interface
@@ -212,7 +198,9 @@ func (cpc *AmstradCPC) EndFrame() {
 // CPC IO bus
 // -----------------------------------------------------------------------------
 
-// Read bus at address
+// Read bus at address. The Z80 core adds the 4 Ts of the I/O cycle; the Gate
+// Array wait states are applied per instruction in Emulate (known D7, B17 for
+// OUT (C),r and IN r,(C)).
 func (cpc *AmstradCPC) Read(address uint16) byte {
 	var result byte = 0xff
 	if address&0x4000 == 0 { // CRTC
@@ -226,7 +214,9 @@ func (cpc *AmstradCPC) Read(address uint16) byte {
 	return result
 }
 
-// Write bus at address
+// Write bus at address. The Z80 core adds the 4 Ts of the I/O cycle; the Gate
+// Array wait states are applied per instruction in Emulate (known D7, B17 for
+// OUT (C),r and IN r,(C)).
 func (cpc *AmstradCPC) Write(address uint16, data byte) {
 	if address&0x4000 == 0 { // CRTC
 		port := byte(address>>8) & 0x3
@@ -251,17 +241,19 @@ func (cpc *AmstradCPC) onPsgReadPortA() byte {
 // -----------------------------------------------------------------------------
 
 // LoadState loads an Amstrad CPC snapshot
-func (cpc *AmstradCPC) LoadState(state machine.State) {
+func (cpc *AmstradCPC) LoadState(state machine.State) error {
 	var snap *format.Snapshot
 	switch state.Format {
 	case format.SNA:
 		snap = format.LoadSNA(state.Data)
 	default:
-		log.Println("CPC : Not implemented snap format:", state.Format)
+		return fmt.Errorf("not supported snapshot format %q", state.Format)
 	}
-	if snap != nil {
-		cpc.loadSnapshot(snap)
+	if snap == nil {
+		return fmt.Errorf("invalid %s snapshot", state.Format)
 	}
+	cpc.loadSnapshot(snap)
+	return nil
 }
 
 func (cpc *AmstradCPC) loadSnapshot(snap *format.Snapshot) {

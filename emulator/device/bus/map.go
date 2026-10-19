@@ -19,8 +19,8 @@ type Map struct {
 	active       bool     // Is map active
 	activeInit   bool     // Initial active state
 	readOnly     bool     // Is readonly access
-	OnAccess     Callback // On bus access callback
-	OnPostAccess Callback // On bus post access callback
+	OnAccess     Callback // On bus access callback (before the data access)
+	OnPostAccess Callback // On bus post access callback (after the data access)
 }
 
 // NewMap creates a mapping from a bus device

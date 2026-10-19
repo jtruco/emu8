@@ -27,5 +27,11 @@ type Device interface {
 	Bus           // Is a data bus
 }
 
-// Callback is a device bus event callback
+// Callback is a device bus event callback.
+//
+// Timing contract: both callbacks of a CPU memory access run at the start
+// time of the memory cycle (the Z80 adds the 3 Ts of the cycle after the data
+// access, see z80.readByte). A callback may add wait states to the clock
+// (contention) before the access. Bus-only cycles (no MREQ) are also notified
+// as reads, one per T-state.
 type Callback func(code int, address uint16)

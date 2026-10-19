@@ -15,7 +15,7 @@ type panicMachine struct {
 	loads  int
 }
 
-func (m *panicMachine) Init()                          {}
+func (m *panicMachine) Init() error                    { return nil }
 func (m *panicMachine) Reset()                         {}
 func (m *panicMachine) Config() *machine.Config        { return &m.config }
 func (m *panicMachine) Clock() device.Clock            { return device.NewClock() }
@@ -24,7 +24,10 @@ func (m *panicMachine) Emulate()                       {}
 func (m *panicMachine) BeginFrame()                    {}
 func (m *panicMachine) EndFrame()                      {}
 func (m *panicMachine) SaveState() machine.State       { return machine.State{} }
-func (m *panicMachine) LoadState(state machine.State)  { m.loads++; panic("malformed snapshot") }
+func (m *panicMachine) LoadState(state machine.State) error {
+	m.loads++
+	panic("malformed snapshot")
+}
 func (m *panicMachine) InitControl(ctl machine.Control) {
 	ctl.BindTapeDrive(tape.New(device.NewClock()))
 	ctl.RegisterSnapshot("snp")
@@ -40,14 +43,15 @@ func (panicTape) Play(ctl *tape.Control) {}
 
 func TestLoadFileRecoversFromPanics(t *testing.T) {
 	fs := vfs.NewMemFileSystem()
-	vfs.SetFileSystem(fs)
 	m := new(panicMachine)
-	controller := New(m)
+	controller := New(m, fs)
 	for _, name := range []string{"game.snp", "game.tpe"} {
 		if err := fs.SaveFile(vfs.NewFileInfoData(name, []byte{0x00})); err != nil {
 			t.Fatal(err)
 		}
-		controller.LoadFile(name) // must not panic
+		if err := controller.LoadFile(name); err == nil { // must not panic
+			t.Errorf("LoadFile(%s) = nil, want the recovered panic error", name)
+		}
 	}
 	if m.loads != 1 {
 		t.Errorf("snapshot loads = %d, want 1", m.loads)

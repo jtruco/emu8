@@ -105,7 +105,9 @@ func (z80 *Z80) setSP(address uint16) {
 // Memory & IO functions
 // -----------------------------------------------------------------------------
 
-// readByte reads a byte from memory
+// readByte reads a byte from memory : a 3 Ts memory read cycle. The data
+// access (and its bus callbacks) happens at the cycle start, then the 3 Ts are
+// added.
 func (z80 *Z80) readByte(address uint16) byte {
 	data := z80.mem.Read(address)
 	z80.clock.Add(3) // +3 tstates in memory access
@@ -119,7 +121,8 @@ func (z80 *Z80) readBytePC() byte {
 	return data
 }
 
-// readNoReq only puts address on bus (no MREQ) during n tstates
+// readNoReq only puts address on bus (no MREQ) during n tstates. Each T-state
+// is a bus read without data, so that the bus callbacks apply contention.
 func (z80 *Z80) readNoReq(address uint16, n int) {
 	for i := 0; i < n; i++ {
 		z80.mem.Read(address) // only bus access
@@ -127,19 +130,26 @@ func (z80 *Z80) readNoReq(address uint16, n int) {
 	}
 }
 
-// readPort writes a byte to a port
+// readPort reads a byte from a port : a 4 Ts I/O read cycle. The I/O device
+// is accessed after the first T-state (IORQ) and adds its wait states.
 func (z80 *Z80) readPort(port uint16) byte {
+	z80.clock.Inc() // T1 : address on the bus
 	value := z80.io.Read(port)
+	z80.clock.Add(3) // T2, TW, T3
 	return value
 }
 
-// writeByte writes a byte into memory
+// writeByte writes a byte into memory : a 3 Ts memory write cycle. The data
+// access (and its bus callbacks) happens at the cycle start, then the 3 Ts are
+// added.
 func (z80 *Z80) writeByte(address uint16, value byte) {
 	z80.mem.Write(address, value)
 	z80.clock.Add(3) // +3 tstates in memory access
 }
 
-// writeNoReq only puts address on bus (no MREQ) during n tstates
+// writeNoReq only puts address on bus (no MREQ) during n tstates. Each
+// T-state is a bus read without data, so that the bus callbacks apply
+// contention.
 func (z80 *Z80) writeNoReq(address uint16, n int) {
 	for i := 0; i < n; i++ {
 		z80.mem.Read(address) // only bus access
@@ -147,9 +157,12 @@ func (z80 *Z80) writeNoReq(address uint16, n int) {
 	}
 }
 
-// writePort writes a byte to a port
+// writePort writes a byte to a port : a 4 Ts I/O write cycle. The I/O device
+// is accessed after the first T-state (IORQ) and adds its wait states.
 func (z80 *Z80) writePort(port uint16, value byte) {
+	z80.clock.Inc() // T1 : address on the bus
 	z80.io.Write(port, value)
+	z80.clock.Add(3) // T2, TW, T3
 }
 
 // -----------------------------------------------------------------------------

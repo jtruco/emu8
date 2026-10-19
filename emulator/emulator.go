@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jtruco/emu8/emulator/controller"
+	"github.com/jtruco/emu8/emulator/controller/vfs"
 	"github.com/jtruco/emu8/emulator/machine"
 )
 
@@ -26,24 +27,29 @@ type Emulator struct {
 	lost     bool                   // Lost frame
 }
 
-// New creates a machine emulator
-func New(machine machine.Machine) *Emulator {
+// New creates a ready to use emulator of a machine, using a file system for
+// its files. It connects the machine to the emulator controller, then
+// initializes it (ROMs are loaded).
+func New(machine machine.Machine, fs vfs.FileSystem) (*Emulator, error) {
 	emulator := new(Emulator)
 	emulator.machine = machine
-	emulator.control = controller.New(machine)
-	return emulator
+	emulator.control = controller.New(machine, fs)
+	if err := emulator.initialize(); err != nil {
+		return nil, err
+	}
+	return emulator, nil
 }
 
 // Emulator factory
 
-// FromModel returns an emulator for a machine model name
-func FromModel(model string) (*Emulator, error) {
-	machine, err := machine.Create(model)
+// Create returns an emulator of a machine built from its settings, using a
+// file system for its files
+func Create(settings machine.Settings, fs vfs.FileSystem) (*Emulator, error) {
+	machine, err := machine.Create(settings)
 	if err != nil {
-		log.Println(err.Error())
 		return nil, err
 	}
-	return New(machine), nil
+	return New(machine, fs)
 }
 
 // Machine controller
@@ -63,11 +69,14 @@ func (emulator *Emulator) Machine() machine.Machine {
 // IsRunning the emulation
 func (emulator *Emulator) IsRunning() bool { return emulator.running }
 
-// Init the emulation
-func (emulator *Emulator) Init() {
-	emulator.machine.Init()
+// initialize initializes the machine and the emulation timings
+func (emulator *Emulator) initialize() error {
+	if err := emulator.machine.Init(); err != nil {
+		return err
+	}
 	emulator.tstates = emulator.machine.Config().TStates
 	emulator.duration = emulator.machine.Config().Duration
+	return nil
 }
 
 // Reset the emulation
@@ -97,22 +106,22 @@ func (emulator *Emulator) Stop() {
 	}
 }
 
-// LoadFile loads file into the emulator
-func (emulator *Emulator) LoadFile(name string) {
+// LoadFile loads a snapshot or tape file into the emulator
+func (emulator *Emulator) LoadFile(name string) error {
 	if emulator.running {
 		emulator.Stop()
 		defer emulator.Start()
 	}
-	emulator.control.LoadFile(name)
+	return emulator.control.LoadFile(name)
 }
 
 // TakeSnapshot takes and saves snapshot of the machine state
-func (emulator *Emulator) TakeSnapshot() {
+func (emulator *Emulator) TakeSnapshot() error {
 	if emulator.running {
 		emulator.Stop()
 		defer emulator.Start()
 	}
-	emulator.control.TakeSnapshot()
+	return emulator.control.TakeSnapshot()
 }
 
 // Emulation
