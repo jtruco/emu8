@@ -2,6 +2,7 @@
 package machine
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/jtruco/emu8/emulator/device"
@@ -9,6 +10,7 @@ import (
 	"github.com/jtruco/emu8/emulator/device/io/joystick"
 	"github.com/jtruco/emu8/emulator/device/io/keyboard"
 	"github.com/jtruco/emu8/emulator/device/io/tape"
+	"github.com/jtruco/emu8/emulator/device/memory"
 	"github.com/jtruco/emu8/emulator/device/video"
 )
 
@@ -18,7 +20,8 @@ import (
 
 // Machine is a 8bit machine
 type Machine interface {
-	device.Device                   // Is a device
+	Init() error                    // Init initializes the machine and loads its ROMs
+	Reset()                         // Reset resets the machine (ROMs are kept)
 	Config() *Config                // Config gets the machine configuration
 	Clock() device.Clock            // Clock the machine main clock
 	Components() *device.Components // Components the machine components
@@ -42,6 +45,20 @@ type Control interface {
 	LoadROM(string) ([]byte, error)    // Loads a ROM file
 	RegisterSnapshot(string)           // RegisterSnapshot adds a snapshot format
 	RegisterTape(string, tape.Builder) // RegisterTape ads a tape format and its builder
+}
+
+// LoadROM loads a ROM file into a read only memory bank. The file must fill
+// the bank; bigger files are truncated.
+func LoadROM(control Control, name string, bank *memory.Bank) error {
+	data, err := control.LoadROM(name)
+	if err != nil {
+		return fmt.Errorf("ROM %s : %w", name, err)
+	}
+	if size := int(bank.Size()); len(data) < size {
+		return fmt.Errorf("ROM %s : %d bytes, want %d", name, len(data), size)
+	}
+	bank.Load(0, data[:bank.Size()])
+	return nil
 }
 
 // DefaultAudioFrequency is the default audio output frequency (48 KHz)

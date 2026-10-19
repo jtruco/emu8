@@ -98,31 +98,15 @@ func New(model int, settings machine.Settings) machine.Machine {
 
 // Device interface
 
-// Init initializes machine
-func (spectrum *Spectrum) Init() {
-	// initialize components
+// Init initializes machine and loads its ROM
+func (spectrum *Spectrum) Init() error {
 	spectrum.components.Init()
-	// initialize spectrum
-	spectrum.initSpectrum()
+	return machine.LoadROM(spectrum.control, zxRomName, spectrum.memory.Bank(0))
 }
 
 // Reset resets the machine
 func (spectrum *Spectrum) Reset() {
-	// reset components
 	spectrum.components.Reset()
-	// resets spectrum
-	spectrum.initSpectrum()
-}
-
-// initSpectrum common init tasks
-func (spectrum *Spectrum) initSpectrum() {
-	// load ROM at bank 0
-	data, err := spectrum.control.LoadROM(zxRomName)
-	if err != nil {
-		return
-	}
-	rom := spectrum.memory.Bank(0)
-	rom.Load(0, data[0:0x4000])
 }
 
 // Machine properties

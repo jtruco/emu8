@@ -41,13 +41,15 @@ func (bank *Bank) Save(data []byte) {
 
 // Init initializes bank data
 func (bank *Bank) Init() {
-	bank.Reset()
-}
-
-// Reset resets bank data
-func (bank *Bank) Reset() {
 	for i := 0; i < len(bank.data); i++ {
 		bank.data[i] = 0
+	}
+}
+
+// Reset resets bank data. Read only banks (ROMs) keep their contents.
+func (bank *Bank) Reset() {
+	if !bank.readOnly {
+		bank.Init()
 	}
 }
 

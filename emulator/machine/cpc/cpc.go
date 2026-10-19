@@ -104,41 +104,25 @@ func New(model int, settings machine.Settings) machine.Machine {
 // Device interface
 // -----------------------------------------------------------------------------
 
-// Init initializes machine
-func (cpc *AmstradCPC) Init() {
+// Init initializes machine and loads its ROMs
+func (cpc *AmstradCPC) Init() error {
 	cpc.components.Init()
-	cpc.initAmstrad()
+	osrom := cpcOsRomName
+	switch cpc.config.Options { // OS ROM language
+	case "es":
+		osrom = cpcOsRomNameES
+	case "fr":
+		osrom = cpcOsRomNameFR
+	}
+	if err := machine.LoadROM(cpc.control, osrom, cpc.memory.Bank(cpcLowerROM)); err != nil {
+		return err
+	}
+	return machine.LoadROM(cpc.control, cpcBasicRomName, cpc.memory.Bank(cpcUpperROM))
 }
 
 // Reset resets the machine
 func (cpc *AmstradCPC) Reset() {
 	cpc.components.Reset()
-	cpc.initAmstrad()
-}
-
-// initAmstrad common init tasks
-func (cpc *AmstradCPC) initAmstrad() {
-	// load lower rom (os)
-	romname := cpcOsRomName
-	switch cpc.config.Options { // OS ROM language
-	case "es":
-		romname = cpcOsRomNameES
-	case "fr":
-		romname = cpcOsRomNameFR
-	}
-	data, err := cpc.control.LoadROM(romname)
-	if err != nil {
-		return
-	}
-	cpc.memory.Bank(cpcLowerROM).Load(0, data[:0x4000]) // lower rom
-	// load upper rom (basic)
-	data, err = cpc.control.LoadROM(cpcBasicRomName)
-	if err != nil {
-		return
-	}
-	cpc.memory.Bank(cpcUpperROM).Load(0, data[:0x4000]) // upper rom
-	// devices
-	cpc.ppi.jumpers = cpcJumpers
 }
 
 // Machine interface

@@ -1,12 +1,6 @@
 package cpc
 
-import (
-	"testing"
-
-	"github.com/jtruco/emu8/emulator/controller"
-	"github.com/jtruco/emu8/emulator/controller/vfs"
-	"github.com/jtruco/emu8/emulator/machine"
-)
+import "testing"
 
 // Instruction timings of the CPC (Z80 with Gate Array wait states), from the
 // CPC instruction timing tables (NOP = 4 Ts). Known differences are marked
@@ -31,9 +25,7 @@ func TestCpcInstructionTimings(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			m := New(AmstradCPC464, machine.Settings{}).(*AmstradCPC)
-			controller.New(m, vfs.NewMemFileSystem())
-			m.Init()
+			m := newTestCPC(t)
 			m.memory.Bank(2).Load(0, c.code) // RAM at 4000h
 			m.cpu.PC, m.cpu.SP = 0x4000, 0xbf00
 			m.cpu.B, m.cpu.C = 0xf7, 0x00 // port F700h : PPI control

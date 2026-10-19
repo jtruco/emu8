@@ -1,19 +1,11 @@
 package cpc
 
-import (
-	"testing"
-
-	"github.com/jtruco/emu8/emulator/controller"
-	"github.com/jtruco/emu8/emulator/controller/vfs"
-	"github.com/jtruco/emu8/emulator/machine"
-)
+import "testing"
 
 // The lower and upper ROMs are switched over the RAM by the gate array;
 // writes always go to RAM.
 func TestCpcROMSwitching(t *testing.T) {
-	m := New(AmstradCPC464, machine.Settings{}).(*AmstradCPC)
-	controller.New(m, vfs.NewMemFileSystem())
-	m.Init()
+	m := newTestCPC(t)
 	m.memory.Bank(cpcLowerROM).Data()[0] = 0xa1 // lower ROM at 0000h
 	m.memory.Bank(cpcUpperROM).Data()[0] = 0xa2 // upper ROM at C000h
 	m.memory.Write(0x0000, 0x11)                // RAM under the ROMs

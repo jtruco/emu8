@@ -1,7 +1,7 @@
 package machine
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -53,7 +53,7 @@ func FindModel(modelId string) *Model {
 func Create(settings Settings) (Machine, error) {
 	model := FindModel(settings.ModelID)
 	if model == nil {
-		return nil, errors.New("Machine : unknown machine model")
+		return nil, fmt.Errorf("Machine : unknown machine model : %q", settings.ModelID)
 	}
 	machine := model.Build(settings)
 	machine.Config().Name = model.Name

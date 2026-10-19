@@ -18,6 +18,7 @@ type Ppi struct {
 func NewPpi(cpc *AmstradCPC) *Ppi {
 	ppi := new(Ppi)
 	ppi.cpc = cpc
+	ppi.jumpers = cpcJumpers // fixed hardware configuration
 	return ppi
 }
 
@@ -30,7 +31,6 @@ func (ppi *Ppi) Reset() {
 	ppi.portB = 0x00
 	ppi.portC = 0x00
 	ppi.control = 0x00
-	ppi.jumpers = 0x00
 }
 
 // Read reads from a PPI port

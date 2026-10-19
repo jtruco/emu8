@@ -15,7 +15,7 @@ type panicMachine struct {
 	loads  int
 }
 
-func (m *panicMachine) Init()                          {}
+func (m *panicMachine) Init() error                    { return nil }
 func (m *panicMachine) Reset()                         {}
 func (m *panicMachine) Config() *machine.Config        { return &m.config }
 func (m *panicMachine) Clock() device.Clock            { return device.NewClock() }

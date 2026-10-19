@@ -13,9 +13,8 @@ func newBenchCpc(b *testing.B) *AmstradCPC {
 	b.Helper()
 	m := New(AmstradCPC464, machine.Settings{}).(*AmstradCPC)
 	controller.New(m, vfs.NewDesktopFileSystem("../../.."))
-	m.Init()
-	if m.memory.Bank(cpcLowerROM).Data()[0] == 0 {
-		b.Skip("ROM not found")
+	if err := m.Init(); err != nil {
+		b.Skip(err)
 	}
 	return m
 }

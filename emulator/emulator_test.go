@@ -24,6 +24,15 @@ func cpcSNA(address int, marker byte) []byte {
 	return data
 }
 
+// romFileSystem returns a memory file system with zeroed ROM files
+func romFileSystem() *vfs.MemFileSystem {
+	fs := vfs.NewMemFileSystem()
+	for _, name := range []string{"zxspectrum.rom", "cpc464_os.rom", "cpc464_basic.rom"} {
+		fs.SaveFile(vfs.NewFileInfoData(name, make([]byte, 0x4000)))
+	}
+	return fs
+}
+
 // Emulators are independent : each one has its own machine, settings and
 // file system, and they can run at the same time.
 func TestEmulatorInstancesAreIndependent(t *testing.T) {
@@ -40,7 +49,7 @@ func TestEmulatorInstancesAreIndependent(t *testing.T) {
 	}
 	emus := make([]*Emulator, len(instances))
 	for i, in := range instances {
-		fs := vfs.NewMemFileSystem()
+		fs := romFileSystem()
 		fs.SaveFile(vfs.NewFileInfoData("game.sna", in.snapshot)) // same name in each file system
 		emu, err := Create(machine.Settings{ModelID: in.model, AudioFrequency: in.frequency}, fs)
 		if err != nil {
@@ -99,5 +108,15 @@ func TestCreateReadyEmulator(t *testing.T) {
 	data := emu.Machine().SaveState().Data // SNA : RAM from offset 27 (0x4000)
 	if got := data[27+0x8000-0x4000]; got != 0x42 {
 		t.Errorf("RAM 0x8000 = %#02x, want 0x42 written by the ROM", got)
+	}
+}
+
+// Create fails when the machine can't be initialized (missing ROM)
+func TestCreateMissingROM(t *testing.T) {
+	for _, model := range []string{"zx48k", "cpc464"} {
+		emu, err := Create(machine.Settings{ModelID: model}, vfs.NewMemFileSystem())
+		if emu != nil || err == nil {
+			t.Errorf("%s: Create without ROMs = %v, %v; want nil and an error", model, emu, err)
+		}
 	}
 }

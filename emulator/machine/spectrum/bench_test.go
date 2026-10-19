@@ -13,9 +13,8 @@ func newBenchSpectrum(b *testing.B) *Spectrum {
 	b.Helper()
 	m := New(ZXSpectrum48K, machine.Settings{}).(*Spectrum)
 	controller.New(m, vfs.NewDesktopFileSystem("../../.."))
-	m.Init()
-	if m.memory.Bank(0).Data()[0] == 0 {
-		b.Skip("ROM not found")
+	if err := m.Init(); err != nil {
+		b.Skip(err)
 	}
 	return m
 }

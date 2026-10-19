@@ -30,12 +30,14 @@ type Emulator struct {
 // New creates a ready to use emulator of a machine, using a file system for
 // its files. It connects the machine to the emulator controller, then
 // initializes it (ROMs are loaded).
-func New(machine machine.Machine, fs vfs.FileSystem) *Emulator {
+func New(machine machine.Machine, fs vfs.FileSystem) (*Emulator, error) {
 	emulator := new(Emulator)
 	emulator.machine = machine
 	emulator.control = controller.New(machine, fs)
-	emulator.initialize()
-	return emulator
+	if err := emulator.initialize(); err != nil {
+		return nil, err
+	}
+	return emulator, nil
 }
 
 // Emulator factory
@@ -45,10 +47,9 @@ func New(machine machine.Machine, fs vfs.FileSystem) *Emulator {
 func Create(settings machine.Settings, fs vfs.FileSystem) (*Emulator, error) {
 	machine, err := machine.Create(settings)
 	if err != nil {
-		log.Println(err.Error())
 		return nil, err
 	}
-	return New(machine, fs), nil
+	return New(machine, fs)
 }
 
 // Machine controller
@@ -69,10 +70,13 @@ func (emulator *Emulator) Machine() machine.Machine {
 func (emulator *Emulator) IsRunning() bool { return emulator.running }
 
 // initialize initializes the machine and the emulation timings
-func (emulator *Emulator) initialize() {
-	emulator.machine.Init()
+func (emulator *Emulator) initialize() error {
+	if err := emulator.machine.Init(); err != nil {
+		return err
+	}
 	emulator.tstates = emulator.machine.Config().TStates
 	emulator.duration = emulator.machine.Config().Duration
+	return nil
 }
 
 // Reset the emulation
