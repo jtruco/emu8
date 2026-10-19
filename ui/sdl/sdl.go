@@ -1,4 +1,3 @@
-// Package sdl is the libSDLv2 user interface implementation
 package sdl
 
 import "github.com/jtruco/emu8/config"

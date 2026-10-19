@@ -139,6 +139,16 @@ These are the main goals and features for the next versions :
 - UI : [libRETRO](https://github.com/libretro) core implementation.
 - Mobile : native apps for Android & iOS.
 
+## Development
+
+Tests and checks, from the repository root :
+```
+make test-short               # fast tests (slow tests are skipped)
+make test                     # all tests, including the Z80 zexall test (~90 s)
+go test -race -short ./...    # data race detector
+go vet ./...
+```
+
 ## Contributing
 
 **emu8** is currently in alpha development stage, and its structure is subject to change frequently.

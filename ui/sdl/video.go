@@ -73,6 +73,12 @@ func (video *Video) Update(screen *video.Screen) {
 
 // OnUpdate updates screen changes to video display
 func (video *Video) OnUpdate(refresh bool) {
+	video.render(refresh)
+	video.renderer.Present()
+}
+
+// render uploads the screen changes and draws them, without presenting
+func (video *Video) render(refresh bool) {
 	rects := video.Screen.DirtyRects() // none : all the screen
 	if refresh {
 		rects = nil
@@ -86,7 +92,6 @@ func (video *Video) OnUpdate(refresh bool) {
 			video.renderer.Copy(video.texture, &video.srcRects[r], &video.dstRects[r])
 		}
 	}
-	video.renderer.Present()
 }
 
 // updateTexture uploads the band of screen rows with dirty regions to the

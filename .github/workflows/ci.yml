@@ -31,6 +31,9 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      - name: Vet SDL tests (build tag sdltest, not run)
+        run: go vet -tags sdltest ./ui/sdl/
+
       - name: Staticcheck
         run: go run honnef.co/go/tools/cmd/staticcheck@${{ env.STATICCHECK_VERSION }} ./...
 
