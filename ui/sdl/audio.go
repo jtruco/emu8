@@ -1,6 +1,7 @@
 package sdl
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/jtruco/emu8/config"
@@ -25,7 +26,7 @@ func NewAudio() *Audio {
 }
 
 // Init the SDL audio
-func (audio *Audio) Init() bool {
+func (audio *Audio) Init() error {
 	var want, spec sdl.AudioSpec
 	want.Freq = audio.Frequency
 	want.Format = sdl.AUDIO_S16LSB
@@ -33,13 +34,11 @@ func (audio *Audio) Init() bool {
 	want.Samples = 1024
 	err := sdl.OpenAudio(&want, &spec)
 	if err != nil {
-		log.Println("SDL : Error initializing SDL audio:", err.Error())
-		return false
-
+		return fmt.Errorf("opening audio : %w", err)
 	}
 	sdl.PauseAudio(false)
 	log.Println("SDL : Audio initialized:", want.Freq, "Hz")
-	return true
+	return nil
 }
 
 // Close closes audio resources

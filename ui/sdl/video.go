@@ -1,6 +1,7 @@
 package sdl
 
 import (
+	"fmt"
 	"log"
 	"unsafe"
 
@@ -33,24 +34,30 @@ func NewVideo() *Video {
 }
 
 // Init initializes video
-func (video *Video) Init() bool {
-	if !video.sdlCreateWindow() {
-		return false
+func (video *Video) Init() error {
+	if err := video.sdlCreateWindow(); err != nil {
+		return err
 	}
-	if !video.sdlCreateSurface() {
-		return false
+	if err := video.sdlCreateSurface(); err != nil {
+		return err
 	}
 	video.createRegions()
 	video.updateScreen()
-	return true
+	return nil
 }
 
 // Destroy free video resources
 func (video *Video) Destroy() {
 	log.Println("SDL : Closing video resources")
-	video.surface.Free()
-	video.renderer.Destroy()
-	video.window.Destroy()
+	if video.surface != nil {
+		video.surface.Free()
+	}
+	if video.renderer != nil {
+		video.renderer.Destroy()
+	}
+	if video.window != nil {
+		video.window.Destroy()
+	}
 }
 
 // ToggleFullscreen enable / disable fullscreen mode
@@ -87,7 +94,7 @@ func (video *Video) OnUpdate(refresh bool) {
 	video.renderer.Present()
 }
 
-func (video *Video) sdlCreateWindow() bool {
+func (video *Video) sdlCreateWindow() error {
 	var err error
 	video.wRect = sdl.Rect{
 		X: 0, Y: 0,
@@ -97,21 +104,24 @@ func (video *Video) sdlCreateWindow() bool {
 		video.Title, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
 		video.wRect.W, video.wRect.H, sdl.WINDOW_SHOWN)
 	if err != nil {
-		log.Println("SDL : Error creating Window:", err.Error())
+		return fmt.Errorf("creating window : %w", err)
 	}
 	// renderer
 	video.renderer, err = sdl.CreateRenderer(video.window, -1, sdl.RENDERER_ACCELERATED)
+	if err != nil { // no hardware acceleration
+		video.renderer, err = sdl.CreateRenderer(video.window, -1, sdl.RENDERER_SOFTWARE)
+	}
 	if err != nil {
-		log.Println("SDL : Error creating Renderer:", err.Error())
+		return fmt.Errorf("creating renderer : %w", err)
 	}
 	video.renderer.SetLogicalSize(video.wRect.W, video.wRect.H)
 	info, _ := video.renderer.GetInfo()
 	video.hwAccel = (info.Flags & sdl.RENDERER_ACCELERATED) != 0
 	log.Println("SDL : Renderer is:", info.Name)
-	return true
+	return nil
 }
 
-func (video *Video) sdlCreateSurface() bool {
+func (video *Video) sdlCreateSurface() error {
 	var err error
 	pixels := unsafe.Pointer(&video.Screen.Data()[0])
 	video.surface, err = sdl.CreateRGBSurfaceWithFormatFrom(
@@ -121,10 +131,9 @@ func (video *Video) sdlCreateSurface() bool {
 		X: int32(video.Screen.View().X), Y: int32(video.Screen.View().Y),
 		W: int32(video.Screen.View().W), H: int32(video.Screen.View().H)}
 	if err != nil {
-		log.Println("Error creating emulator surface:", err.Error())
-		return false
+		return fmt.Errorf("creating screen surface : %w", err)
 	}
-	return true
+	return nil
 }
 
 // updateScreen update screen state
